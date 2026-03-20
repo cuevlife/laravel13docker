@@ -23,9 +23,9 @@
                 <div class="space-y-6">
                     <div class="space-y-3">
                         <label class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em] ml-1 italic">{{ __('Select Merchant') }}</label>
-                        <select id="merchant_id" class="w-full bg-slate-50 dark:bg-discord-darker border-0 rounded-2xl h-12 px-4 text-xs font-black text-slate-700 dark:text-white focus:ring-2 focus:ring-discord-green shadow-inner">
-                            @foreach($merchants as $merchant)
-                                <option value="{{ $merchant->id }}">{{ $merchant->name }}</option>
+                        <select id="template_id" class="w-full bg-slate-50 dark:bg-discord-darker border-0 rounded-2xl h-12 px-4 text-xs font-black text-slate-700 dark:text-white focus:ring-2 focus:ring-discord-green shadow-inner">
+                            @foreach($templates as $template)
+                                <option value="{{ $template->id }}">{{ $template->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -60,10 +60,10 @@
                         <div class="flex items-start justify-between mb-6">
                             <div class="flex items-center space-x-4">
                                 <div class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-discord-darker flex items-center justify-center text-rose-500 shadow-inner group-hover:rotate-12 transition-transform">
-                                    <span class="text-[10px] font-black italic">{{ strtoupper(substr($slip->merchant->name, 0, 2)) }}</span>
+                                    <span class="text-[10px] font-black italic">{{ strtoupper(substr($slip->template->name ?? 'NA', 0, 2)) }}</span>
                                 </div>
                                 <div class="overflow-hidden">
-                                    <p class="text-sm font-black text-slate-800 dark:text-white uppercase italic truncate">{{ $slip->merchant->name }}</p>
+                                    <p class="text-sm font-black text-slate-800 dark:text-white uppercase italic truncate">{{ $slip->template->name ?? 'Untitled' }}</p>
                                     <p class="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{{ $slip->processed_at->format('d M Y, H:i') }}</p>
                                 </div>
                             </div>
@@ -101,7 +101,7 @@
         <div class="bg-white dark:bg-discord-main w-full max-w-xl sm:rounded-[3rem] overflow-hidden shadow-2xl transition-all border border-white/5">
             <div class="p-8 border-b border-slate-50 dark:border-white/5 flex justify-between items-center">
                 <h3 class="text-xs font-black dark:text-white uppercase tracking-widest italic">Calibration Registry</h3>
-                <button onclick="closeMod()" class="p-2 text-slate-400 hover:rotate-90 transition-all"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeMod()" class="p-2 text-slate-400 hover:rotate-90 transition-all"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-2 bg-slate-50 dark:bg-discord-black">
                 <textarea id="jsonInput" class="w-full bg-white dark:bg-discord-black text-emerald-500 font-mono text-[11px] p-8 focus:ring-0 border-0 custom-scrollbar" rows="12"></textarea>
@@ -130,7 +130,7 @@
         inp.onchange = (e) => handleUpload(e.target.files[0]);
 
         async function handleUpload(file) {
-            const mId = document.getElementById('merchant_id').value;
+            const tId = document.getElementById('template_id').value;
             const q = document.getElementById('queueZone');
             q.classList.remove('hidden');
             const id = 'q-'+Date.now();
@@ -138,7 +138,7 @@
             lucide.createIcons();
 
             const fd = new FormData();
-            fd.append('image', file); fd.append('merchant_id', mId); fd.append('_token', '{{ csrf_token() }}');
+            fd.append('image', file); fd.append('template_id', tId); fd.append('_token', '{{ csrf_token() }}');
 
             try {
                 const res = await fetch('{{ route("admin.slip-process") }}', { method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'} });
@@ -154,7 +154,8 @@
         let curId = null;
         function editRec(id) {
             curId = id;
-            const rec = @json($slips->items()).find(s => s.id == id);
+            const items = @json($slips->items());
+            const rec = items.find(s => s.id == id);
             document.getElementById('jsonInput').value = JSON.stringify(rec.extracted_data, null, 4);
             document.getElementById('jsonMod').classList.remove('hidden');
             lucide.createIcons();
