@@ -1,0 +1,27 @@
+services:
+  smartbill-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartbill-app
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./SmartBill:/app
+      - smartbill_vendor:/app/vendor
+    working_dir: /app
+    environment:
+      - DB_HOST=mysql
+      - DB_USERNAME=root
+      - DB_PASSWORD=
+      - DB_DATABASE=smartbill_db
+    depends_on: []
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    external: true
+
+volumes:
+  smartbill_vendor:
