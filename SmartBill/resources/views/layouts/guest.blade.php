@@ -72,7 +72,7 @@
         </style>
     </head>
     <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0 overflow-x-hidden">
-        <div class="w-full h-screen sm:h-auto sm:max-w-[1000px] sm:p-6 lg:p-0">
+        <div class="w-full h-screen sm:h-auto sm:max-w-[1000px] transition-all duration-500">
             {{ $slot }}
         </div>
     </body>
