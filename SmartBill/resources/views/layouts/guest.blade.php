@@ -7,6 +7,7 @@
 
         <title>SmartBill</title>
 
+        <!-- Anti-Flicker Script -->
         <script>
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
@@ -46,28 +47,29 @@
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'sans-serif';
-                letter-spacing: -0.025em;
-                transition: background-color 0.4s ease;
+                letter-spacing: -0.02em;
+                transition: background-color 0.5s ease;
             }
             .auth-bg { background-color: #ffffff; }
             .dark .auth-bg { background-color: #020617; }
 
-            @keyframes shimmer {
+            /* Advanced SmartBill Shimmer */
+            @keyframes shimmerFlow {
                 0% { background-position: -200% center; }
                 100% { background-position: 200% center; }
             }
-            .animate-shimmer {
+            .animate-smartbill {
                 background: linear-gradient(90deg, #f23f43, #fb7185, #f23f43);
                 background-size: 200% auto;
                 -webkit-background-clip: text;
                 background-clip: text;
                 -webkit-text-fill-color: transparent;
-                animation: shimmer 4s linear infinite;
+                animation: shimmerFlow 4s linear infinite;
                 display: inline-block;
             }
         </style>
     </head>
-    <body class="antialiased auth-bg min-h-screen flex items-center justify-center p-6 sm:p-12 overflow-x-hidden" 
+    <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0 overflow-x-hidden" 
           x-data="{ 
             darkMode: localStorage.getItem('darkMode') === 'true',
             toggleDarkMode() {
@@ -77,7 +79,7 @@
                 else document.documentElement.classList.remove('dark');
             }
           }">
-        <div class="w-full max-w-[950px] transition-all duration-500 py-10">
+        <div class="w-full h-screen sm:h-auto sm:max-w-[1000px] sm:p-6 lg:p-0">
             {{ $slot }}
         </div>
     </body>
