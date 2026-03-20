@@ -9,7 +9,7 @@
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://unpkg.com/lucide@latest"></script>
@@ -39,20 +39,24 @@
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'sans-serif';
-                background-color: #0f172a;
-                letter-spacing: -0.02em;
+                background-color: #020617;
+                letter-spacing: -0.025em;
+            }
+            /* Spectacular Soft Glow */
+            .glow-bg {
+                background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.08) 0%, transparent 70%);
             }
         </style>
     </head>
-    <body class="antialiased min-h-screen flex items-center justify-center p-0 sm:p-6 lg:p-12 overflow-x-hidden">
+    <body class="antialiased min-h-screen flex items-center justify-center p-4 sm:p-8 glow-bg overflow-x-hidden">
         
-        <!-- Background Decor -->
-        <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-            <div class="absolute top-[-5%] right-[-10%] w-[60%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-[-5%] left-[-10%] w-[50%] h-[30%] bg-rose-500/10 rounded-full blur-[100px]"></div>
+        <!-- Abstract Decoration (The "แหวก" Part) -->
+        <div class="fixed inset-0 pointer-events-none -z-10">
+            <div class="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/[0.03] rounded-full blur-[120px]"></div>
+            <div class="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-500/[0.03] rounded-full blur-[100px]"></div>
         </div>
 
-        <div class="w-full max-w-[1000px]">
+        <div class="w-full max-w-[460px] relative">
             {{ $slot }}
         </div>
         <script>lucide.createIcons();</script>
