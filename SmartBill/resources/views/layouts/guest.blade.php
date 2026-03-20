@@ -1,11 +1,20 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>SmartBill Login</title>
+        <title>SmartBill</title>
+
+        <!-- Anti-Flicker Script (Fixes the white flash) -->
+        <script>
+            if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        </script>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,13 +32,13 @@
                         fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
                         colors: {
                             discord: {
-                                dark: '#1e1f22',
+                                dark: '#313338',
+                                darker: '#1e1f22',
                                 black: '#020617',
                                 green: '#23a55a',
                                 red: '#f23f43'
                             }
-                        },
-                        letterSpacing: { tightest: '-.05em' }
+                        }
                     }
                 }
             }
@@ -40,23 +49,12 @@
             body { 
                 font-family: 'Plus Jakarta Sans', 'sans-serif';
                 background-color: #020617;
-                letter-spacing: -0.02em;
-            }
-            .cyber-border {
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+                letter-spacing: -0.025em;
             }
         </style>
     </head>
-    <body class="antialiased min-h-screen flex items-center justify-center sm:p-6 lg:p-12 overflow-x-hidden">
-        
-        <!-- Subtle Neon Orbs -->
-        <div class="fixed inset-0 pointer-events-none">
-            <div class="absolute top-0 left-0 w-[500px] h-[500px] bg-discord-red/5 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-discord-green/5 rounded-full blur-[120px]"></div>
-        </div>
-
-        <div class="w-full max-w-[850px] relative z-10">
+    <body class="antialiased min-h-screen flex items-center justify-center overflow-x-hidden">
+        <div class="w-full max-w-[900px] relative z-10">
             {{ $slot }}
         </div>
         <script>lucide.createIcons();</script>
