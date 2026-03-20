@@ -7,12 +7,10 @@
 
         <title>SmartBill Login</title>
 
-        <!-- New Premium Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         
-        <!-- Tailwind Play CDN -->
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://unpkg.com/lucide@latest"></script>
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -22,9 +20,16 @@
                 darkMode: 'class',
                 theme: {
                     extend: {
-                        fontFamily: {
-                            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
-                        },
+                        fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
+                        colors: {
+                            discord: {
+                                dark: '#313338',
+                                darker: '#1e1f22',
+                                black: '#0f172a',
+                                green: '#23a55a',
+                                red: '#f23f43'
+                            }
+                        }
                     }
                 }
             }
@@ -33,16 +38,21 @@
         <style>
             [x-cloak] { display: none !important; }
             body { 
-                font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+                font-family: 'Plus Jakarta Sans', 'sans-serif';
                 background-color: #0f172a;
                 letter-spacing: -0.02em;
             }
-            .discord-card { background-color: #1e293b; }
-            .discord-input { background-color: #0f172a; }
         </style>
     </head>
-    <body class="antialiased min-h-screen flex items-center justify-center p-4">
-        <div class="w-full max-w-[480px]">
+    <body class="antialiased min-h-screen flex items-center justify-center p-0 sm:p-6 lg:p-12 overflow-x-hidden">
+        
+        <!-- Background Decor -->
+        <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+            <div class="absolute top-[-5%] right-[-10%] w-[60%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px]"></div>
+            <div class="absolute bottom-[-5%] left-[-10%] w-[50%] h-[30%] bg-rose-500/10 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div class="w-full max-w-[1000px]">
             {{ $slot }}
         </div>
         <script>lucide.createIcons();</script>
