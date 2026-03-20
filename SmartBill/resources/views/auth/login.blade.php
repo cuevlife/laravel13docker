@@ -18,10 +18,10 @@
                 <p class="mt-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] italic opacity-60">Authorize Protocol Link</p>
             </div>
 
-            <form method="POST" action="{{ route('login') }}" class="space-y-12">
+            <form method="POST" action="{{ route('login') }}" class="space-y-10">
                 @csrf
 
-                <!-- High-Symmetry Input Node -->
+                <!-- High-Symmetry Input Node: Username -->
                 <div class="relative group">
                     <label class="absolute -top-7 left-0 text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest group-focus-within:text-discord-green transition-colors">{{ __('Username') }}</label>
                     <input id="username" type="text" name="username" :value="old('username')" required autofocus 
@@ -30,7 +30,7 @@
                     <x-input-error :messages="$errors->get('username')" class="mt-2 text-[10px] font-bold text-discord-red uppercase italic" />
                 </div>
 
-                <!-- High-Symmetry Input Node -->
+                <!-- High-Symmetry Input Node: Password -->
                 <div class="relative group">
                     <label class="absolute -top-7 left-0 text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest group-focus-within:text-discord-green transition-colors">{{ __('Password') }}</label>
                     <input id="password" type="password" name="password" required 
@@ -39,25 +39,27 @@
                     <x-input-error :messages="$errors->get('password')" class="mt-2 text-[10px] font-bold text-discord-red uppercase italic" />
                 </div>
 
-                <div class="pt-4 flex flex-col items-center space-y-10">
-                    <!-- Action CTA: Larger and Gilded -->
-                    <button type="submit" class="w-full py-5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-2xl shadow-2xl shadow-emerald-900/30 transition transform active:scale-[0.96] text-sm uppercase tracking-[0.3em]">
-                        {{ __('Login') }}
-                    </button>
-
-                    <!-- Premium iOS Style Toggle -->
+                <!-- Remember Me Toggle (New Symmetrical Position) -->
+                <div class="flex items-center justify-between px-1">
                     <label class="flex items-center cursor-pointer group select-none">
                         <div class="relative">
                             <input type="checkbox" name="remember" class="peer sr-only">
                             <!-- Track -->
-                            <div class="w-10 h-5.5 bg-slate-100 dark:bg-black/20 rounded-full border border-slate-200 dark:border-white/5 transition-colors peer-checked:bg-discord-green peer-checked:border-discord-green group-active:scale-95 transition-transform duration-200"></div>
-                            <!-- Thumb (Dot) -->
-                            <div class="absolute left-1 top-1 w-3.5 h-3.5 bg-slate-400 dark:bg-slate-600 rounded-full transition-all peer-checked:translate-x-4.5 peer-checked:bg-white"></div>
+                            <div class="w-9 h-5 bg-slate-100 dark:bg-black/40 rounded-full border border-slate-200 dark:border-white/5 transition-all peer-checked:bg-discord-green peer-checked:border-discord-green"></div>
+                            <!-- Thumb -->
+                            <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-slate-400 dark:bg-slate-600 rounded-full transition-all peer-checked:translate-x-4 peer-checked:bg-white shadow-sm"></div>
                         </div>
-                        <span class="ml-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors peer-checked:text-discord-green group-hover:text-slate-600 dark:group-hover:text-slate-300">
+                        <span class="ml-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors peer-checked:text-discord-green group-hover:text-slate-600 dark:group-hover:text-slate-300">
                             {{ __('Remember Me') }}
                         </span>
                     </label>
+                </div>
+
+                <div class="pt-2">
+                    <!-- Action CTA -->
+                    <button type="submit" class="w-full py-5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-2xl shadow-2xl shadow-emerald-900/30 transition transform active:scale-[0.96] text-sm uppercase tracking-[0.3em]">
+                        {{ __('Login') }}
+                    </button>
                 </div>
             </form>
         </div>
