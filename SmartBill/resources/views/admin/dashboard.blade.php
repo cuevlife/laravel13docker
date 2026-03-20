@@ -1,64 +1,72 @@
 <x-app-layout>
-    <div class="space-y-10 animate-in fade-in duration-700">
-        <!-- Dashboard Header -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tightest italic">Dashboard</h1>
-                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] mt-2 italic">System.Registry_v3.9</p>
-            </div>
-            <div class="flex items-center space-x-2">
-                <span class="flex h-2 w-2 rounded-full bg-discord-green shadow-[0_0_15px_rgba(35,165,90,0.4)]"></span>
-                <span class="text-[10px] font-black text-discord-green uppercase tracking-widest">Protocol Active</span>
-            </div>
-        </div>
+    <x-slot name="header">
+        <h2 class="text-xl font-black italic tracking-tightest uppercase dark:text-white">{{ __('Dashboard') }}</h2>
+    </x-slot>
 
-        <!-- Stats Grid (Minimalist Solid Blocks) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Card: Users -->
-            <div class="bg-white dark:bg-discord-main p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-2xl shadow-slate-200/20 dark:shadow-none transition-all hover:scale-[1.02] group">
-                <div class="flex items-center justify-between mb-6">
-                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">{{ __('Active Users') }}</span>
-                    <div class="w-2 h-2 rounded-full bg-discord-red group-hover:animate-ping"></div>
-                </div>
-                <div class="text-5xl font-black text-slate-900 dark:text-white tracking-tightest italic">{{ $stats['users_count'] }}</div>
-                <p class="text-[9px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-[0.2em] mt-4">Authorized Nodes</p>
-            </div>
-
-            <!-- Card: Merchants -->
-            <div class="bg-white dark:bg-discord-main p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-2xl shadow-slate-200/20 dark:shadow-none transition-all hover:scale-[1.02] group">
-                <div class="flex items-center justify-between mb-6">
-                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">{{ __('Merchant Stores') }}</span>
-                    <div class="w-2 h-2 rounded-full bg-discord-green group-hover:animate-ping"></div>
-                </div>
-                <div class="text-5xl font-black text-slate-900 dark:text-white tracking-tightest italic">{{ $stats['merchants_count'] }}</div>
-                <p class="text-[9px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-[0.2em] mt-4">Neural Mapping Gates</p>
-            </div>
-
-            <!-- Card: Slips -->
-            <div class="bg-white dark:bg-discord-main p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-2xl shadow-slate-200/20 dark:shadow-none transition-all hover:scale-[1.02] group">
-                <div class="flex items-center justify-between mb-6">
-                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">{{ __('Total Slips') }}</span>
-                    <div class="w-2 h-2 rounded-full bg-indigo-500 group-hover:animate-ping"></div>
-                </div>
-                <div class="text-5xl font-black text-slate-900 dark:text-white tracking-tightest italic">{{ $stats['slips_count'] }}</div>
-                <p class="text-[9px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-[0.2em] mt-4">Extracted Data Units</p>
-            </div>
-        </div>
-
-        <!-- Call to Action Module -->
-        <div class="bg-slate-900 dark:bg-discord-black rounded-[2.5rem] p-10 md:p-16 overflow-hidden relative group">
-            <!-- Decorative Accent -->
-            <div class="absolute -top-24 -right-24 w-64 h-64 bg-discord-green/10 rounded-full blur-[80px]"></div>
+    <div class="space-y-12">
+        <!-- Fluid Stats Grid: Responsive from 1 to 3 columns -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
             
-            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-                <div class="max-w-xl text-center md:text-left">
-                    <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter">{{ __('System Ready') }}</h2>
-                    <p class="text-slate-400 mt-3 text-sm font-medium leading-relaxed italic opacity-80">
-                        The neural link is synchronized. Ready to extract intelligence from documents.
+            <!-- Stat Card: Users -->
+            <div class="group relative bg-white dark:bg-discord-main p-8 md:p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 transition-all hover:scale-[1.03] shadow-2xl shadow-slate-200/20 dark:shadow-none overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-discord-red/5 rounded-full blur-3xl group-hover:bg-discord-red/10 transition-all"></div>
+                <div class="relative z-10">
+                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em] italic mb-6 block">{{ __('Active Users') }}</span>
+                    <div class="text-6xl md:text-7xl font-black italic tracking-tightest dark:text-white animate-text-neural">
+                        {{ $stats['users_count'] }}
+                    </div>
+                    <div class="mt-6 flex items-center space-x-2">
+                        <span class="h-1.5 w-1.5 rounded-full bg-discord-red animate-pulse"></span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Live Authorized Nodes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Card: Merchants -->
+            <div class="group relative bg-white dark:bg-discord-main p-8 md:p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 transition-all hover:scale-[1.03] shadow-2xl shadow-slate-200/20 dark:shadow-none overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-discord-green/5 rounded-full blur-3xl group-hover:bg-discord-green/10 transition-all"></div>
+                <div class="relative z-10">
+                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em] italic mb-6 block">{{ __('Merchant Stores') }}</span>
+                    <div class="text-6xl md:text-7xl font-black italic tracking-tightest dark:text-white animate-text-green">
+                        {{ $stats['merchants_count'] }}
+                    </div>
+                    <div class="mt-6 flex items-center space-x-2">
+                        <span class="h-1.5 w-1.5 rounded-full bg-discord-green animate-pulse"></span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Neural Mapping Synced</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Card: Slips (Span full on smaller screens if needed) -->
+            <div class="group relative bg-white dark:bg-discord-main p-8 md:p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 transition-all hover:scale-[1.03] shadow-2xl shadow-slate-200/20 dark:shadow-none overflow-hidden sm:col-span-2 lg:col-span-1">
+                <div class="relative z-10">
+                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em] italic mb-6 block">{{ __('Total Slips') }}</span>
+                    <div class="text-6xl md:text-7xl font-black italic tracking-tightest text-slate-900 dark:text-white opacity-90">
+                        {{ $stats['slips_count'] }}
+                    </div>
+                    <div class="mt-6 flex items-center space-x-2">
+                        <span class="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Data Units Processed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Module: Hybrid Flow -->
+        <div class="relative bg-slate-900 dark:bg-discord-black rounded-[3rem] p-10 md:p-20 overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)]">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(35,165,90,0.1),transparent_50%)]"></div>
+            
+            <div class="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-12 text-center xl:text-left">
+                <div class="max-w-2xl">
+                    <h2 class="text-3xl md:text-4xl font-black text-white uppercase italic tracking-tighter leading-tight">{{ __('System Ready') }}</h2>
+                    <p class="mt-6 text-slate-400 font-medium leading-relaxed italic text-sm md:text-base opacity-80">
+                        The neural data extraction interface is operational. Deploy your document nodes to begin automated mapping and intelligence gathering across all synchronized merchant gateways.
                     </p>
                 </div>
-                <div class="shrink-0 w-full md:w-auto">
-                    <a href="{{ route('admin.slip-reader') }}" class="flex items-center justify-center px-12 py-5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-[1.5rem] shadow-xl shadow-emerald-950/40 transition-all transform active:scale-[0.96] text-xs uppercase tracking-[0.3em]">
+                
+                <div class="shrink-0">
+                    <a href="{{ route('admin.slip-reader') }}" class="group relative inline-flex items-center justify-center px-16 py-6 bg-discord-green hover:bg-[#1a8348] text-white font-black text-xs uppercase tracking-[0.3em] rounded-2xl transition-all shadow-2xl shadow-emerald-950/50 hover:-translate-y-1 active:scale-95">
+                        <i data-lucide="zap" class="w-4 h-4 mr-3 fill-current icon-pulse-slow"></i>
                         {{ __('Start Scanning') }}
                     </a>
                 </div>
