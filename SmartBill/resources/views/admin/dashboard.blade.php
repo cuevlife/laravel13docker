@@ -1,87 +1,74 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-black text-lg text-slate-800 leading-tight flex items-center">
-            <i class="fas fa-radar mr-2 text-indigo-500"></i>{{ __('Neural Overview') }}
-        </h2>
-    </x-slot>
-
-    <div class="space-y-10 pb-20">
-        
-        <!-- Stats Cards (Glassmorphism & Glow) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Users Stats -->
-            <div class="relative group">
-                <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-3xl blur opacity-10 group-hover:opacity-25 transition duration-1000"></div>
-                <div class="relative bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex items-center">
-                    <div class="h-16 w-16 rounded-2xl bg-indigo-50 flex items-center justify-center mr-6 border border-indigo-100 text-indigo-600 shadow-inner">
-                        <i class="fas fa-users text-2xl"></i>
-                    </div>
-                    <div>
-                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Entity Count</div>
-                        <div class="text-4xl font-black text-slate-900 tracking-tighter">{{ $stats['users_count'] }}</div>
-                        <div class="text-[10px] text-indigo-500 font-bold uppercase mt-1">Active Accounts</div>
-                    </div>
-                </div>
+    <div class="space-y-10">
+        <!-- Hero Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Intelligence Dashboard</h1>
+                <p class="text-sm text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-widest font-medium">Neural Status: Optimal</p>
             </div>
-
-            <!-- Merchants Stats -->
-            <div class="relative group">
-                <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl blur opacity-10 group-hover:opacity-25 transition duration-1000"></div>
-                <div class="relative bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex items-center">
-                    <div class="h-16 w-16 rounded-2xl bg-emerald-50 flex items-center justify-center mr-6 border border-emerald-100 text-emerald-600 shadow-inner">
-                        <i class="fas fa-store text-2xl"></i>
-                    </div>
-                    <div>
-                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Neural Nodes</div>
-                        <div class="text-4xl font-black text-slate-900 tracking-tighter">{{ $stats['merchants_count'] }}</div>
-                        <div class="text-[10px] text-emerald-500 font-bold uppercase mt-1">Registered Stores</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slips Stats -->
-            <div class="relative group">
-                <div class="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl blur opacity-10 group-hover:opacity-25 transition duration-1000"></div>
-                <div class="relative bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex items-center">
-                    <div class="h-16 w-16 rounded-2xl bg-amber-50 flex items-center justify-center mr-6 border border-amber-100 text-amber-600 shadow-inner">
-                        <i class="fas fa-microchip text-2xl"></i>
-                    </div>
-                    <div>
-                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Total Processing</div>
-                        <div class="text-4xl font-black text-slate-900 tracking-tighter">{{ $stats['slips_count'] }}</div>
-                        <div class="text-[10px] text-amber-500 font-bold uppercase mt-1">Extracted Units</div>
-                    </div>
-                </div>
+            <div class="flex items-center space-x-2">
+                <span class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+                <span class="text-xs font-bold text-emerald-600/80 uppercase tracking-tighter">System Live</span>
             </div>
         </div>
 
-        <!-- Quick Access Matrix -->
-        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-10 relative overflow-hidden">
-            <div class="relative z-10 md:flex items-center justify-between">
-                <div class="max-w-xl mb-8 md:mb-0">
-                    <h3 class="text-3xl font-black text-slate-900 mb-4 tracking-tighter">Command Center</h3>
-                    <p class="text-slate-500 leading-relaxed font-medium">
-                        Access the neural network interface to begin data extraction or calibrate merchant mapping protocols. 
-                        The system is currently operating at optimal efficiency.
+        <!-- Stats Grid (Minimalist Cards) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Stat 1 -->
+            <div class="bg-white dark:bg-[#0b0f1a] p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-lg text-slate-400">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase">Global Entities</span>
+                </div>
+                <div class="text-3xl font-bold text-slate-800 dark:text-white">{{ $stats['users_count'] }}</div>
+                <p class="text-xs text-slate-400 mt-1">Registered authentication links</p>
+            </div>
+
+            <!-- Stat 2 -->
+            <div class="bg-white dark:bg-[#0b0f1a] p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-lg text-slate-400">
+                        <i data-lucide="store" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase">Neural Nodes</span>
+                </div>
+                <div class="text-3xl font-bold text-slate-800 dark:text-white">{{ $stats['merchants_count'] }}</div>
+                <p class="text-xs text-slate-400 mt-1">Active merchant mapping protocols</p>
+            </div>
+
+            <!-- Stat 3 -->
+            <div class="bg-white dark:bg-[#0b0f1a] p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-lg text-slate-400">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-amber-500 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full uppercase">Data Units</span>
+                </div>
+                <div class="text-3xl font-bold text-slate-800 dark:text-white">{{ $stats['slips_count'] }}</div>
+                <p class="text-xs text-slate-400 mt-1">Total successfully extracted slips</p>
+            </div>
+        </div>
+
+        <!-- Command Module -->
+        <div class="bg-white dark:bg-[#0b0f1a] rounded-3xl border border-slate-200/60 dark:border-white/5 overflow-hidden shadow-sm">
+            <div class="p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="max-w-lg text-center md:text-left">
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Ready for Operation?</h2>
+                    <p class="text-slate-400 dark:text-slate-500 mt-2 text-sm leading-relaxed">
+                        The AI neural link is calibrated and ready. You can begin scanning new documents or configure the mapping registry.
                     </p>
                 </div>
-                
-                <div class="flex flex-col space-y-4 w-full md:w-64">
-                    <a href="{{ route('admin.slip-reader') }}" class="group relative py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-500/30 hover:bg-indigo-700 transition transform hover:-translate-y-1 overflow-hidden">
-                        <span class="relative z-10 flex items-center justify-center uppercase text-xs tracking-widest">
-                            <i class="fas fa-scan mr-2"></i> Launch Scanner
-                        </span>
-                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                    <a href="{{ route('admin.slip-reader') }}" class="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition shadow-lg shadow-indigo-500/20 flex items-center justify-center">
+                        <i data-lucide="scan" class="w-4 h-4 mr-2"></i> Open Scanner
                     </a>
-                    
-                    <a href="{{ route('admin.merchants') }}" class="py-4 bg-slate-50 text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-white hover:shadow-lg transition flex items-center justify-center uppercase text-xs tracking-widest">
-                        <i class="fas fa-sliders-h mr-2"></i> Configure Nodes
+                    <a href="{{ route('admin.merchants') }}" class="w-full sm:w-auto px-8 py-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-xs uppercase tracking-widest transition flex items-center justify-center border border-slate-200/60 dark:border-white/5">
+                        <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i> Manage Nodes
                     </a>
                 </div>
             </div>
-            
-            <!-- Tech Backdrop -->
-            <i class="fas fa-brain absolute -right-10 -bottom-10 text-[15rem] text-slate-50 pointer-events-none"></i>
         </div>
     </div>
 </x-app-layout>
