@@ -53,53 +53,26 @@
                 letter-spacing: -0.02em;
                 transition: background-color 0.5s ease;
             }
-            
-            .auth-bg { background-color: #f8fafc; }
+            .auth-bg { background-color: #ffffff; }
             .dark .auth-bg { background-color: #020617; }
 
-            /* Advanced SmartBill Animation */
             @keyframes shimmerFlow {
                 0% { background-position: -200% center; }
                 100% { background-position: 200% center; }
             }
-            @keyframes breatheGlow {
-                0%, 100% { filter: drop-shadow(0 0 5px rgba(242, 63, 67, 0.2)); }
-                50% { filter: drop-shadow(0 0 15px rgba(242, 63, 67, 0.5)); }
-            }
-
             .animate-smartbill-pro {
-                background: linear-gradient(
-                    to right, 
-                    #f23f43 20%, 
-                    #ff8e8e 40%, 
-                    #ffffff 50%, 
-                    #ff8e8e 60%, 
-                    #f23f43 80%
-                );
+                background: linear-gradient(90deg, #f23f43, #fb7185, #f23f43);
                 background-size: 200% auto;
                 -webkit-background-clip: text;
                 background-clip: text;
                 -webkit-text-fill-color: transparent;
-                animation: shimmerFlow 4s linear infinite, breatheGlow 3s ease-in-out infinite;
+                animation: shimmerFlow 4s linear infinite;
                 display: inline-block;
             }
-
-            /* Entrance Animations */
-            @keyframes cardReveal {
-                from { opacity: 0; transform: scale(0.95) translateY(10px); }
-                to { opacity: 1; transform: scale(1) translateY(0); }
-            }
-            @keyframes staggeredFade {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-
-            .reveal-card { animation: cardReveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-            .item-fade { opacity: 0; animation: staggeredFade 0.5s ease forwards; }
         </style>
     </head>
-    <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-4 sm:p-8 overflow-hidden">
-        <div class="w-full max-w-[420px] relative reveal-card">
+    <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0 overflow-x-hidden">
+        <div class="w-full h-screen sm:h-auto sm:max-w-[1000px] sm:p-6 lg:p-0">
             {{ $slot }}
         </div>
     </body>
