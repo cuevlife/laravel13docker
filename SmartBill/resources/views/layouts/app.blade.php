@@ -23,9 +23,9 @@
 
         <title>SmartBill</title>
 
-        <!-- Anti-Flicker Script -->
+        <!-- Anti-Flicker Script (Default to LIGHT) -->
         <script>
-            if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
@@ -54,6 +54,9 @@
                                 green: '#23a55a',
                                 red: '#f23f43'
                             }
+                        },
+                        animation: {
+                            'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         }
                     }
                 }
@@ -64,7 +67,7 @@
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'sans-serif'; 
-                transition: background-color 0.3s ease;
+                transition: background-color 0.5s ease, color 0.5s ease;
             }
             .dark body { background-color: #0f172a; }
             .custom-scrollbar::-webkit-scrollbar { width: 5px; }
@@ -75,7 +78,14 @@
     </head>
     <body class="antialiased bg-slate-50 dark:bg-discord-black text-slate-600 dark:text-slate-400 overflow-hidden">
         
+        <!-- Background Decor -->
+        <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+            <div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/[0.03] dark:bg-emerald-500/10 rounded-full blur-[120px]"></div>
+            <div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-rose-500/[0.02] dark:bg-rose-500/10 rounded-full blur-[100px]"></div>
+        </div>
+
         <div class="flex h-screen overflow-hidden">
+            <!-- Sidebar -->
             <aside :class="{ 'w-64': !sidebarCollapsed, 'w-20': sidebarCollapsed }" 
                    class="sidebar-transition z-[70] hidden md:flex flex-col bg-white dark:bg-discord-darker border-r border-slate-200 dark:border-white/5 shadow-xl">
                 @include('layouts.sidebar')
@@ -94,8 +104,8 @@
 
                     <div class="flex items-center space-x-4 md:space-x-6">
                         <div class="flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
-                            <a href="{{ route('lang.switch', 'th') }}" class="px-2.5 py-1 rounded-lg text-[10px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-white dark:bg-discord-green text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600' }}">TH</a>
-                            <a href="{{ route('lang.switch', 'en') }}" class="px-2.5 py-1 rounded-lg text-[10px] font-black transition-all {{ app()->getLocale() == 'en' ? 'bg-white dark:bg-discord-green text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600' }}">EN</a>
+                            <a href="{{ route('lang.switch', 'th') }}" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-white dark:bg-discord-green text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600' }}">TH</a>
+                            <a href="{{ route('lang.switch', 'en') }}" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-all {{ app()->getLocale() == 'en' ? 'bg-white dark:bg-discord-green text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600' }}">EN</a>
                         </div>
 
                         <button @click="toggleDarkMode()" class="text-slate-400 hover:text-amber-400 transition-all">
@@ -116,7 +126,7 @@
 
                             <div x-show="userDropdown" x-cloak 
                                  class="absolute right-0 mt-3 w-52 bg-white dark:bg-discord-darker rounded-2xl shadow-2xl border border-slate-200 dark:border-white/5 py-2 z-50 overflow-hidden">
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors uppercase tracking-widest">{{ __('Settings') }}</a>
+                                <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors uppercase tracking-widest">{{ __('Settings') }}</a>
                                 <div class="h-px bg-slate-100 dark:bg-white/5 my-1 mx-2"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf

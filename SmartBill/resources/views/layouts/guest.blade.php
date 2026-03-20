@@ -7,9 +7,9 @@
 
         <title>SmartBill</title>
 
-        <!-- Anti-Flicker Script (Fixes the white flash) -->
+        <!-- Anti-Flicker Script (Default to LIGHT) -->
         <script>
-            if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
@@ -21,7 +21,6 @@
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         
         <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://unpkg.com/lucide@latest"></script>
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
         <script>
@@ -34,10 +33,19 @@
                             discord: {
                                 dark: '#313338',
                                 darker: '#1e1f22',
-                                black: '#020617',
+                                black: '#0f172a',
                                 green: '#23a55a',
                                 red: '#f23f43'
                             }
+                        },
+                        keyframes: {
+                            shimmer: {
+                                '0%': { backgroundPosition: '-200% 0' },
+                                '100%': { backgroundPosition: '200% 0' },
+                            }
+                        },
+                        animation: {
+                            'shimmer': 'shimmer 3s linear infinite',
                         }
                     }
                 }
@@ -48,15 +56,25 @@
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'sans-serif';
-                background-color: #020617;
+                background-color: #f8fafc;
                 letter-spacing: -0.025em;
+                transition: background-color 0.5s ease;
+            }
+            .dark body { background-color: #020617; }
+
+            /* Text Animation */
+            .animate-text-gradient {
+                background: linear-gradient(to right, #f23f43, #ff8e8e, #f23f43);
+                background-size: 200% auto;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                animation: shimmer 4s linear infinite;
             }
         </style>
     </head>
-    <body class="antialiased min-h-screen flex items-center justify-center overflow-x-hidden">
-        <div class="w-full max-w-[900px] relative z-10">
+    <body class="antialiased min-h-screen flex items-center justify-center overflow-x-hidden p-4 sm:p-0">
+        <div class="w-full max-w-[850px] relative z-10">
             {{ $slot }}
         </div>
-        <script>lucide.createIcons();</script>
     </body>
 </html>
