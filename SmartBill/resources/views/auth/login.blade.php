@@ -55,9 +55,9 @@
                         <x-input-error :messages="$errors->get('password')" class="mt-1" />
                     </div>
 
-                    <!-- CTA Button -->
-                    <div class="pt-2">
-                        <button type="submit" class="w-full py-4.5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-2xl shadow-xl shadow-emerald-900/20 transition transform active:scale-[0.98] text-[11px] uppercase tracking-[0.3em]">
+                    <!-- CTA Button (Larger & More Prominent) -->
+                    <div class="pt-4">
+                        <button type="submit" class="w-full py-5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-2xl shadow-2xl shadow-emerald-900/30 transition transform active:scale-[0.96] text-sm uppercase tracking-[0.3em]">
                             {{ __('Login') }}
                         </button>
                     </div>
