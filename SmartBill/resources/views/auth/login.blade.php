@@ -71,8 +71,6 @@
                     <span x-show="darkMode">Light Mode</span>
                 </button>
             </div>
-
-            <span class="text-[8px] font-black text-slate-400 dark:text-slate-700 uppercase tracking-[1em] ml-[1em]">Secure End-to-End Encryption</span>
         </div>
     </div>
 
