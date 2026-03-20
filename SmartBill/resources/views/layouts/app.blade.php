@@ -1,119 +1,93 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
       x-data="{ 
-        darkMode: localStorage.getItem('darkMode') === 'true',
+        darkMode: true, // Force dark for Discord style
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         sidebarOpen: false,
         userDropdown: false,
-        toggleDarkMode() {
-            this.darkMode = !this.darkMode;
-            localStorage.setItem('darkMode', this.darkMode);
-        },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
         }
       }" 
-      :class="{ 'dark': darkMode }">
+      class="dark">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'SmartBill') }}</title>
+        <title>SmartBill Admin</title>
 
-        <!-- New Premium Fonts: Plus Jakarta Sans & Inter -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/lucide@latest"></script>
         
-        <!-- Scripts & Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important; 
-                letter-spacing: -0.02em;
-                transition: background-color 0.3s ease, color 0.3s ease;
+                background-color: #0f172a; /* Discord Background */
+                color: #cbd5e1;
             }
-            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+            .discord-sidebar { background-color: #1e293b; }
+            .discord-card { background-color: #1e293b; }
+            .discord-topbar { background-color: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-            .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-            .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; }
-            .sidebar-transition { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         </style>
     </head>
-    <body class="antialiased bg-slate-50 dark:bg-[#020617] text-slate-600 dark:text-slate-400">
+    <body class="antialiased overflow-hidden">
+        
         <div class="flex h-screen overflow-hidden">
-            <!-- Sidebar & Main Content Logic Remains the Same -->
-            <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[60] md:hidden" x-cloak></div>
             
-            <aside :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen, 'w-64': !sidebarCollapsed, 'w-20': sidebarCollapsed }" 
-                   class="fixed inset-y-0 left-0 sidebar-transition transform transition-transform duration-300 ease-in-out z-[70] md:translate-x-0 md:static md:inset-0 bg-white dark:bg-[#0b0f1a] border-r border-slate-200/60 dark:border-white/5">
+            <!-- Sidebar -->
+            <aside :class="{ 'w-64': !sidebarCollapsed, 'w-20': sidebarCollapsed }" 
+                   class="discord-sidebar transition-all duration-300 ease-in-out z-[70] hidden md:flex flex-col border-r border-white/5">
                 @include('layouts.sidebar')
             </aside>
 
+            <!-- Main Content -->
             <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                <header class="h-16 bg-white/80 dark:bg-[#0b0f1a]/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-6 md:px-8 border-b border-slate-200/60 dark:border-white/5">
+                
+                <!-- Topbar -->
+                <header class="h-14 discord-topbar flex items-center justify-between px-6">
                     <div class="flex items-center space-x-4">
-                        <button @click="toggleSidebar()" class="hidden md:flex text-slate-400 hover:text-indigo-500 transition-colors">
-                            <i x-show="!sidebarCollapsed" data-lucide="menu-fold" class="w-5 h-5"></i>
-                            <i x-show="sidebarCollapsed" data-lucide="menu-unfold" class="w-5 h-5"></i>
+                        <button @click="toggleSidebar()" class="text-slate-400 hover:text-white transition-colors">
+                            <i data-lucide="menu" class="w-5 h-5"></i>
                         </button>
-                        <button @click="sidebarOpen = true" class="md:hidden text-slate-400">
-                            <i data-lucide="menu" class="w-6 h-6"></i>
-                        </button>
-                        @isset($header)
-                            <div class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-[0.2em]">{{ $header }}</div>
-                        @endisset
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            @isset($header) {{ $header }} @endisset
+                        </div>
                     </div>
 
                     <div class="flex items-center space-x-4">
-                        <button @click="toggleDarkMode()" class="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-all">
-                            <i x-show="!darkMode" data-lucide="moon" class="w-4 h-4"></i>
-                            <i x-show="darkMode" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
-                        </button>
-
                         <div class="relative" @click.away="userDropdown = false">
-                            <button @click="userDropdown = !userDropdown" class="flex items-center space-x-3 p-1.5 pr-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all">
-                                <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white text-[10px] font-black shadow-sm">
+                            <button @click="userDropdown = !userDropdown" class="flex items-center space-x-2 group">
+                                <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white text-xs font-bold">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                 </div>
-                                <div class="hidden md:block text-left">
-                                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 leading-none">{{ Auth::user()->name }}</p>
-                                    <p class="text-[9px] text-slate-400 uppercase font-medium mt-1 tracking-tighter italic">Auth Protocol</p>
-                                </div>
-                                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 transition-transform" :class="userDropdown ? 'rotate-180' : ''"></i>
+                                <span class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{{ Auth::user()->name }}</span>
+                                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500"></i>
                             </button>
 
                             <div x-show="userDropdown" x-cloak 
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 scale-95 translate-y-[-10px]"
-                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                                 class="absolute right-0 mt-2 w-56 bg-white dark:bg-[#161b2a] rounded-2xl shadow-2xl border border-slate-200/60 dark:border-white/5 py-2 z-50">
-                                <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors uppercase tracking-widest">
-                                    <i data-lucide="settings" class="w-4 h-4"></i>
-                                    <span>Settings</span>
-                                </a>
-                                <div class="h-px bg-slate-100 dark:bg-white/5 my-1 mx-2"></div>
+                                 class="absolute right-0 mt-2 w-48 bg-[#18191c] rounded-md shadow-xl border border-white/5 py-1 z-50">
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs text-slate-300 hover:bg-indigo-500 hover:text-white mx-1 rounded transition-colors">Settings</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center space-x-3 px-4 py-3 text-[11px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors uppercase tracking-widest">
-                                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                                        <span>Terminate Link</span>
-                                    </button>
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs text-rose-400 hover:bg-rose-500 hover:text-white mx-1 rounded transition-colors">Logout</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
-                    <div class="max-w-6xl mx-auto">
-                        {{ $slot }}
-                    </div>
+                <main class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    {{ $slot }}
                 </main>
             </div>
         </div>
@@ -122,6 +96,5 @@
             lucide.createIcons();
             document.addEventListener('alpine:initialized', () => { lucide.createIcons(); });
         </script>
-        @stack('scripts')
     </body>
 </html>
