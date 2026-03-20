@@ -11,25 +11,36 @@
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/lucide@latest"></script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         
         <style>
-            body { font-family: 'Kanit', sans-serif !important; }
             [x-cloak] { display: none !important; }
+            body { 
+                font-family: 'Kanit', sans-serif !important;
+                letter-spacing: -0.01em;
+            }
+            .mesh-gradient {
+                background-color: #ffffff;
+                background-image: 
+                    radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+            }
+            .dark .mesh-gradient {
+                background-color: #020617;
+                background-image: 
+                    radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            }
         </style>
     </head>
-    <body class="antialiased bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
-        <div class="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
-            <!-- Background Orbs -->
-            <div class="absolute top-0 left-0 w-full h-full pointer-events-none -z-10">
-                <div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-[120px]"></div>
-                <div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[100px]"></div>
-            </div>
-
-            <div class="w-full max-w-[440px] transition-all duration-500">
+    <body class="antialiased mesh-gradient min-h-screen transition-colors duration-700">
+        <div class="min-h-screen flex items-center justify-center p-6 relative">
+            <div class="w-full max-w-[420px] relative z-10">
                 {{ $slot }}
             </div>
         </div>
