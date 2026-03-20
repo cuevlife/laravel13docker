@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: smartbill-app
     ports:
-      - "8001:8001"
+      - "32152:8001"
     volumes:
       - ./SmartBill:/app
       - smartbill_vendor:/app/vendor
