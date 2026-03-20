@@ -7,9 +7,10 @@
 
         <title>{{ config('app.name', 'SmartBill') }}</title>
 
+        <!-- New Premium Fonts: Plus Jakarta Sans & Inter -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
         <script src="https://unpkg.com/lucide@latest"></script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,15 +18,12 @@
         <style>
             [x-cloak] { display: none !important; }
             body { 
-                font-family: 'Kanit', sans-serif !important;
-                background-color: #0f172a; /* Deep Discord Dark */
-            }
-            .discord-card {
-                background-color: #1e293b; /* Slightly lighter block */
-            }
-            .discord-input {
+                font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
                 background-color: #0f172a;
+                letter-spacing: -0.02em; /* Tighter for modern look */
             }
+            .discord-card { background-color: #1e293b; }
+            .discord-input { background-color: #0f172a; }
         </style>
     </head>
     <body class="antialiased min-h-screen flex items-center justify-center p-4">
