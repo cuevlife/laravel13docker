@@ -7,15 +7,13 @@
 
         <title>SmartBill</title>
 
+        <!-- Theme Detection -->
         <script>
-            function applyTheme() {
-                if (localStorage.getItem('darkMode') === 'true') {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
-            applyTheme();
         </script>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,9 +51,7 @@
                 letter-spacing: -0.02em;
                 transition: background-color 0.5s ease;
             }
-            
-            /* Softer Backgrounds */
-            .auth-bg { background-color: #f8fafc; } 
+            .auth-bg { background-color: #f2f3f5; }
             .dark .auth-bg { background-color: #020617; }
 
             @keyframes textShimmer {
@@ -63,7 +59,7 @@
                 50% { background-position: 100% 50%; }
                 100% { background-position: 0% 50%; }
             }
-            .animate-smartbill {
+            .animate-shimmer {
                 background: linear-gradient(90deg, #f23f43, #fb7185, #f23f43);
                 background-size: 200% auto;
                 -webkit-background-clip: text;
@@ -73,7 +69,7 @@
             }
         </style>
     </head>
-    <body class="antialiased auth-bg min-h-screen flex flex-col items-center justify-center m-0 p-0" 
+    <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-4 sm:p-8" 
           x-data="{ 
             darkMode: localStorage.getItem('darkMode') === 'true',
             toggleDarkMode() {
@@ -83,6 +79,8 @@
                 else document.documentElement.classList.remove('dark');
             }
           }">
-        {{ $slot }}
+        <div class="w-full max-w-[440px] relative">
+            {{ $slot }}
+        </div>
     </body>
 </html>
