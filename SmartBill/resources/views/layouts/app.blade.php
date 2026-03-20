@@ -54,10 +54,6 @@
             .dark body { background-color: #0f172a; color: #f2f3f5; }
             body { background-color: #f2f3f5; color: #2e3338; }
 
-            /* Simple Entrance */
-            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-            .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
-
             .custom-scrollbar::-webkit-scrollbar { width: 6px; }
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
             .custom-scrollbar::-webkit-scrollbar-thumb { background: #4e5058; border-radius: 10px; }
@@ -66,6 +62,7 @@
     <body x-data="{ 
             darkMode: localStorage.getItem('darkMode') === 'true',
             sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+            sidebarOpen: false,
             userDropdown: false,
             toggleDarkMode() {
                 this.darkMode = !this.darkMode;
@@ -74,33 +71,54 @@
                 else document.documentElement.classList.remove('dark');
             },
             toggleSidebar() {
-                this.sidebarCollapsed = !this.sidebarCollapsed;
-                localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+                if (window.innerWidth < 1024) {
+                    this.sidebarOpen = !this.sidebarOpen;
+                } else {
+                    this.sidebarCollapsed = !this.sidebarCollapsed;
+                    localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+                }
             }
           }">
         
         <div class="flex h-screen overflow-hidden">
             
-            <!-- Sidebar -->
-            <aside :class="sidebarCollapsed ? 'w-20' : 'w-64'" 
-                   class="hidden lg:flex flex-col bg-[#f2f3f5] dark:bg-discord-darker border-r border-slate-200 dark:border-white/5 transition-all duration-200 z-50">
+            <!-- Mobile Sidebar Overlay -->
+            <div x-show="sidebarOpen" 
+                 x-transition:enter="transition-opacity ease-linear duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition-opacity ease-linear duration-300"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="sidebarOpen = false" 
+                 class="fixed inset-0 bg-black/60 z-[60] lg:hidden" x-cloak></div>
+
+            <!-- Sidebar (Responsive Drawer) -->
+            <aside :class="{ 
+                        'w-64': !sidebarCollapsed || sidebarOpen, 
+                        'w-20': sidebarCollapsed && !sidebarOpen,
+                        'translate-x-0': sidebarOpen,
+                        '-translate-x-full': !sidebarOpen && window.innerWidth < 1024,
+                        'lg:translate-x-0': true
+                   }" 
+                   class="fixed inset-y-0 left-0 lg:static lg:flex flex-col bg-[#f2f3f5] dark:bg-discord-darker border-r border-slate-200 dark:border-white/5 transition-all duration-300 z-[70]">
                 @include('layouts.sidebar')
             </aside>
 
-            <!-- Content Area -->
+            <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 
                 <!-- Topbar -->
                 <header class="h-14 shrink-0 bg-white dark:bg-discord-black border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-6 z-40">
                     <div class="flex items-center space-x-4">
-                        <button @click="toggleSidebar()" class="hidden lg:block text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors">
-                            <i x-show="!sidebarCollapsed" data-lucide="panel-left-close" class="w-5 h-5"></i>
-                            <i x-show="sidebarCollapsed" data-lucide="panel-left-open" class="w-5 h-5"></i>
+                        <!-- Hamburger Menu Button -->
+                        <button @click="toggleSidebar()" class="p-2 -ml-2 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors focus:outline-none">
+                            <i data-lucide="menu" class="w-5 h-5"></i>
                         </button>
-                        <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">SmartBill Node</div>
+                        <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:block italic">SmartBill Gateway</div>
                     </div>
 
-                    <div class="flex items-center space-x-4 md:space-x-6">
+                    <div class="flex items-center space-x-4">
                         <!-- Language Switcher -->
                         <div class="flex items-center bg-slate-100 dark:bg-black/20 p-1 rounded-md">
                             <a href="{{ route('lang.switch', 'th') }}" class="px-2 py-1 rounded text-[10px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-white dark:bg-discord-green text-slate-900 dark:text-white shadow-sm' : 'text-slate-400' }}">TH</a>
@@ -114,46 +132,37 @@
 
                         <div class="h-4 w-px bg-slate-200 dark:bg-white/5"></div>
 
-                        <!-- Profile -->
+                        <!-- User Profile -->
                         <div class="relative" @click.away="userDropdown = false">
                             <button @click="userDropdown = !userDropdown" class="flex items-center space-x-2">
                                 <div class="w-7 h-7 rounded-md bg-discord-red flex items-center justify-center text-white text-[10px] font-black shadow-lg">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                 </div>
-                                <span class="hidden sm:block text-xs font-bold dark:text-white">{{ Auth::user()->name }}</span>
+                                <span class="hidden md:block text-xs font-bold dark:text-white italic">{{ Auth::user()->name }}</span>
                             </button>
                             <div x-show="userDropdown" x-cloak class="absolute right-0 mt-3 w-48 bg-white dark:bg-discord-darker rounded-lg shadow-2xl border border-slate-200 dark:border-white/5 py-1 overflow-hidden">
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5">{{ __('Settings') }}</a>
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 italic">{{ __('Settings') }}</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs font-bold text-discord-red hover:bg-rose-50 dark:hover:bg-rose-500/10">{{ __('Logout') }}</button>
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs font-bold text-discord-red hover:bg-rose-50 dark:hover:bg-rose-500/10 italic">{{ __('Logout') }}</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <!-- Page Content -->
-                <main class="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar fade-in">
+                <!-- Content Area -->
+                <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar relative">
                     <div class="max-w-6xl mx-auto">
                         {{ $slot }}
                     </div>
                 </main>
 
-                <!-- Bottom Nav (Mobile) -->
-                <nav class="lg:hidden h-14 bg-white dark:bg-discord-darker border-t border-slate-200 dark:border-white/5 flex items-center justify-around px-6 pb-safe">
-                    <a href="{{ route('dashboard') }}" class="flex flex-col items-center">
-                        <i data-lucide="layout-grid" class="w-5 h-5 {{ request()->routeIs('dashboard') ? 'text-discord-green' : 'text-slate-400' }}"></i>
-                    </a>
-                    <a href="{{ route('admin.slip-reader') }}" class="flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full bg-discord-green flex items-center justify-center text-white shadow-lg">
-                            <i data-lucide="scan" class="w-5 h-5"></i>
-                        </div>
-                    </a>
-                    <a href="{{ route('admin.merchants') }}" class="flex flex-col items-center">
-                        <i data-lucide="store" class="w-5 h-5 {{ request()->routeIs('admin.merchants') ? 'text-discord-green' : 'text-slate-400' }}"></i>
-                    </a>
-                </nav>
+                <!-- Floating Action Button (Mobile Primary Action) -->
+                <a href="{{ route('admin.slip-reader') }}" 
+                   class="lg:hidden fixed bottom-8 right-6 w-14 h-14 bg-discord-green text-white rounded-full flex items-center justify-center shadow-2xl shadow-emerald-900/40 z-[55] active:scale-90 transition-transform">
+                    <i data-lucide="scan" class="w-6 h-6 stroke-[2.5px]"></i>
+                </a>
             </div>
         </div>
 
