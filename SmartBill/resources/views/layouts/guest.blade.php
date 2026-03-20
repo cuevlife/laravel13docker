@@ -7,7 +7,6 @@
 
         <title>SmartBill</title>
 
-        <!-- Anti-Flicker Script (Default to LIGHT) -->
         <script>
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
@@ -37,15 +36,6 @@
                                 green: '#23a55a',
                                 red: '#f23f43'
                             }
-                        },
-                        keyframes: {
-                            shimmer: {
-                                '0%': { backgroundPosition: '-200% 0' },
-                                '100%': { backgroundPosition: '200% 0' },
-                            }
-                        },
-                        animation: {
-                            'shimmer': 'shimmer 3s linear infinite',
                         }
                     }
                 }
@@ -62,18 +52,36 @@
             }
             .dark body { background-color: #020617; }
 
-            /* Text Animation */
-            .animate-text-gradient {
-                background: linear-gradient(to right, #f23f43, #ff8e8e, #f23f43);
+            /* Keyframes สำหรับตัวหนังสือเรืองแสง */
+            @keyframes textShimmer {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+
+            .animate-smartbill {
+                background: linear-gradient(90deg, #f23f43, #fb7185, #f23f43);
                 background-size: 200% auto;
                 -webkit-background-clip: text;
+                background-clip: text;
                 -webkit-text-fill-color: transparent;
-                animation: shimmer 4s linear infinite;
+                animation: textShimmer 3s ease infinite;
+                display: inline-block;
+            }
+
+            /* แอนิเมชันตอนเปิดหน้าจอ (Fade In & Slide Up) */
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .reveal-content {
+                animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             }
         </style>
     </head>
     <body class="antialiased min-h-screen flex items-center justify-center overflow-x-hidden p-4 sm:p-0">
-        <div class="w-full max-w-[850px] relative z-10">
+        <div class="w-full max-w-[850px] relative z-10 reveal-content">
             {{ $slot }}
         </div>
     </body>
