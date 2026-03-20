@@ -13,71 +13,55 @@ class GeminiService
 
     public function __construct()
     {
-        // ในระบบจริงควรใช้ config หรือ env แต่ตอนนี้ดึงจาก concept มาก่อนตามที่คุณต้องการ
         $this->apiKey = 'AIzaSyC7iF_-tQPu-RVIrfCFdW5TgUcUW8HfwxQ';
-        $this->model = 'gemini-2.0-flash'; // ใช้ flash 2.0 เพื่อความเร็ว
+        $this->model = 'gemini-2.0-flash';
     }
 
-    public function extractDataFromImage(string $imagePath): array
+    public function extractDataFromImage(string $imagePath, array $config): array
     {
-        if (!file_exists($imagePath)) {
-            throw new \Exception("Image file not found at: " . $imagePath);
-        }
-
         $base64Image = base64_encode(file_get_contents($imagePath));
-        $prompt = $this->getDynamicPrompt();
+        $prompt = $this->getDynamicPrompt($config);
 
         try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
-                "contents" => [
-                    [
-                        "parts" => [
-                            ["text" => $prompt],
-                            [
-                                "inline_data" => [
-                                    "mime_type" => "image/jpeg",
-                                    "data" => $base64Image
-                                ]
+            $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
+                    "contents" => [
+                        [
+                            "parts" => [
+                                ["text" => $prompt],
+                                ["inline_data" => ["mime_type" => "image/jpeg", "data" => $base64Image]]
                             ]
                         ]
-                    ]
-                ],
-                "generationConfig" => [
-                    "response_mime_type" => "application/json"
-                ]
-            ]);
+                    ],
+                    "generationConfig" => ["response_mime_type" => "application/json"]
+                ]);
 
-            if ($response->failed()) {
-                Log::error("Gemini API Error: " . $response->body());
-                throw new \Exception("Gemini API failed to process the image.");
-            }
+            if ($response->failed()) throw new \Exception("AI Engine Error");
 
             $data = $response->json();
             $responseText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
-            
-            // Clean up JSON if AI adds markdown code blocks
-            $cleanJson = preg_replace('/^```json\s*|```$/', '', trim($responseText));
-            
-            return json_decode($cleanJson, true) ?: [];
+            return json_decode(preg_replace('/^```json\s*|```$/', '', trim($responseText)), true) ?: [];
 
         } catch (\Exception $e) {
-            Log::error("Gemini Extraction Error: " . $e->getMessage());
             return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
-    protected function getDynamicPrompt(): string
+    protected function getDynamicPrompt(array $config): string
     {
-        return "Extract data from this receipt into RAW JSON.
-        STRICT RULES:
-        - Numbers ONLY for prices.
-        - Date format: YYYY-MM-DD.
-        - Items: Provide an array of objects with 'name' and 'price'.
-        - Categories for items: Medicine, Service, Food, Lab/X-ray, Other.
+        // === ใช้ Logic ที่คุณให้มาเป๊ะๆ ===
+        $prompt = $config['main_instruction'] . "\n\nSTRICT RULES:\n";
+        $prompt .= "- Numbers ONLY for prices.\n";
+        $prompt .= "- Date format: YYYY-MM-DD.\n";
+        $prompt .= "- Items: Provide 'name' (ข้อความในสลิป) and 'price' (ราคา).\n";
+        $prompt .= "- Return RAW JSON with keys: ";
         
-        Return JSON with these keys: 
-        date, shop_name, customer_name, pet_info, items, subtotal, deposit_deduction, final_total";
+        $enabledKeys = [];
+        foreach($config['ai_fields'] as $k => $enabled) {
+            if($enabled) $enabledKeys[] = $k;
+        }
+        $prompt .= implode(", ", $enabledKeys) . "\n";
+        
+        return $prompt;
     }
 }

@@ -5,14 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['user_id', 'merchant_id', 'image_path', 'extracted_data', 'status', 'processed_at'])]
+#[Fillable(['user_id', 'slip_template_id', 'image_path', 'extracted_data', 'status', 'processed_at'])]
 class Slip extends Model
 {
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -26,8 +21,8 @@ class Slip extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function merchant()
+    public function template()
     {
-        return $this->belongsTo(Merchant::class);
+        return $this->belongsTo(SlipTemplate::class, 'slip_template_id');
     }
 }
