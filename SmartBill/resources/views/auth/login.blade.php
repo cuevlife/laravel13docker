@@ -1,85 +1,82 @@
 <x-guest-layout>
-    <div class="relative group">
-        <!-- Background Layer (The "Original" Solid Block) -->
-        <div class="absolute inset-0 bg-discord-darker rounded-[2.5rem] shadow-2xl transition-all duration-500 group-hover:scale-[1.01]"></div>
-        
-        <!-- Top Accent (The "แหวก" Part: Asymmetric Red Stripe) -->
-        <div class="absolute top-0 right-0 w-32 h-32 bg-discord-red/10 rounded-tr-[2.5rem] rounded-bl-full pointer-events-none"></div>
-        <div class="absolute top-4 right-4 flex space-x-1.5 z-50">
-            <a href="{{ route('lang.switch', 'th') }}" class="px-2.5 py-1 rounded-lg text-[9px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-discord-green text-white shadow-lg' : 'bg-white/5 text-slate-500 hover:bg-white/10' }}">TH</a>
-            <a href="{{ route('lang.switch', 'en') }}" class="px-2.5 py-1 rounded-lg text-[9px] font-black transition-all {{ app()->getLocale() == 'en' ? 'bg-discord-green text-white shadow-lg' : 'bg-white/5 text-slate-500 hover:bg-white/10' }}">EN</a>
+    <!-- Language Switcher (Top Right) -->
+    <div class="fixed top-8 right-8 flex items-center space-x-4 z-50">
+        <div class="flex bg-white/5 p-1 rounded-lg border border-white/5">
+            <a href="{{ route('lang.switch', 'th') }}" class="px-3 py-1 rounded-md text-[10px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-discord-green text-white shadow-lg shadow-emerald-900/40' : 'text-slate-500 hover:text-slate-300' }}">TH</a>
+            <a href="{{ route('lang.switch', 'en') }}" class="px-3 py-1 rounded-md text-[10px] font-black transition-all {{ app()->getLocale() == 'en' ? 'bg-discord-green text-white shadow-lg shadow-emerald-900/40' : 'text-slate-500 hover:text-slate-300' }}">EN</a>
         </div>
-
-        <!-- Main Content (The Glass Layer) -->
-        <div class="relative bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/5 p-8 sm:p-12 overflow-hidden transition-all duration-700">
-            
-            <!-- Logo Section -->
-            <div class="mb-10 flex items-center space-x-4">
-                <div class="relative">
-                    <div class="absolute inset-0 bg-discord-red blur-lg opacity-20 animate-pulse"></div>
-                    <div class="relative w-12 h-12 bg-discord-red rounded-2xl flex items-center justify-center shadow-lg shadow-rose-900/40 transform rotate-3 hover:rotate-12 transition-transform">
-                        <i data-lucide="zap" class="w-6 h-6 text-white"></i>
-                    </div>
-                </div>
-                <div>
-                    <h1 class="text-xl font-black text-white tracking-tighter uppercase italic">Smart<span class="text-discord-red">Bill</span></h1>
-                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.3em]">Auth.Protocol_v3</p>
-                </div>
-            </div>
-
-            <!-- Form Section -->
-            <form method="POST" action="{{ route('login') }}" class="space-y-8">
-                @csrf
-
-                <!-- Username Input (Minimal & Clean) -->
-                <div class="space-y-2.5">
-                    <div class="flex justify-between items-center px-1">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ __('Username') }}</label>
-                        <i data-lucide="fingerprint" class="w-3 h-3 text-slate-600"></i>
-                    </div>
-                    <input id="username" type="text" name="username" :value="old('username')" required autofocus 
-                           class="block w-full px-5 py-4 bg-discord-black/50 border border-white/[0.03] rounded-2xl text-sm font-bold text-slate-200 placeholder-slate-700 focus:ring-4 focus:ring-discord-green/10 focus:border-discord-green/50 transition-all outline-none"
-                           placeholder="User Identifier">
-                    <x-input-error :messages="$errors->get('username')" class="mt-1" />
-                </div>
-
-                <!-- Password Input -->
-                <div class="space-y-2.5">
-                    <div class="flex justify-between items-center px-1">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ __('Password') }}</label>
-                        <i data-lucide="shield-check" class="w-3 h-3 text-slate-600"></i>
-                    </div>
-                    <input id="password" type="password" name="password" required 
-                           class="block w-full px-5 py-4 bg-discord-black/50 border border-white/[0.03] rounded-2xl text-sm font-bold text-slate-200 placeholder-slate-700 focus:ring-4 focus:ring-discord-green/10 focus:border-discord-green/50 transition-all outline-none"
-                           placeholder="••••••••">
-                    <x-input-error :messages="$errors->get('password')" class="mt-1" />
-                </div>
-
-                <!-- Action Section -->
-                <div class="pt-2">
-                    <button type="submit" class="group relative w-full py-4.5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-2xl shadow-xl shadow-emerald-900/20 transition-all duration-300 transform active:scale-[0.98] overflow-hidden">
-                        <span class="relative z-10 flex items-center justify-center uppercase text-[11px] tracking-[0.2em]">
-                            {{ __('Login') }}
-                            <i data-lucide="arrow-right" class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
-                        </span>
-                    </button>
-                </div>
-
-                <div class="flex items-center justify-center pt-2">
-                    <label class="flex items-center cursor-pointer group">
-                        <input type="checkbox" name="remember" class="h-4 w-4 rounded border-white/10 bg-white/5 text-discord-green focus:ring-0 transition-all">
-                        <span class="ml-3 text-[9px] font-black text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-widest italic">{{ __('Remember Me') }}</span>
-                    </label>
-                </div>
-            </form>
-        </div>
-
-        <!-- Floating Decorative Orb (Spectacular Detail) -->
-        <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-discord-green/5 rounded-full blur-2xl pointer-events-none group-hover:bg-discord-green/10 transition-all"></div>
     </div>
 
-    <!-- Minimalistic Footer -->
-    <div class="mt-10 text-center opacity-20">
-        <span class="text-[8px] font-black text-slate-500 uppercase tracking-[0.8em]">End-to-End Encryption Mode</span>
+    <div class="flex flex-col lg:flex-row bg-[#0b0f1a] cyber-border sm:rounded-[2rem] overflow-hidden transition-all duration-700">
+        
+        <!-- Left: Branding Side (Industrial Minimalist) -->
+        <div class="w-full lg:w-1/3 bg-[#0f172a] p-10 lg:p-16 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/5">
+            <div>
+                <div class="w-10 h-10 bg-discord-red rounded-xl flex items-center justify-center shadow-lg shadow-rose-900/20">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+                </div>
+                <h1 class="mt-10 text-5xl font-black text-white tracking-tightest leading-none italic uppercase">
+                    Smart<br/><span class="text-discord-red">Bill</span>
+                </h1>
+            </div>
+            
+            <div class="mt-12 lg:mt-0">
+                <div class="h-px w-8 bg-discord-red mb-4"></div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] leading-relaxed">
+                    AI Extraction Node<br/>Verified Protocol
+                </p>
+            </div>
+        </div>
+
+        <!-- Right: Login Form (Pure Minimalist) -->
+        <div class="w-full lg:w-2/3 p-10 lg:p-20 bg-[#0b0f1a]">
+            <div class="max-w-xs mx-auto lg:mx-0">
+                <div class="mb-12">
+                    <h2 class="text-2xl font-black text-white tracking-tight uppercase italic">{{ __('Login') }}</h2>
+                    <div class="h-1 w-6 bg-discord-green mt-2 rounded-full"></div>
+                </div>
+
+                <form method="POST" action="{{ route('login') }}" class="space-y-10">
+                    @csrf
+
+                    <!-- Field: Username -->
+                    <div class="relative group">
+                        <label class="absolute -top-6 left-0 text-[9px] font-black text-slate-600 uppercase tracking-widest group-focus-within:text-discord-green transition-colors">{{ __('Username') }}</label>
+                        <input id="username" type="text" name="username" :value="old('username')" required autofocus 
+                               class="block w-full bg-transparent border-0 border-b border-white/5 py-3 text-sm font-bold text-white placeholder-slate-800 focus:ring-0 focus:border-discord-green transition-all outline-none"
+                               placeholder="User ID">
+                        <x-input-error :messages="$errors->get('username')" class="mt-2 text-[10px] font-bold text-discord-red uppercase italic" />
+                    </div>
+
+                    <!-- Field: Password -->
+                    <div class="relative group">
+                        <label class="absolute -top-6 left-0 text-[9px] font-black text-slate-600 uppercase tracking-widest group-focus-within:text-discord-green transition-colors">{{ __('Password') }}</label>
+                        <input id="password" type="password" name="password" required 
+                               class="block w-full bg-transparent border-0 border-b border-white/5 py-3 text-sm font-bold text-white placeholder-slate-800 focus:ring-0 focus:border-discord-green transition-all outline-none"
+                               placeholder="••••••••">
+                        <x-input-error :messages="$errors->get('password')" class="mt-2 text-[10px] font-bold text-discord-red uppercase italic" />
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" name="remember" class="h-4 w-4 rounded-sm border-white/10 bg-white/5 text-discord-green focus:ring-0 transition-all">
+                            <span class="ml-3 text-[9px] font-black text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-widest">{{ __('Remember Me') }}</span>
+                        </label>
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="pt-4">
+                        <button type="submit" class="w-full py-4 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-lg shadow-xl shadow-emerald-950/20 transition-all transform active:scale-[0.98] text-[11px] uppercase tracking-[0.3em]">
+                            Initialize Login
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smallest Footer -->
+    <div class="mt-12 text-center">
+        <p class="text-[8px] font-black text-slate-700 uppercase tracking-[1em]">Secure System v3.2.0</p>
     </div>
 </x-guest-layout>
