@@ -54,7 +54,8 @@
                 transition: background-color 0.5s ease;
             }
             
-            .auth-bg { background-color: #f2f3f5; } /* Light Discord gray */
+            /* Softer Backgrounds */
+            .auth-bg { background-color: #f8fafc; } 
             .dark .auth-bg { background-color: #020617; }
 
             @keyframes textShimmer {
@@ -72,7 +73,7 @@
             }
         </style>
     </head>
-    <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0" 
+    <body class="antialiased auth-bg min-h-screen flex flex-col items-center justify-center m-0 p-0" 
           x-data="{ 
             darkMode: localStorage.getItem('darkMode') === 'true',
             toggleDarkMode() {
@@ -82,8 +83,6 @@
                 else document.documentElement.classList.remove('dark');
             }
           }">
-        <div class="w-full max-w-[440px] transition-all duration-500">
-            {{ $slot }}
-        </div>
+        {{ $slot }}
     </body>
 </html>
