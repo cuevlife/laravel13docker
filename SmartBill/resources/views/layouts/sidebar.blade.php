@@ -1,17 +1,16 @@
 <div class="flex flex-col h-full overflow-hidden transition-colors duration-500">
     
-    <!-- Brand -->
-    <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-white/5 bg-white dark:bg-discord-darker">
-        <div class="flex items-center space-x-3 min-w-max">
-            <div class="w-8 h-8 bg-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20 transform hover:rotate-12 transition-all">
-                <i data-lucide="zap" class="w-5 h-5 text-white"></i>
-            </div>
-            <span x-show="!sidebarCollapsed" x-transition class="text-sm font-black tracking-widest text-slate-800 dark:text-white uppercase italic">Smart<span class="text-rose-500">Bill</span></span>
+    <!-- Brand (Text Only) -->
+    <div class="h-14 flex items-center px-6 border-b border-slate-100 dark:border-white/5 bg-white dark:bg-discord-darker">
+        <div class="flex items-center min-w-max">
+            <span x-show="!sidebarCollapsed" x-transition class="text-sm font-black tracking-widest text-slate-800 dark:text-white uppercase italic leading-none">Smart<span class="text-rose-500">Bill</span></span>
+            <!-- เมื่อหุบจะโชว์ตัว S แดงเท่ๆ -->
+            <span x-show="sidebarCollapsed" class="text-lg font-black text-rose-500 italic">S</span>
         </div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto custom-scrollbar bg-white dark:bg-discord-darker/50">
+    <!-- Navigation (With Menu Icons) -->
+    <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar bg-[#f2f3f5] dark:bg-discord-darker/50">
         <x-sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="layout-grid">
             {{ __('Dashboard') }}
         </x-sidebar-link>
@@ -35,7 +34,7 @@
     <div class="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-black/20">
         <div class="flex items-center justify-center space-x-2">
             <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span x-show="!sidebarCollapsed" class="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">Node Synchronized</span>
+            <span x-show="!sidebarCollapsed" class="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest italic">Gateway Connected</span>
         </div>
     </div>
 </div>
