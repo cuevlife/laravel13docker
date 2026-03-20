@@ -4,6 +4,13 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/lang/{locale}', function ($locale) {
+    if (in_array($locale, ['en', 'th'])) {
+        session()->put('locale', $locale);
+    }
+    return back();
+})->name('lang.switch');
+
 Route::get('/', function () {
     return redirect()->route('login');
 });

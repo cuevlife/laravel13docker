@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
       x-data="{ 
-        darkMode: true, // Force dark for Discord style
+        darkMode: true, 
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         sidebarOpen: false,
         userDropdown: false,
@@ -29,7 +29,7 @@
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important; 
-                background-color: #0f172a; /* Discord Background */
+                background-color: #0f172a;
                 color: #cbd5e1;
             }
             .discord-sidebar { background-color: #1e293b; }
@@ -59,15 +59,22 @@
                         <button @click="toggleSidebar()" class="text-slate-400 hover:text-white transition-colors">
                             <i data-lucide="menu" class="w-5 h-5"></i>
                         </button>
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        <div class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
                             @isset($header) {{ $header }} @endisset
                         </div>
                     </div>
 
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-6">
+                        <!-- Language Switcher -->
+                        <div class="flex items-center bg-black/20 rounded-lg p-1">
+                            <a href="{{ route('lang.switch', 'th') }}" class="px-2 py-1 rounded text-[10px] font-black uppercase transition-all {{ app()->getLocale() == 'th' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-slate-300' }}">TH</a>
+                            <a href="{{ route('lang.switch', 'en') }}" class="px-2 py-1 rounded text-[10px] font-black uppercase transition-all {{ app()->getLocale() == 'en' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-slate-300' }}">EN</a>
+                        </div>
+
+                        <!-- User Dropdown -->
                         <div class="relative" @click.away="userDropdown = false">
                             <button @click="userDropdown = !userDropdown" class="flex items-center space-x-2 group">
-                                <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white text-xs font-bold">
+                                <div class="w-7 h-7 rounded-lg bg-rose-500 flex items-center justify-center text-white text-[10px] font-black">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                 </div>
                                 <span class="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{{ Auth::user()->name }}</span>
@@ -76,17 +83,17 @@
 
                             <div x-show="userDropdown" x-cloak 
                                  class="absolute right-0 mt-2 w-48 bg-[#18191c] rounded-md shadow-xl border border-white/5 py-1 z-50">
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs text-slate-300 hover:bg-indigo-500 hover:text-white mx-1 rounded transition-colors">Settings</a>
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs text-slate-300 hover:bg-emerald-600 hover:text-white mx-1 rounded transition-colors uppercase font-bold tracking-widest">{{ __('Settings') }}</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs text-rose-400 hover:bg-rose-500 hover:text-white mx-1 rounded transition-colors">Logout</button>
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs text-rose-400 hover:bg-rose-500 hover:text-white mx-1 rounded transition-colors uppercase font-bold tracking-widest">{{ __('Logout') }}</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <main class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
                     {{ $slot }}
                 </main>
             </div>

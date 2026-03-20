@@ -13,26 +13,26 @@
     <!-- Navigation -->
     <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
         <x-sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="layout-grid">
-            Dashboard
+            {{ __('Dashboard') }}
         </x-sidebar-link>
 
         <x-sidebar-link :href="route('admin.slip-reader')" :active="request()->routeIs('admin.slip-reader')" icon="image-upscale">
-            Scan Slips
+            {{ __('Scan Slips') }}
         </x-sidebar-link>
 
-        <div x-show="!sidebarCollapsed" class="mt-8 mb-2 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Settings</div>
+        <div x-show="!sidebarCollapsed" class="mt-8 mb-2 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ __('Settings') }}</div>
         
         <x-sidebar-link :href="route('admin.merchants')" :active="request()->routeIs('admin.merchants')" icon="store">
-            Merchants
+            {{ __('Merchants') }}
         </x-sidebar-link>
 
         <x-sidebar-link :href="route('admin.users')" :active="request()->routeIs('admin.users')" icon="users">
-            User List
+            {{ __('User List') }}
         </x-sidebar-link>
     </nav>
 
     <!-- Footer -->
     <div class="p-4 border-t border-white/5 bg-black/10">
-        <div class="text-[9px] font-bold text-slate-600 uppercase tracking-[0.3em] text-center">Version 3.0.0</div>
+        <div class="text-[9px] font-bold text-slate-600 uppercase tracking-[0.3em] text-center italic">Version 3.1.0</div>
     </div>
 </div>
