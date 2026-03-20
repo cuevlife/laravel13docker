@@ -1,125 +1,91 @@
 <x-app-layout>
-    <div class="space-y-8">
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-black text-white tracking-tight italic uppercase">{{ __('Scan Slips') }}</h1>
-                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1 italic">Process your documents</p>
-            </div>
-            <button onclick="exportData()" class="flex items-center space-x-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-black uppercase tracking-[0.2em] shadow-lg transition-all">
-                <i data-lucide="download" class="w-4 h-4"></i>
-                <span>{{ __('Download CSV') }}</span>
+    <div class="space-y-6">
+        <!-- Header Section -->
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter">{{ __('Scan Slips') }}</h1>
+            <button onclick="exportData()" class="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                <i data-lucide="download" class="w-5 h-5"></i>
             </button>
         </div>
 
-        <!-- Upload Section -->
-        <div class="discord-card p-8 rounded-lg border border-white/5 relative overflow-hidden group text-center md:text-left">
-            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div class="lg:col-span-7">
-                    <h2 class="text-lg font-black text-white uppercase italic">{{ __('Upload Document') }}</h2>
-                    <p class="text-sm text-slate-400 mt-2 font-medium">Select a store and drop your slip image here. AI will extract the data automatically.</p>
+        <!-- Modern Upload Block (App Style) -->
+        <div class="bg-white dark:bg-[#1e1f22] rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-white/5 space-y-6">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{{ __('Select Merchant') }}</label>
+                <select id="merchant_id" class="w-full bg-slate-50 dark:bg-discord-black border-0 rounded-2xl h-14 px-4 text-sm font-bold focus:ring-2 focus:ring-discord-green transition-all">
+                    @foreach($merchants as $merchant)
+                        <option value="{{ $merchant->id }}">{{ $merchant->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div id="dropZone" class="relative group cursor-pointer">
+                <input type="file" id="imageInput" class="hidden" accept="image/*">
+                <div onclick="document.getElementById('imageInput').click()" 
+                     class="h-48 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-[2rem] bg-slate-50 dark:bg-discord-black flex flex-col items-center justify-center transition-all hover:bg-emerald-500/5 hover:border-emerald-500">
+                    <div class="w-16 h-16 bg-white dark:bg-[#1e1f22] rounded-2xl flex items-center justify-center shadow-lg mb-4 group-active:scale-90 transition-transform">
+                        <i data-lucide="image-plus" class="w-8 h-8 text-discord-green"></i>
+                    </div>
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ __('Upload Document') }}</span>
                 </div>
+            </div>
 
-                <div class="lg:col-span-5 space-y-4">
-                    <select id="merchant_id" class="w-full bg-[#0f172a] border-white/5 rounded-md text-xs font-bold text-slate-300 h-12 focus:ring-emerald-500 transition-all">
-                        @foreach($merchants as $merchant)
-                            <option value="{{ $merchant->id }}">{{ $merchant->name }}</option>
-                        @endforeach
-                    </select>
+            <div id="queueZone" class="hidden space-y-3 pt-2"></div>
+        </div>
 
-                    <div id="dropZone" class="relative cursor-pointer group/drop">
-                        <input type="file" id="imageInput" class="hidden" accept="image/*">
-                        <div onclick="document.getElementById('imageInput').click()" 
-                             class="h-24 border-2 border-dashed border-white/5 rounded-md bg-[#0f172a]/50 flex flex-col items-center justify-center transition-all hover:border-emerald-500 hover:bg-emerald-500/5">
-                            <i data-lucide="plus-circle" class="w-6 h-6 text-slate-500 mb-1"></i>
-                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ __('Upload Document') }}</span>
+        <!-- Compact Registry List -->
+        <div class="space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{{ __('Processing Registry') }}</h3>
+            
+            @forelse($slips as $slip)
+                <div class="bg-white dark:bg-[#1e1f22] p-4 rounded-2xl border border-slate-200 dark:border-white/5 flex items-center justify-between group active:bg-slate-50 dark:active:bg-white/5 transition-colors" id="slip-{{ $slip->id }}">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl bg-slate-50 dark:bg-discord-black flex items-center justify-center text-rose-500 font-black text-[10px]">
+                            {{ strtoupper(substr($slip->merchant->name, 0, 2)) }}
+                        </div>
+                        <div>
+                            <p class="text-sm font-black text-slate-800 dark:text-white leading-none uppercase italic">{{ $slip->merchant->name }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{{ $slip->processed_at->format('d M, H:i') }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black text-emerald-500 italic">฿ {{ number_format($slip->extracted_data['final_total'] ?? 0, 2) }}</p>
+                        <div class="flex items-center justify-end space-x-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="editRec({{ $slip->id }})" class="text-slate-400"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div id="queueZone" class="mt-6 hidden border-t border-white/5 pt-6 space-y-2"></div>
-        </div>
-
-        <!-- History Table -->
-        <div class="discord-card rounded-lg border border-white/5 overflow-hidden">
-            <div class="px-6 py-4 border-b border-white/5 bg-black/10 flex items-center justify-between">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{{ __('Processing Registry') }}</h3>
-                <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest italic">{{ $slips->total() }} unit(s)</span>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-black/5">
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Date / Time</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Store Name</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Items Found</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Amount</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Manage</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5 text-xs">
-                        @forelse($slips as $slip)
-                            <tr class="hover:bg-white/[0.02] transition" id="slip-{{ $slip->id }}">
-                                <td class="px-6 py-5 whitespace-nowrap">
-                                    <div class="font-bold text-slate-300 italic">{{ $slip->processed_at->format('d M Y') }}</div>
-                                    <div class="text-[10px] text-slate-600 mt-0.5 uppercase">{{ $slip->processed_at->format('H:i:s') }}</div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="font-black text-white italic uppercase">{{ $slip->merchant->name }}</div>
-                                    <div class="text-[9px] font-bold text-rose-500 uppercase">{{ $slip->extracted_data['shop_code'] ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="flex flex-wrap gap-1.5">
-                                        @foreach(array_slice($slip->extracted_data['items'] ?? [], 0, 2) as $item)
-                                            <span class="px-2 py-1 bg-black/20 rounded border border-white/5 text-slate-400 font-medium">
-                                                {{ Str::limit($item['name'], 12) }} <span class="text-emerald-500 mx-1">→</span> {{ $item['code'] ?? '?' }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5 text-right whitespace-nowrap font-black text-emerald-400 italic">
-                                    ฿ {{ number_format($slip->extracted_data['final_total'] ?? 0, 2) }}
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="flex items-center justify-center space-x-2">
-                                        <button onclick="editRec({{ $slip->id }})" class="p-2 text-slate-500 hover:text-white"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                                        <button onclick="deleteRec({{ $slip->id }})" class="p-2 text-slate-500 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="5" class="px-6 py-12 text-center text-slate-600 uppercase tracking-widest text-[10px]">No data found</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            @empty
+                <div class="py-12 text-center">
+                    <i data-lucide="inbox" class="w-12 h-12 text-slate-200 dark:text-white/5 mx-auto mb-4"></i>
+                    <p class="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">No Records Found</p>
+                </div>
+            @endforelse
         </div>
     </div>
 
-    <!-- JSON Edit -->
-    <div id="jsonMod" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm hidden" x-cloak>
-        <div class="discord-card rounded-lg w-full max-w-2xl overflow-hidden shadow-2xl border border-white/10">
-            <div class="px-8 py-4 border-b border-white/5 flex justify-between items-center bg-black/20">
-                <h3 class="text-xs font-black text-white uppercase italic tracking-widest">Edit Slip Data</h3>
-                <button onclick="closeMod()" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- Mobile-style Modal -->
+    <div id="jsonMod" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm hidden" x-cloak>
+        <div class="bg-white dark:bg-discord-darker w-full max-w-lg rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden shadow-2xl transition-all">
+            <div class="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
+                <h3 class="text-xs font-black dark:text-white uppercase tracking-widest italic">Edit Data</h3>
+                <button onclick="closeMod()" class="text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <textarea id="jsonInput" class="w-full bg-[#0f172a] text-emerald-400 font-mono text-[11px] p-8 focus:ring-0 border-0" rows="15" spellcheck="false"></textarea>
-            <div class="p-6 bg-black/20 border-t border-white/5 flex justify-end space-x-3">
-                <button onclick="closeMod()" class="px-6 py-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Cancel</button>
-                <button onclick="saveRec()" class="px-8 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-black uppercase tracking-widest shadow-lg">{{ __('Save Changes') }}</button>
+            <textarea id="jsonInput" class="w-full bg-slate-50 dark:bg-discord-black text-emerald-500 font-mono text-[11px] p-6 focus:ring-0 border-0" rows="12"></textarea>
+            <div class="p-6 safe-bottom">
+                <button onclick="saveRec()" class="w-full py-4 bg-discord-green text-white rounded-xl font-black text-xs uppercase tracking-widest">{{ __('Save Changes') }}</button>
             </div>
         </div>
     </div>
 
     @push('scripts')
     <script>
-        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        const Toast = Swal.mixin({ toast: true, position: 'top', showConfirmButton: false, timer: 3000 });
         const dz = document.getElementById('dropZone');
         const inp = document.getElementById('imageInput');
         
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => dz.addEventListener(e, (ev) => {
-            ev.preventDefault(); ev.stopPropagation();
+            ev.preventDefault();
             if(['dragenter', 'dragover'].includes(e)) dz.classList.add('border-emerald-500', 'bg-emerald-500/5');
             else dz.classList.remove('border-emerald-500', 'bg-emerald-500/5');
         }));
@@ -132,22 +98,19 @@
             const q = document.getElementById('queueZone');
             q.classList.remove('hidden');
             const id = 'q-'+Date.now();
-            q.insertAdjacentHTML('beforeend', `<div id="${id}" class="p-4 bg-black/20 rounded border border-white/5 flex justify-between items-center animate-pulse"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Uploading: ${file.name}</span><span class="text-[9px] font-black text-emerald-500 uppercase">PROCESSING...</span></div>`);
+            q.insertAdjacentHTML('beforeend', `<div id="${id}" class="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/20 flex justify-between items-center animate-pulse"><span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest italic">Scanning: ${file.name}</span></div>`);
 
             const fd = new FormData();
-            fd.append('image', file);
-            fd.append('merchant_id', mId);
-            fd.append('_token', '{{ csrf_token() }}');
+            fd.append('image', file); fd.append('merchant_id', mId); fd.append('_token', '{{ csrf_token() }}');
 
             try {
                 const res = await fetch('{{ route("admin.slip-process") }}', { method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'} });
                 const data = await res.json();
-                if(data.status === 'success') { Toast.fire({ icon: 'success', title: 'Success' }); setTimeout(() => location.reload(), 1000); }
+                if(data.status === 'success') { Toast.fire({ icon: 'success', title: 'Data Commited' }); setTimeout(() => location.reload(), 1000); }
                 else throw new Error(data.message);
             } catch(e) {
-                Toast.fire({ icon: 'error', title: 'Error' });
-                document.getElementById(id).classList.remove('animate-pulse');
-                document.getElementById(id).classList.add('border-rose-500/20', 'bg-rose-500/5');
+                Toast.fire({ icon: 'error', title: 'Link Failed' });
+                document.getElementById(id).remove();
             }
         }
 
@@ -166,12 +129,6 @@
             fd.append('_token', '{{ csrf_token() }}');
             await fetch(`/admin/slip-update/${curId}`, { method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'} });
             location.reload();
-        }
-        async function deleteRec(id) {
-            if(confirm('Delete this record?')) {
-                await fetch(`/admin/slip-delete/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' } });
-                location.reload();
-            }
         }
         function exportData() { window.location.href = '{{ route("admin.slip-export") }}'; }
     </script>

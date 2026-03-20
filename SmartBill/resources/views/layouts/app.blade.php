@@ -2,34 +2,25 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
       x-data="{ 
         darkMode: localStorage.getItem('darkMode') === 'true',
-        sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
-        sidebarOpen: false,
         userDropdown: false,
         toggleDarkMode() {
             this.darkMode = !this.darkMode;
             localStorage.setItem('darkMode', this.darkMode);
             if (this.darkMode) document.documentElement.classList.add('dark');
             else document.documentElement.classList.remove('dark');
-        },
-        toggleSidebar() {
-            this.sidebarCollapsed = !this.sidebarCollapsed;
-            localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
         }
-      }">
+      }"
+      :class="{ 'dark': darkMode }">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>SmartBill</title>
 
-        <!-- Anti-Flicker Script (Default to LIGHT) -->
         <script>
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
+            if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
         </script>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,16 +38,7 @@
                     extend: {
                         fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
                         colors: {
-                            discord: {
-                                dark: '#313338',
-                                darker: '#1e1f22',
-                                black: '#0f172a',
-                                green: '#23a55a',
-                                red: '#f23f43'
-                            }
-                        },
-                        animation: {
-                            'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                            discord: { dark: '#313338', darker: '#1e1f22', black: '#0f172a', green: '#23a55a', red: '#f23f43' }
                         }
                     }
                 }
@@ -67,79 +49,93 @@
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'sans-serif'; 
-                transition: background-color 0.5s ease, color 0.5s ease;
+                -webkit-tap-highlight-color: transparent;
+                transition: background-color 0.3s ease;
             }
-            .dark body { background-color: #0f172a; }
-            .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+            /* Safe area for iPhone 14 Notch/Home Indicator */
+            .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+            
+            /* App-like Transitions */
+            .fade-enter { opacity: 0; transform: translateY(10px); }
+            .fade-enter-active { opacity: 1; transform: translateY(0); transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+            
+            /* Custom Scrollbar */
+            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
             .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.2); border-radius: 10px; }
-            .sidebar-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         </style>
     </head>
-    <body class="antialiased bg-slate-50 dark:bg-discord-black text-slate-600 dark:text-slate-400 overflow-hidden">
+    <body class="antialiased bg-[#f2f3f5] dark:bg-[#020617] text-slate-800 dark:text-slate-200">
         
-        <!-- Background Decor -->
-        <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-            <div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/[0.03] dark:bg-emerald-500/10 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-rose-500/[0.02] dark:bg-rose-500/10 rounded-full blur-[100px]"></div>
-        </div>
-
-        <div class="flex h-screen overflow-hidden">
-            <!-- Sidebar -->
-            <aside :class="{ 'w-64': !sidebarCollapsed, 'w-20': sidebarCollapsed }" 
-                   class="sidebar-transition z-[70] hidden md:flex flex-col bg-white dark:bg-discord-darker border-r border-slate-200 dark:border-white/5 shadow-xl">
+        <div class="flex h-screen overflow-hidden flex-col md:flex-row">
+            
+            <!-- Sidebar (Desktop Only) -->
+            <aside class="hidden md:flex flex-col w-64 bg-white dark:bg-[#1e1f22] border-r border-slate-200 dark:border-white/5 shadow-xl z-50">
                 @include('layouts.sidebar')
             </aside>
 
-            <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <header class="h-16 bg-white/80 dark:bg-discord-black/80 backdrop-blur-md flex items-center justify-between px-6 border-b border-slate-200 dark:border-white/5 z-50">
-                    <div class="flex items-center space-x-4">
-                        <button @click="toggleSidebar()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 transition-all">
-                            <i data-lucide="menu" class="w-5 h-5"></i>
-                        </button>
-                        <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
-                            @isset($header) {{ $header }} @endisset
+            <!-- Main Application Area -->
+            <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+                
+                <!-- App Top Bar (Fixed) -->
+                <header class="h-14 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md flex items-center justify-between px-6 border-b border-slate-200 dark:border-white/5 z-40 shrink-0">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-7 h-7 bg-discord-red rounded-lg flex items-center justify-center text-white shadow-lg">
+                            <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
                         </div>
+                        <span class="font-black text-sm uppercase tracking-tighter italic">Smart<span class="text-discord-red">Bill</span></span>
                     </div>
 
-                    <div class="flex items-center space-x-4 md:space-x-6">
-                        <div class="flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
-                            <a href="{{ route('lang.switch', 'th') }}" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-white dark:bg-discord-green text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600' }}">TH</a>
-                            <a href="{{ route('lang.switch', 'en') }}" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-all {{ app()->getLocale() == 'en' ? 'bg-white dark:bg-discord-green text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600' }}">EN</a>
-                        </div>
-
-                        <button @click="toggleDarkMode()" class="text-slate-400 hover:text-amber-400 transition-all">
-                            <i x-show="!darkMode" data-lucide="moon" class="w-5 h-5"></i>
-                            <i x-show="darkMode" data-lucide="sun" class="w-5 h-5 text-amber-400"></i>
+                    <div class="flex items-center space-x-4">
+                        <button @click="toggleDarkMode()" class="text-slate-400 hover:text-amber-400 transition-colors">
+                            <i x-show="!darkMode" data-lucide="moon" class="w-4 h-4"></i>
+                            <i x-show="darkMode" data-lucide="sun" class="w-4 h-4"></i>
                         </button>
-
+                        
                         <div class="relative" @click.away="userDropdown = false">
-                            <button @click="userDropdown = !userDropdown" class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-lg bg-discord-red flex items-center justify-center text-white text-[10px] font-black shadow-lg">
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                </div>
-                                <div class="hidden sm:block text-left">
-                                    <p class="text-xs font-black text-slate-700 dark:text-slate-200 leading-none">{{ Auth::user()->name }}</p>
-                                    <p class="text-[9px] text-slate-400 uppercase font-bold mt-1 tracking-tighter">{{ __('Username') }}</p>
-                                </div>
+                            <button @click="userDropdown = !userDropdown" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center font-bold text-[10px]">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </button>
-
-                            <div x-show="userDropdown" x-cloak 
-                                 class="absolute right-0 mt-3 w-52 bg-white dark:bg-discord-darker rounded-2xl shadow-2xl border border-slate-200 dark:border-white/5 py-2 z-50 overflow-hidden">
-                                <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors uppercase tracking-widest">{{ __('Settings') }}</a>
-                                <div class="h-px bg-slate-100 dark:bg-white/5 my-1 mx-2"></div>
+                            <div x-show="userDropdown" x-cloak class="absolute right-0 mt-3 w-48 bg-white dark:bg-[#1e1f22] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/5 py-2 overflow-hidden">
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5">{{ __('Settings') }}</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center space-x-3 px-4 py-3 text-xs font-bold text-discord-red hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors uppercase tracking-widest">{{ __('Logout') }}</button>
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs font-bold text-discord-red hover:bg-rose-50 dark:hover:bg-rose-500/10">{{ __('Logout') }}</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar relative">
-                    {{ $slot }}
+                <!-- Scrollable Content -->
+                <main class="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar fade-enter-active">
+                    <div class="max-w-4xl mx-auto pb-24 md:pb-0">
+                        {{ $slot }}
+                    </div>
                 </main>
+
+                <!-- Mobile Bottom Navigation (iPhone 14 Style) -->
+                <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-[#1e1f22]/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/5 px-6 pt-3 safe-bottom z-50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none">
+                    <div class="flex items-center justify-between">
+                        <a href="{{ route('dashboard') }}" class="flex flex-col items-center space-y-1 group">
+                            <i data-lucide="layout-grid" class="w-5 h-5 {{ request()->routeIs('dashboard') ? 'text-discord-green stroke-[2.5px]' : 'text-slate-400 group-active:scale-90 transition-transform' }}"></i>
+                            <span class="text-[9px] font-black uppercase tracking-widest {{ request()->routeIs('dashboard') ? 'text-discord-green' : 'text-slate-400' }}">{{ __('Dashboard') }}</span>
+                        </a>
+
+                        <!-- Primary Action: Scan -->
+                        <a href="{{ route('admin.slip-reader') }}" class="flex flex-col items-center -mt-8">
+                            <div class="w-14 h-14 rounded-full bg-discord-green flex items-center justify-center text-white shadow-xl shadow-emerald-900/30 border-4 border-[#f2f3f5] dark:border-[#020617] active:scale-90 transition-transform">
+                                <i data-lucide="scan" class="w-6 h-6 stroke-[2.5px]"></i>
+                            </div>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-discord-green mt-1">Scan</span>
+                        </a>
+
+                        <a href="{{ route('admin.merchants') }}" class="flex flex-col items-center space-y-1 group">
+                            <i data-lucide="store" class="w-5 h-5 {{ request()->routeIs('admin.merchants') ? 'text-discord-green stroke-[2.5px]' : 'text-slate-400 group-active:scale-90 transition-transform' }}"></i>
+                            <span class="text-[9px] font-black uppercase tracking-widest {{ request()->routeIs('admin.merchants') ? 'text-discord-green' : 'text-slate-400' }}">{{ __('Merchants') }}</span>
+                        </a>
+                    </div>
+                </nav>
             </div>
         </div>
 
