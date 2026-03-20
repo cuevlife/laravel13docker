@@ -4,7 +4,8 @@
         <!-- SIDE A: Branding -->
         <div class="w-full lg:w-1/2 p-12 lg:p-20 flex flex-col justify-center items-center lg:items-start bg-slate-50 dark:bg-discord-black border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-white/5 relative group">
             <div class="relative z-10 text-center lg:text-left space-y-6">
-                <h1 class="text-6xl lg:text-8xl font-black leading-none tracking-tightest uppercase italic animate-smartbill">
+                <!-- Added pr-4 and adjusted leading to prevent clipping of italic characters -->
+                <h1 class="text-6xl lg:text-8xl font-black leading-[1.1] tracking-tighter uppercase italic animate-smartbill pr-4">
                     Smart<br class="hidden lg:block"/>Bill
                 </h1>
                 <div class="h-1.5 w-16 bg-discord-red rounded-full mx-auto lg:mx-0 shadow-lg shadow-rose-500/20"></div>
