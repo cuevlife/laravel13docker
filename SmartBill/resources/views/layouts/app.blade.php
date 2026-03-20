@@ -7,7 +7,7 @@
 
         <title>SmartBill</title>
 
-        <!-- Ultra-Stable Theme Logic -->
+        <!-- Zero-Flash Theme Script -->
         <script>
             if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -21,7 +21,6 @@
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         
         <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://unpkg.com/lucide@latest"></script>
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
         
         <script>
@@ -83,17 +82,9 @@
         <div class="flex h-screen overflow-hidden">
             
             <!-- Mobile Sidebar Overlay -->
-            <div x-show="sidebarOpen" 
-                 x-transition:enter="transition-opacity ease-linear duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition-opacity ease-linear duration-300"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 @click="sidebarOpen = false" 
-                 class="fixed inset-0 bg-black/60 z-[60] lg:hidden" x-cloak></div>
+            <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/60 z-[60] lg:hidden" x-cloak></div>
 
-            <!-- Sidebar (Responsive Drawer) -->
+            <!-- Sidebar (No Icons) -->
             <aside :class="{ 
                         'w-64': !sidebarCollapsed || sidebarOpen, 
                         'w-20': sidebarCollapsed && !sidebarOpen,
@@ -111,40 +102,42 @@
                 <!-- Topbar -->
                 <header class="h-14 shrink-0 bg-white dark:bg-discord-black border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-6 z-40">
                     <div class="flex items-center space-x-4">
-                        <!-- Hamburger Menu Button -->
-                        <button @click="toggleSidebar()" class="p-2 -ml-2 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors focus:outline-none">
-                            <i data-lucide="menu" class="w-5 h-5"></i>
+                        <button @click="toggleSidebar()" class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hover:text-indigo-500 transition-colors">
+                            <span x-show="!sidebarCollapsed || sidebarOpen">Close</span>
+                            <span x-show="sidebarCollapsed && !sidebarOpen">Menu</span>
                         </button>
-                        <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:block italic">SmartBill Gateway</div>
+                        <div class="h-4 w-px bg-slate-100 dark:bg-white/5 hidden sm:block"></div>
+                        <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:block italic">SmartBill Node</div>
                     </div>
 
-                    <div class="flex items-center space-x-4">
-                        <!-- Language Switcher -->
-                        <div class="flex items-center bg-slate-100 dark:bg-black/20 p-1 rounded-md">
-                            <a href="{{ route('lang.switch', 'th') }}" class="px-2 py-1 rounded text-[10px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-white dark:bg-discord-green text-slate-900 dark:text-white shadow-sm' : 'text-slate-400' }}">TH</a>
-                            <a href="{{ route('lang.switch', 'en') }}" class="px-2 py-1 rounded text-[10px] font-black transition-all {{ app()->getLocale() == 'en' ? 'bg-white dark:bg-discord-green text-slate-900 dark:text-white shadow-sm' : 'text-slate-400' }}">EN</a>
+                    <div class="flex items-center space-x-6">
+                        <!-- Language Switcher (Text-Only) -->
+                        <div class="flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest">
+                            <a href="{{ route('lang.switch', 'th') }}" class="transition-all {{ app()->getLocale() == 'th' ? 'text-discord-green underline underline-offset-4 decoration-2' : 'text-slate-400 hover:text-slate-200' }}">TH</a>
+                            <a href="{{ route('lang.switch', 'en') }}" class="transition-all {{ app()->getLocale() == 'en' ? 'text-discord-green underline underline-offset-4 decoration-2' : 'text-slate-400 hover:text-slate-200' }}">EN</a>
                         </div>
 
-                        <button @click="toggleDarkMode()" class="text-slate-500 hover:text-amber-500 transition-colors">
-                            <i x-show="!darkMode" data-lucide="moon" class="w-4 h-4"></i>
-                            <i x-show="darkMode" data-lucide="sun" class="w-4 h-4"></i>
+                        <!-- Theme Toggle (Text-Only) -->
+                        <button @click="toggleDarkMode()" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-amber-500 transition-colors">
+                            <span x-show="!darkMode">Dark</span>
+                            <span x-show="darkMode" class="text-amber-400">Light</span>
                         </button>
 
                         <div class="h-4 w-px bg-slate-200 dark:bg-white/5"></div>
 
                         <!-- User Profile -->
                         <div class="relative" @click.away="userDropdown = false">
-                            <button @click="userDropdown = !userDropdown" class="flex items-center space-x-2">
-                                <div class="w-7 h-7 rounded-md bg-discord-red flex items-center justify-center text-white text-[10px] font-black shadow-lg">
+                            <button @click="userDropdown = !userDropdown" class="flex items-center space-x-2 group">
+                                <div class="w-7 h-7 rounded-md bg-discord-red flex items-center justify-center text-white text-[10px] font-black shadow-lg group-hover:rotate-12 transition-transform">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                 </div>
-                                <span class="hidden md:block text-xs font-bold dark:text-white italic">{{ Auth::user()->name }}</span>
+                                <span class="hidden md:block text-xs font-bold dark:text-white italic tracking-tight">{{ Auth::user()->name }}</span>
                             </button>
                             <div x-show="userDropdown" x-cloak class="absolute right-0 mt-3 w-48 bg-white dark:bg-discord-darker rounded-lg shadow-2xl border border-slate-200 dark:border-white/5 py-1 overflow-hidden">
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 italic">{{ __('Settings') }}</a>
+                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-500">{{ __('Settings') }}</a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs font-bold text-discord-red hover:bg-rose-50 dark:hover:bg-rose-500/10 italic">{{ __('Logout') }}</button>
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest text-discord-red hover:bg-rose-50 dark:hover:bg-rose-500/10">{{ __('Logout') }}</button>
                                 </form>
                             </div>
                         </div>
@@ -158,17 +151,12 @@
                     </div>
                 </main>
 
-                <!-- Floating Action Button (Mobile Primary Action) -->
+                <!-- Floating Text Button (Mobile Only) -->
                 <a href="{{ route('admin.slip-reader') }}" 
-                   class="lg:hidden fixed bottom-8 right-6 w-14 h-14 bg-discord-green text-white rounded-full flex items-center justify-center shadow-2xl shadow-emerald-900/40 z-[55] active:scale-90 transition-transform">
-                    <i data-lucide="scan" class="w-6 h-6 stroke-[2.5px]"></i>
+                   class="lg:hidden fixed bottom-8 right-6 px-6 py-4 bg-discord-green text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-900/40 z-[55] active:scale-95 transition-all">
+                    <span class="text-[11px] font-black uppercase tracking-[0.3em]">Scan</span>
                 </a>
             </div>
         </div>
-
-        <script>
-            lucide.createIcons();
-            document.addEventListener('alpine:initialized', () => { lucide.createIcons(); });
-        </script>
     </body>
 </html>
