@@ -22,25 +22,23 @@
                 font-family: 'Kanit', sans-serif !important;
                 letter-spacing: -0.01em;
             }
-            .mesh-gradient {
-                background-color: #ffffff;
-                background-image: 
-                    radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
-                    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
-                    radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
-                    radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+            .auth-bg {
+                background-color: #f8fafc;
             }
-            .dark .mesh-gradient {
+            .dark .auth-bg {
                 background-color: #020617;
-                background-image: 
-                    radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
-                    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
             }
         </style>
     </head>
-    <body class="antialiased mesh-gradient min-h-screen transition-colors duration-700">
-        <div class="min-h-screen flex items-center justify-center p-6 relative">
-            <div class="w-full max-w-[420px] relative z-10">
+    <body class="antialiased auth-bg min-h-screen transition-colors duration-700">
+        <div class="min-h-screen flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+            <!-- Dynamic Background -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden">
+                <div class="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-500/[0.03] dark:bg-indigo-500/10 rounded-full blur-[120px]"></div>
+                <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/[0.02] dark:bg-emerald-500/5 rounded-full blur-[100px]"></div>
+            </div>
+
+            <div class="w-full max-w-[900px] relative z-10">
                 {{ $slot }}
             </div>
         </div>
