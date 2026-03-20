@@ -5,18 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Merchant;
 use App\Models\Slip;
 use App\Models\User;
-use App\Services\EncryptionService;
+use App\Services\GeminiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
-    protected EncryptionService $encryptionService;
+    protected GeminiService $geminiService;
 
-    public function __construct(EncryptionService $encryptionService)
+    public function __construct(GeminiService $geminiService)
     {
-        $this->encryptionService = $encryptionService;
+        $this->geminiService = $geminiService;
     }
 
     public function dashboard()
@@ -43,56 +43,76 @@ class AdminController extends Controller
             'image' => 'required|image|max:2048',
         ]);
 
-        $path = $request->file('image')->store('slips', 'public');
+        try {
+            // Save file
+            $path = $request->file('image')->store('slips', 'public');
+            $fullPath = storage_path('app/public/' . $path);
 
-        // Mock AI Extraction logic
-        // In reality, you'd send this to an OCR/AI service
-        $extractedData = [
-            'transaction_id' => 'TXN-' . strtoupper(str()->random(8)),
-            'amount' => rand(100, 5000) . '.00',
-            'date' => now()->format('Y-m-d H:i:s'),
-            'sender' => 'User ' . auth()->id(),
-            'receiver' => Merchant::find($request->merchant_id)->name,
-        ];
+            // 1. AI EXTRACTION
+            $extractedData = $this->geminiService->extractDataFromImage($fullPath);
+            
+            if (isset($extractedData['status']) && $extractedData['status'] === 'error') {
+                return response()->json(['status' => 'error', 'message' => $extractedData['message']], 500);
+            }
 
-        $slip = Slip::create([
-            'user_id' => auth()->id(),
-            'merchant_id' => $request->merchant_id,
-            'image_path' => $path,
-            'extracted_data' => $extractedData,
-            'status' => 'completed',
-            'processed_at' => now(),
-        ]);
-
-        return back()->with('success', 'Slip processed successfully!');
-    }
-
-    public function exportExcel()
-    {
-        // For demonstration, we'll create a simple export
-        // In a real app, you'd use a dedicated Export class
-        $slips = Slip::with('merchant')->get();
-        
-        $data = $slips->map(function($slip) {
-            return array_merge([
-                'Merchant' => $slip->merchant->name,
-                'Status' => $slip->status,
-                'Processed At' => $slip->processed_at,
-            ], $slip->extracted_data ?? []);
-        });
-
-        // This is a simplified export logic
-        return response()->streamDownload(function() use ($data) {
-            $file = fopen('php://output', 'w');
-            if ($data->count() > 0) {
-                fputcsv($file, array_keys($data->first()));
-                foreach ($data as $row) {
-                    fputcsv($file, $row);
+            // 2. MAPPING LOGIC (Inspired by Concept)
+            $merchant = Merchant::find($request->merchant_id);
+            $config = $merchant->config ?: [];
+            
+            // Map item names to item codes if config exists
+            if (!empty($extractedData['items']) && !empty($config['item_code_mapping'])) {
+                foreach ($extractedData['items'] as &$item) {
+                    $item['code'] = $config['item_code_mapping'][$item['name']] ?? 'N/A';
                 }
             }
-            fclose($file);
-        }, 'slips_export_' . now()->format('YmdHis') . '.csv');
+
+            // Add vendor code from merchant config
+            $extractedData['shop_code'] = $config['vendor_code'] ?? 'V-SET';
+
+            // 3. SAVE TO DB
+            $slip = Slip::create([
+                'user_id' => auth()->id(),
+                'merchant_id' => $request->merchant_id,
+                'image_path' => $path,
+                'extracted_data' => $extractedData,
+                'status' => 'completed',
+                'processed_at' => now(),
+            ]);
+
+            // AJAX response for better UX (High-Tech style)
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'data' => $slip]);
+            }
+
+            return back()->with('success', 'Slip processed successfully!');
+
+        } catch (\Exception $e) {
+            Log::error("Process Slip Error: " . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
     }
+
+    public function updateSlip(Request $request, Slip $slip)
+    {
+        $request->validate(['data' => 'required|json']);
+        
+        $slip->update([
+            'extracted_data' => json_decode($request->data, true),
+        ]);
+
+        return response()->json(['status' => 'success']);
+    }
+
+    public function deleteSlip(Slip $slip)
+    {
+        // Delete image file
+        Storage::disk('public')->delete($slip->image_path);
+        $slip->delete();
+        
+        return response()->json(['status' => 'success']);
+    }
+
+    // --- Merchant & Mapping Management ---
 
     public function merchants()
     {
@@ -106,10 +126,29 @@ class AdminController extends Controller
         
         Merchant::create([
             'name' => $request->name,
-            'config' => ['fields' => ['amount', 'date', 'transaction_id']]
+            'config' => [
+                'vendor_code' => 'V-' . strtoupper(str()->random(5)),
+                'item_code_mapping' => []
+            ]
         ]);
 
         return back()->with('success', 'Merchant created!');
+    }
+
+    public function updateMerchantMapping(Request $request, Merchant $merchant)
+    {
+        $request->validate([
+            'vendor_code' => 'nullable|string',
+            'item_code_mapping' => 'nullable|json'
+        ]);
+
+        $config = $merchant->config ?: [];
+        $config['vendor_code'] = $request->vendor_code;
+        $config['item_code_mapping'] = json_decode($request->item_code_mapping, true) ?: [];
+
+        $merchant->update(['config' => $config]);
+
+        return response()->json(['status' => 'success']);
     }
 
     public function users()
