@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="flex flex-col lg:flex-row min-h-screen sm:min-h-[600px] bg-white dark:bg-discord-main sm:rounded-[3rem] border-0 sm:border border-slate-100 dark:border-white/5 shadow-2xl overflow-hidden transition-all duration-500">
         
-        <!-- SIDE A: Branding (PC: Left Half | Mobile: Top Section) -->
+        <!-- SIDE A: Branding -->
         <div class="w-full lg:w-1/2 p-12 lg:p-20 flex flex-col justify-center items-center lg:items-start bg-slate-50 dark:bg-discord-black border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-white/5 relative group">
             <div class="relative z-10 text-center lg:text-left space-y-6">
                 <h1 class="text-6xl lg:text-8xl font-black leading-none tracking-tightest uppercase italic animate-smartbill">
@@ -12,10 +12,9 @@
             </div>
         </div>
 
-        <!-- SIDE B: Login Form & Integrated Controls (PC: Right Half | Mobile: Bottom Section) -->
+        <!-- SIDE B: Login Form -->
         <div class="w-full lg:w-1/2 p-10 sm:p-16 lg:p-24 flex flex-col justify-between bg-white dark:bg-transparent">
             
-            <!-- Content Wrapper (Centered Vertically) -->
             <div class="flex-1 flex flex-col justify-center">
                 <div class="w-full max-w-sm mx-auto">
                     <div class="mb-12 text-center lg:text-left">
@@ -44,38 +43,39 @@
                             <x-input-error :messages="$errors->get('password')" class="mt-2 text-[10px] font-bold text-discord-red uppercase italic" />
                         </div>
 
-                        <!-- Submit Section -->
-                        <div class="pt-4 flex flex-col items-center space-y-8">
-                            <button type="submit" class="w-full py-5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-2xl shadow-xl shadow-emerald-900/30 transition transform active:scale-[0.96] text-sm uppercase tracking-[0.3em]">
-                                {{ __('Login') }}
-                            </button>
-
+                        <!-- Remember Me Toggle (Placed directly under Password) -->
+                        <div class="flex items-center justify-between px-1 -mt-4">
                             <label class="flex items-center cursor-pointer group select-none">
                                 <div class="relative">
                                     <input type="checkbox" name="remember" class="peer sr-only">
                                     <div class="w-9 h-5 bg-slate-100 dark:bg-black/40 rounded-full border border-slate-200 dark:border-white/5 transition-all peer-checked:bg-discord-green"></div>
                                     <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-slate-400 dark:bg-slate-600 rounded-full transition-all peer-checked:translate-x-4 peer-checked:bg-white shadow-sm"></div>
                                 </div>
-                                <span class="ml-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{{ __('Remember Me') }}</span>
+                                <span class="ml-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors peer-checked:text-discord-green group-hover:text-slate-600 dark:group-hover:text-slate-300">
+                                    {{ __('Remember Me') }}
+                                </span>
                             </label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="pt-2">
+                            <button type="submit" class="w-full py-5 bg-discord-green hover:bg-[#1a8348] text-white font-black rounded-2xl shadow-xl shadow-emerald-900/30 transition transform active:scale-[0.96] text-sm uppercase tracking-[0.3em]">
+                                {{ __('Login') }}
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Integrated Controls (BOTTOM - NOT FLOATING) -->
+            <!-- Integrated Controls -->
             <div class="mt-12 flex flex-col items-center space-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500">
                 <div class="flex items-center space-x-8 text-[9px] font-black tracking-[0.3em] uppercase">
-                    <!-- Language -->
                     <div class="flex items-center space-x-3">
                         <a href="{{ route('lang.switch', 'th') }}" class="hover:text-discord-red transition-colors {{ app()->getLocale() == 'th' ? 'text-discord-red' : 'text-slate-500' }}">TH</a>
                         <span class="text-slate-800">/</span>
                         <a href="{{ route('lang.switch', 'en') }}" class="hover:text-discord-red transition-colors {{ app()->getLocale() == 'en' ? 'text-discord-red' : 'text-slate-500' }}">EN</a>
                     </div>
-
                     <span class="h-3 w-px bg-slate-200 dark:bg-white/10"></span>
-
-                    <!-- Theme -->
                     <button @click="toggleDarkMode()" class="hover:text-amber-500 transition-colors uppercase" :class="darkMode ? 'text-amber-400' : 'text-slate-500'">
                         <span x-show="!darkMode">Dark Mode</span>
                         <span x-show="darkMode">Light Mode</span>
