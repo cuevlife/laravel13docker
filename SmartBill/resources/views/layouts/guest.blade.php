@@ -53,7 +53,7 @@
                 letter-spacing: -0.02em;
                 transition: background-color 0.5s ease;
             }
-            .auth-bg { background-color: #ffffff; }
+            .auth-bg { background-color: #f8fafc; }
             .dark .auth-bg { background-color: #020617; }
 
             @keyframes shimmerFlow {
@@ -71,7 +71,18 @@
             }
         </style>
     </head>
-    <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0 overflow-x-hidden">
+    <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0 overflow-x-hidden" 
+          x-data="{ 
+            darkMode: localStorage.getItem('darkMode') === 'true',
+            toggleDarkMode() {
+                this.darkMode = !this.darkMode;
+                localStorage.setItem('darkMode', this.darkMode);
+                if (this.darkMode) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+                // Re-init icons to fix Lucide + Alpine bug
+                this.$nextTick(() => { lucide.createIcons(); });
+            }
+          }">
         <div class="w-full h-screen sm:h-auto sm:max-w-[1000px] transition-all duration-500">
             {{ $slot }}
         </div>
