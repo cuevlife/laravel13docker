@@ -7,15 +7,13 @@
 
         <title>SmartBill</title>
 
+        <!-- Ultra-Fast Theme Check -->
         <script>
-            function applyTheme() {
-                if (localStorage.getItem('darkMode') === 'true') {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
-            applyTheme();
         </script>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +21,6 @@
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         
         <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://unpkg.com/lucide@latest"></script>
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
         <script>
@@ -36,7 +33,7 @@
                             discord: {
                                 main: '#313338',
                                 darker: '#1e1f22',
-                                black: '#0f172a',
+                                black: '#020617',
                                 green: '#23a55a',
                                 red: '#f23f43'
                             }
@@ -50,23 +47,24 @@
             [x-cloak] { display: none !important; }
             body { 
                 font-family: 'Plus Jakarta Sans', 'sans-serif';
-                letter-spacing: -0.02em;
-                transition: background-color 0.5s ease;
+                letter-spacing: -0.025em;
+                transition: background-color 0.4s ease;
             }
-            .auth-bg { background-color: #f8fafc; }
+            .auth-bg { background-color: #ffffff; }
             .dark .auth-bg { background-color: #020617; }
 
-            @keyframes shimmerFlow {
+            /* Premium Shimmer Animation */
+            @keyframes shimmer {
                 0% { background-position: -200% center; }
                 100% { background-position: 200% center; }
             }
-            .animate-smartbill-pro {
+            .animate-shimmer {
                 background: linear-gradient(90deg, #f23f43, #fb7185, #f23f43);
                 background-size: 200% auto;
                 -webkit-background-clip: text;
                 background-clip: text;
                 -webkit-text-fill-color: transparent;
-                animation: shimmerFlow 4s linear infinite;
+                animation: shimmer 4s linear infinite;
                 display: inline-block;
             }
         </style>
@@ -79,11 +77,9 @@
                 localStorage.setItem('darkMode', this.darkMode);
                 if (this.darkMode) document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
-                // Re-init icons to fix Lucide + Alpine bug
-                this.$nextTick(() => { lucide.createIcons(); });
             }
           }">
-        <div class="w-full h-screen sm:h-auto sm:max-w-[1000px] transition-all duration-500">
+        <div class="w-full h-screen sm:h-auto sm:max-w-[950px] transition-all duration-500">
             {{ $slot }}
         </div>
     </body>
