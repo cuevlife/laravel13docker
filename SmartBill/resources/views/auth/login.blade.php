@@ -1,62 +1,65 @@
 <x-guest-layout>
-    <div class="space-y-12">
-        <!-- Minimalist Header -->
-        <div class="text-center">
-            <h1 class="text-3xl font-light tracking-tight text-slate-900 dark:text-white">
-                Smart<span class="font-semibold">Bill</span>
-            </h1>
-            <p class="mt-2 text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Neural Interface</p>
+    <div class="discord-card rounded-lg shadow-2xl p-8 sm:p-10 transition-all duration-500">
+        
+        <!-- Discord Style Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-rose-600 rounded-2xl shadow-lg shadow-rose-900/40 mb-4 transform hover:scale-110 transition-transform">
+                <i data-lucide="flame" class="w-8 h-8 text-white"></i>
+            </div>
+            <h1 class="text-2xl font-black text-white tracking-tight uppercase tracking-widest">Welcome Back!</h1>
+            <p class="text-slate-400 text-sm mt-1 font-medium italic">Establishing Neural Connection...</p>
         </div>
 
-        <!-- Pure Content Area -->
-        <div class="bg-white dark:bg-[#0b0f1a] rounded-[2.5rem] p-10 sm:p-12 soft-shadow border border-slate-100 dark:border-white/5 transition-all">
-            <x-auth-session-status class="mb-8 text-center text-xs font-medium" :status="session('status')" />
+        <x-auth-session-status class="mb-6 text-center text-xs font-bold text-emerald-500" :status="session('status')" />
 
-            <form method="POST" action="{{ route('login') }}" class="space-y-10">
-                @csrf
+        <form method="POST" action="{{ route('login') }}" class="space-y-6">
+            @csrf
 
-                <!-- ID Input -->
-                <div class="relative">
-                    <label class="absolute -top-6 left-1 text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest">Authentication ID</label>
-                    <div class="group relative border-b border-slate-100 dark:border-white/10 focus-within:border-indigo-500 transition-colors duration-500">
-                        <input id="username" type="text" name="username" :value="old('username')" required autofocus 
-                               class="block w-full px-1 py-4 bg-transparent border-0 text-lg font-medium text-slate-700 dark:text-slate-200 placeholder-slate-200 dark:placeholder-slate-800 focus:ring-0 transition-all outline-none"
-                               placeholder="User identifier">
-                    </div>
-                    <x-input-error :messages="$errors->get('username')" class="mt-2" />
-                </div>
+            <!-- Discord Style Input Group -->
+            <div class="space-y-2">
+                <label class="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-0.5 flex items-center">
+                    Authentication ID <span class="text-rose-500 ml-1">*</span>
+                </label>
+                <input id="username" type="text" name="username" :value="old('username')" required autofocus 
+                       class="block w-full px-4 py-3 discord-input border-0 rounded-md text-white font-medium focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
+                       placeholder="">
+                <x-input-error :messages="$errors->get('username')" class="mt-1 text-rose-500 text-[10px] font-bold uppercase" />
+            </div>
 
-                <!-- Passkey Input -->
-                <div class="relative">
-                    <label class="absolute -top-6 left-1 text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest">Secure Passkey</label>
-                    <div class="group relative border-b border-slate-100 dark:border-white/10 focus-within:border-indigo-500 transition-colors duration-500">
-                        <input id="password" type="password" name="password" required 
-                               class="block w-full px-1 py-4 bg-transparent border-0 text-lg font-medium text-slate-700 dark:text-slate-200 placeholder-slate-200 dark:placeholder-slate-800 focus:ring-0 transition-all outline-none"
-                               placeholder="••••••••">
-                    </div>
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                </div>
+            <!-- Discord Style Input Group -->
+            <div class="space-y-2">
+                <label class="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-0.5 flex items-center">
+                    Neural Passkey <span class="text-rose-500 ml-1">*</span>
+                </label>
+                <input id="password" type="password" name="password" required 
+                       class="block w-full px-4 py-3 discord-input border-0 rounded-md text-white font-medium focus:ring-2 focus:ring-emerald-500 transition-all outline-none"
+                       placeholder="">
+                <x-input-error :messages="$errors->get('password')" class="mt-1 text-rose-500 text-[10px] font-bold uppercase" />
+            </div>
 
-                <!-- Subtle Actions -->
-                <div class="flex items-center justify-between px-1">
-                    <label class="flex items-center cursor-pointer group">
-                        <input type="checkbox" name="remember" class="h-4 w-4 rounded-full border-slate-200 dark:border-white/10 bg-transparent text-slate-900 focus:ring-0 transition-all">
-                        <span class="ml-3 text-[10px] font-bold text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors uppercase tracking-tighter">Remember</span>
-                    </label>
-                </div>
+            <!-- Subtle Link -->
+            <div class="flex items-center justify-between">
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="remember" class="h-4 w-4 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-0 transition-all">
+                    <span class="ml-2 text-[11px] font-bold text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-tighter">Stay Linked</span>
+                </label>
+                <a href="#" class="text-[11px] font-bold text-indigo-400 hover:underline">Need help?</a>
+            </div>
 
-                <!-- Clean Deploy Button -->
-                <div class="pt-2">
-                    <button type="submit" class="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-2xl transition shadow-xl shadow-slate-900/10 dark:shadow-none hover:scale-[1.01] active:scale-[0.98] uppercase text-[11px] tracking-[0.2em]">
-                        Establish Connection
-                    </button>
-                </div>
-            </form>
-        </div>
+            <!-- Discord Vibrant Green Button -->
+            <div class="pt-2">
+                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-md shadow-lg shadow-emerald-900/20 transition-all duration-200 transform active:translate-y-[1px] uppercase text-xs tracking-widest">
+                    Log In
+                </button>
+            </div>
 
-        <!-- Footer Decor (Minimal) -->
-        <div class="text-center">
-            <span class="text-[9px] font-medium text-slate-300 dark:text-slate-700 uppercase tracking-[0.6em]">v2.5.2 Neural Link</span>
-        </div>
+            <!-- Footer Text -->
+            <div class="pt-2 text-left">
+                <p class="text-[11px] text-slate-500">
+                    Protected by <span class="text-rose-500 font-bold">Neural Security</span>. 
+                    <a href="#" class="text-indigo-400 hover:underline">System Protocols</a>
+                </p>
+            </div>
+        </form>
     </div>
 </x-guest-layout>
