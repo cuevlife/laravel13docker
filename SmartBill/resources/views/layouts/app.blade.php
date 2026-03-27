@@ -1,166 +1,95 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="antialiased">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="antialiased" x-data="{ darkMode: localStorage.getItem('theme') === 'dark' }" :class="{ 'dark': darkMode }">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title>SmartBill</title>
-
-        <!-- Zero-Flash Theme Script -->
-        <script>
-            if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        </script>
+        <title>{{ config('app.name', 'SmartBill') }}</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
         
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://unpkg.com/lucide@latest"></script>
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
         
         <script>
             tailwind.config = {
                 darkMode: 'class',
                 theme: {
                     extend: {
-                        fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
-                        colors: {
-                            discord: {
-                                dark: '#313338',
-                                darker: '#1e1f22',
-                                black: '#0f172a',
-                                green: '#23a55a',
-                                red: '#f23f43'
-                            }
+                        fontFamily: { sans: ['Plus Jakarta Sans', 'Noto Sans Thai', 'sans-serif'] },
+                        colors: { 
+                            discord: { green: '#23a559', red: '#ed4245', black: '#1e1f22', darkbg: '#313338' },
+                            brand: { primary: '#23a559', secondary: '#ed4245' } 
                         }
                     }
                 }
             }
         </script>
 
-        <style>
+        <style type="text/tailwindcss">
             [x-cloak] { display: none !important; }
-            body { 
-                font-family: 'Plus Jakarta Sans', 'sans-serif'; 
-                transition: background-color 0.2s ease;
-                letter-spacing: -0.02em;
-            }
-            .dark body { background-color: #0f172a; color: #f2f3f5; }
-            body { background-color: #f2f3f5; color: #2e3338; }
-
-            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-            .custom-scrollbar::-webkit-scrollbar-thumb { background: #4e5058; border-radius: 10px; }
+            body { font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', 'sans-serif'; @apply bg-[#fafafa] text-[#1e1f22] dark:bg-[#1e1f22] dark:text-[#f2f3f5] transition-colors duration-300 tracking-tight; }
+            .sidebar-rail { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .nav-wrapper { @apply relative flex items-center justify-center w-full py-1; }
+            .nav-indicator { @apply absolute left-0 w-1 bg-discord-green rounded-r-full transition-all duration-300 scale-y-0 opacity-0; height: 20px; }
+            .nav-wrapper.active .nav-indicator { @apply scale-y-100 opacity-100; height: 32px; }
+            .nav-btn { @apply flex items-center transition-all duration-200 text-slate-400 bg-transparent h-12 w-12 justify-center rounded-[14px]; }
+            .nav-btn:hover { @apply bg-black/5 dark:bg-white/5 text-discord-green; }
+            .nav-btn.active { @apply bg-discord-green text-white shadow-lg shadow-green-500/30 !important; }
+            .premium-card { @apply bg-white dark:bg-[#2b2d31] border border-black/5 dark:border-white/5 shadow-sm hover:shadow-xl hover:border-discord-green/20 transition-all duration-300 rounded-[2.5rem]; }
+            .modal-open-blur { filter: blur(12px); transition: filter 0.3s ease; }
         </style>
-    </head>
-    <body x-data="{ 
-            darkMode: localStorage.getItem('darkMode') === 'true',
-            sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
-            sidebarOpen: false,
-            userDropdown: false,
-            toggleDarkMode() {
-                this.darkMode = !this.darkMode;
-                localStorage.setItem('darkMode', this.darkMode);
-                if (this.darkMode) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-                this.$nextTick(() => { lucide.createIcons(); });
-            },
-            toggleSidebar() {
-                if (window.innerWidth < 1024) {
-                    this.sidebarOpen = !this.sidebarOpen;
-                } else {
-                    this.sidebarCollapsed = !this.sidebarCollapsed;
-                    localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
-                }
-                this.$nextTick(() => { lucide.createIcons(); });
-            }
-          }">
-        
-        <div class="flex h-screen overflow-hidden">
-            
-            <!-- Sidebar Overlay -->
-            <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/60 z-[60] lg:hidden" x-cloak></div>
 
+        <!-- Prevent Dark Mode Flicker -->
+        <script>
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else if (localStorage.getItem('theme') === 'light') {
+                document.documentElement.classList.remove('dark');
+            }
+        </script>
+    </head>
+    <body x-data="{ modalActive: false, profileOpen: false }" :class="{'overflow-hidden': modalActive}" class="bg-[#fafafa] dark:bg-[#1e1f22] font-sans tracking-tight">
+        <div class="flex h-[100dvh] overflow-hidden">
             <!-- Sidebar -->
-            <aside :class="{ 
-                        'w-64': !sidebarCollapsed || sidebarOpen, 
-                        'w-20': sidebarCollapsed && !sidebarOpen,
-                        'translate-x-0': sidebarOpen,
-                        '-translate-x-full': !sidebarOpen && window.innerWidth < 1024,
-                        'lg:translate-x-0': true
-                   }" 
-                   class="fixed inset-y-0 left-0 lg:static lg:flex flex-col bg-[#f2f3f5] dark:bg-discord-darker border-r border-slate-200 dark:border-white/5 transition-all duration-300 z-[70]">
-                @include('layouts.sidebar')
+            <aside class="hidden lg:flex flex-col w-20 bg-[#fafafa] dark:bg-[#1e1f22] border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 z-30 transition-colors" :class="{'modal-open-blur': modalActive}">
+                @include('layouts.parts.sidebar-desktop')
             </aside>
 
-            <!-- Main Content Area -->
-            <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                
-                <!-- Topbar -->
-                <header class="h-14 shrink-0 bg-white dark:bg-discord-black border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-6 z-40">
-                    <div class="flex items-center space-x-4">
-                        <button @click="toggleSidebar()" class="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors">
-                            <i data-lucide="menu" class="w-5 h-5"></i>
-                        </button>
-                        <!-- Branding Text Only -->
-                        <span class="font-black text-sm uppercase tracking-tighter italic dark:text-white">Smart<span class="text-discord-red">Bill</span></span>
-                    </div>
+            <div class="flex-1 flex flex-col min-w-0 relative">
+                <!-- Header -->
+                @include('layouts.parts.header-desktop')
 
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center bg-slate-100 dark:bg-black/20 p-1 rounded-md">
-                            <a href="{{ route('lang.switch', 'th') }}" class="px-2 py-1 rounded text-[10px] font-black transition-all {{ app()->getLocale() == 'th' ? 'bg-white dark:bg-discord-green text-slate-900 dark:text-white shadow-sm' : 'text-slate-400' }}">TH</a>
-                            <a href="{{ route('lang.switch', 'en') }}" class="px-2 py-1 rounded text-[10px] font-black transition-all {{ app()->getLocale() == 'en' ? 'bg-white dark:bg-discord-green text-slate-900 dark:text-white shadow-sm' : 'text-slate-400' }}">EN</a>
-                        </div>
+                <!-- Mobile Header -->
+                <div :class="{'modal-open-blur': modalActive}">
+                    @include('layouts.parts.header-mobile')
+                </div>
 
-                        <button @click="toggleDarkMode()" class="text-slate-500 hover:text-amber-500 transition-colors">
-                            <i x-show="!darkMode" data-lucide="moon" class="w-4 h-4"></i>
-                            <i x-show="darkMode" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
-                        </button>
-
-                        <div class="h-4 w-px bg-slate-200 dark:bg-white/5"></div>
-
-                        <!-- User Profile -->
-                        <div class="relative" @click.away="userDropdown = false">
-                            <button @click="userDropdown = !userDropdown" class="flex items-center space-x-2">
-                                <div class="w-7 h-7 rounded-md bg-discord-red flex items-center justify-center text-white text-[10px] font-black shadow-lg">
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                </div>
-                                <span class="hidden md:block text-xs font-bold dark:text-white italic">{{ Auth::user()->name }}</span>
-                            </button>
-                            <div x-show="userDropdown" x-cloak class="absolute right-0 mt-3 w-48 bg-white dark:bg-discord-darker rounded-lg shadow-2xl border border-slate-200 dark:border-white/5 py-1 overflow-hidden">
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 italic">{{ __('Settings') }}</a>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs font-bold text-discord-red hover:bg-rose-50 dark:hover:bg-rose-500/10 italic">{{ __('Logout') }}</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                <main class="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar relative">
-                    <div class="max-w-6xl mx-auto">
+                <!-- Main Content (Unified Spacing) -->
+                <main class="flex-1 overflow-y-auto p-6 lg:p-10" :class="{'modal-open-blur': modalActive}">
+                    <div class="max-w-7xl mx-auto">
                         {{ $slot }}
                     </div>
                 </main>
 
-                <!-- Floating Scan Action -->
-                <a href="{{ route('admin.slip-reader') }}" 
-                   class="lg:hidden fixed bottom-8 right-6 w-14 h-14 bg-discord-green text-white rounded-full flex items-center justify-center shadow-2xl z-[55] active:scale-90 transition-transform">
-                    <i data-lucide="scan" class="w-6 h-6 stroke-[2.5px]"></i>
-                </a>
+                <!-- Mobile Nav -->
+                <div :class="{'modal-open-blur': modalActive}">
+                    @include('layouts.parts.navigation-mobile')
+                </div>
             </div>
         </div>
 
         <script>
-            lucide.createIcons();
+            window.addEventListener('load', () => { lucide.createIcons(); });
             document.addEventListener('alpine:initialized', () => { lucide.createIcons(); });
         </script>
+        @stack('scripts')
     </body>
 </html>

@@ -25,4 +25,16 @@ class Slip extends Model
     {
         return $this->belongsTo(SlipTemplate::class, 'slip_template_id');
     }
+
+    public function merchant()
+    {
+        return $this->hasOneThrough(
+            Merchant::class,
+            SlipTemplate::class,
+            'id', // Foreign key on slip_templates table...
+            'id', // Foreign key on merchants table...
+            'slip_template_id', // Local key on slips table...
+            'merchant_id' // Local key on slip_templates table...
+        );
+    }
 }
