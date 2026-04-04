@@ -1,10 +1,10 @@
 <x-app-layout>
-    <div x-data="templateEditor()" class="max-w-5xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8 mt-8">
+    <div x-data="templateEditor(window.initialTemplateConfig)" class="max-w-5xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8 mt-8">
         
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-                <a href="{{ route('admin.templates.index', [], false) }}" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'templates') }}" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </a>
                 <div>
@@ -33,7 +33,7 @@
                         class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm active:scale-95 disabled:opacity-50">
                     <i x-show="!suggesting" data-lucide="sparkles" class="w-4 h-4"></i>
                     <i x-show="suggesting" data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
-                    <span x-text="suggesting ? 'Analyzing...' : 'Auto-Headers'"></span>
+                    <span x-text="suggesting ? 'Analyzing Slip...' : 'Auto-Scan Slip (Generate Template)'"></span>
                 </button>
             </div>
         </div>
@@ -125,59 +125,17 @@
 
     @push('scripts')
     <script>
-        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-        function templateEditor() {
-            const initialFields = @json($promptFields).map(f => ({ key: f.key, label: f.label || f.key, type: f.type || 'text' }));
-            return {
-                viewMode: 'ui', jsonContent: JSON.stringify(initialFields, null, 4),
-                form: { 
-                    merchant_id: '{{ $merchant->merchant_id }}',
-                    name: @json($merchant->name), 
-                    main_instruction: @json($merchant->main_instruction) 
-                },
-                fields: initialFields, saving: false, suggesting: false,
-                init() { lucide.createIcons(); },
-                switchMode(mode) {
-                    if (mode === 'json') { this.jsonContent = JSON.stringify(this.fields, null, 4); } else {
-                        try { const parsed = JSON.parse(this.jsonContent); this.fields = parsed.map(f => ({ key: f.key || this.generateKey(f.label || ''), label: f.label || f.key || 'Header', type: f.type || 'text' })); }
-                        catch (e) { Toast.fire({ icon: 'error', title: 'Invalid JSON' }); return; }
-                    }
-                    this.viewMode = mode; this.$nextTick(() => lucide.createIcons());
-                },
-                generateKey(label) { return label.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, ''); },
-                syncKey(field) { field.key = this.generateKey(field.label); },
-                addField() { this.fields.push({ key: '', label: '', type: 'text' }); this.$nextTick(() => lucide.createIcons()); },
-                removeField(index) { this.fields.splice(index, 1); },
-                prettifyJson() { try { this.jsonContent = JSON.stringify(JSON.parse(this.jsonContent), null, 4); } catch (e) { Toast.fire({ icon: 'error', title: 'Malformed JSON' }); } },
-                async suggestFromImage(event) {
-                    const file = event.target.files[0]; if (!file) return;
-                    this.suggesting = true; const fd = new FormData(); fd.append('image', file); fd.append('_token', '{{ csrf_token() }}');
-                    try {
-                        const res = await fetch('{{ route('admin.templates.suggest', [], false) }}', { method: 'POST', body: fd });
-                        const data = await res.json(); if (!res.ok) throw new Error(data.message || 'AI failed');
-                        this.fields = data.ai_fields.map(f => ({ key: f.key, label: f.label, type: f.type }));
-                        this.jsonContent = JSON.stringify(this.fields, null, 4); Toast.fire({ icon: 'success', title: 'Headers Detected' });
-                    } catch (e) { Toast.fire({ icon: 'error', title: e.message }); } finally { this.suggesting = false; event.target.value = ''; this.$nextTick(() => lucide.createIcons()); }
-                },
-                async save() {
-                    this.saving = true;
-                    try {
-                        let finalFields = this.viewMode === 'json' ? JSON.parse(this.jsonContent) : this.fields;
-                        const fd = new FormData();
-                        fd.append('merchant_id', this.form.merchant_id);
-                        fd.append('name', this.form.name);
-                        fd.append('main_instruction', this.form.main_instruction);
-                        fd.append('ai_fields', JSON.stringify(finalFields));
-                        fd.append('export_layout', JSON.stringify(finalFields.map(f => ({ key: f.key, label: f.label, enabled: true }))));
-                        fd.append('_method', 'PATCH'); fd.append('_token', '{{ csrf_token() }}');
-                        const res = await fetch('{{ route('admin.templates.update', $merchant->id, false) }}', { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } });
-                        if (!res.ok) throw new Error('Persistence failed');
-                        Toast.fire({ icon: 'success', title: 'Profile Updated' });
-                        setTimeout(() => window.location.href = '{{ route('admin.templates.index', [], false) }}', 900);
-                    } catch (e) { Toast.fire({ icon: 'error', title: e.message }); } finally { this.saving = false; }
-                }
-            };
-        }
+        window.initialTemplateConfig = {
+            promptFields: @json($promptFields),
+            merchantId: '{{ $merchant->merchant_id }}',
+            merchantName: @json($merchant->name),
+            mainInstruction: @json($merchant->main_instruction),
+            csrfToken: '{{ csrf_token() }}',
+            suggestRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'templates/suggest')),
+            updateRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'templates/update/' . $merchant->id)),
+            indexRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'templates'))
+        };
     </script>
+    <script src="{{ asset('js/admin/template-edit.js') }}"></script>
     @endpush
 </x-app-layout>

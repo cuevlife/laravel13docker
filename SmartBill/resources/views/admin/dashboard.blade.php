@@ -1,72 +1,93 @@
 <x-app-layout>
     <div class="space-y-8 animate-in fade-in duration-700 pb-20">
-        
-        <!-- Header -->
-        <div class="premium-card p-6 md:p-8 border-l-4 border-l-discord-green">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h2 class="text-2xl md:text-3xl font-black text-[#1e1f22] dark:text-[#f2f3f5] uppercase tracking-tight leading-none">Dashboard</h2>
-                    <p class="text-[10px] font-bold text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-[0.2em] mt-3">Node Analytics & Operations</p>
-                </div>
-                <div class="flex items-center gap-3 px-4 py-2 bg-discord-green/10 rounded-[12px] border border-discord-green/20">
-                    <span class="w-2 h-2 rounded-full bg-discord-green animate-pulse shadow-[0_0_8px_rgba(35,165,89,0.8)]"></span>
-                    <span class="text-[9px] font-black uppercase text-discord-green tracking-widest">Gateway Active</span>
-                </div>
+        <!-- KPI Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="premium-card p-5 border-l-4 border-l-rose-500">
+                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Your Token Balance</div>
+                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($billingSummary['tokens']) }}</div>
+                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Ready for new scans</div>
+            </div>
+            <div class="premium-card p-5 border-l-4 border-l-emerald-500">
+                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Workspace Access</div>
+                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ $billingSummary['workspaceAccess'] }}</div>
+                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Permissions inside this workspace</div>
+            </div>
+            <div class="premium-card p-5">
+                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Store Extraction Profiles</div>
+                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($billingSummary['profiles']) }}</div>
+                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Local extraction rulesets</div>
+            </div>
+            <div class="premium-card p-5">
+                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Store Processed Slips</div>
+                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($billingSummary['slips']) }}</div>
+                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Historical registry</div>
             </div>
         </div>
 
-        <!-- Metric Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            @php
-                $metrics = [
-                    ['label' => 'Slips', 'value' => $stats['slips_count'], 'route' => 'admin.slip.index', 'icon' => 'layers', 'color' => 'discord-green'],
-                    ['label' => 'Profiles', 'value' => $stats['templates_count'], 'route' => 'admin.templates.index', 'icon' => 'settings-2', 'color' => 'discord-green'],
-                    ['label' => 'Stores', 'value' => $stats['stores_count'], 'route' => 'admin.stores.index', 'icon' => 'store', 'color' => 'discord-green'],
-                    ['label' => 'Network', 'value' => auth()->user()->isAdmin() ? $stats['users_count'] : 'SECURE', 'route' => '#', 'icon' => 'shield-check', 'color' => '#80848e'],
-                ];
-            @endphp
+        <div class="premium-card overflow-hidden transition-all shadow-lg rounded-[24px]">
+            <div class="p-6 md:p-8 bg-[#f2f3f5] dark:bg-[#1e1f22] flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#e3e5e8] dark:border-[#313338]">
+                <div>
+                    <h3 class="text-xl font-black text-[#1e1f22] dark:text-white tracking-tight uppercase">Extraction Profiles</h3>
+                    <p class="text-xs font-bold text-[#80848e] uppercase tracking-wider mt-1">Manage AI Rules for {{ $tenant->name }}</p>
+                </div>
+                <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'templates') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[16px] transition-all shadow-md active:scale-95">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Create Profile
+                </a>
+            </div>
 
-            @foreach($metrics as $m)
-                <a href="{{ $m['route'] !== '#' ? route($m['route']) : '#' }}" class="premium-card p-6 md:p-8 group relative overflow-hidden transition-all duration-300 hover:-translate-y-1">
-                    <div class="relative z-10 space-y-4">
-                        <div class="w-12 h-12 rounded-[16px] flex items-center justify-center border group-hover:scale-110 transition-transform shadow-sm"
-                             style="background-color: var(--tw-colors-{{ $m['color'] }}, {{ $m['color'] }}15); color: var(--tw-colors-{{ $m['color'] }}, {{ $m['color'] }}); border-color: var(--tw-colors-{{ $m['color'] }}, {{ $m['color'] }}30);"
-                             class="{{ $m['color'] === 'discord-green' ? 'bg-discord-green/10 text-discord-green border-discord-green/20' : 'bg-[#f2f3f5] dark:bg-[#1e1f22] text-[#80848e] border-[#e3e5e8] dark:border-[#313338]' }}">
-                            <i data-lucide="{{ $m['icon'] }}" class="w-6 h-6"></i>
+            <div class="p-6 md:p-8 bg-white dark:bg-[#2b2d31]">
+                @if($tenant->templates->isEmpty())
+                    <div class="text-center py-12 bg-[#f2f3f5] dark:bg-[#1e1f22] rounded-[24px] border-2 border-dashed border-[#e3e5e8] dark:border-[#313338]">
+                        <div class="w-16 h-16 mx-auto bg-white dark:bg-[#2b2d31] rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-gray-100 dark:border-transparent">
+                            <i data-lucide="bot" class="w-8 h-8 text-slate-400"></i>
                         </div>
-                        <div>
-                            <p class="text-3xl font-black text-[#1e1f22] dark:text-white tracking-tighter">{{ is_numeric($m['value']) ? number_format($m['value']) : $m['value'] }}</p>
-                            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#5c5e66] dark:text-[#b5bac1] mt-1">{{ $m['label'] }}</p>
-                        </div>
+                        <h4 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-tight mb-2">No Profiles Set Up Yet</h4>
+                        <p class="text-xs font-bold text-[#80848e] uppercase tracking-wider mb-6 max-w-sm mx-auto">Create an intelligence profile to teach the system how to extract data from slips specific to this store.</p>
+                        <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'templates') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-[14px] transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
+                            <i data-lucide="settings-2" class="w-4 h-4"></i> Setup First Profile
+                        </a>
                     </div>
-                </a>
-            @endforeach
-        </div>
+                @else
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach($tenant->templates as $template)
+                            <div class="p-5 bg-white dark:bg-[#1e1f22] border border-[#e3e5e8] dark:border-[#313338] rounded-[20px] hover:border-discord-green/30 hover:shadow-md transition-all group relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-br from-discord-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="relative z-10 flex flex-col justify-between h-full space-y-4">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-12 h-12 rounded-[14px] bg-[#f2f3f5] dark:bg-[#2b2d31] flex items-center justify-center text-indigo-500 shadow-inner shrink-0">
+                                            <i data-lucide="cpu" class="w-6 h-6"></i>
+                                        </div>
+                                        <div>
+                                            <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'templates/' . $template->id . '/edit') }}" class="text-lg font-black text-[#1e1f22] dark:text-white hover:text-indigo-500 transition-colors leading-tight">
+                                                {{ $template->name }}
+                                            </a>
+                                            <div class="text-[10px] font-bold text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest mt-1">
+                                                {{ count($template->ai_fields ?? []) }} Data Points
+                                            </div>
+                                        </div>
+                                    </div>
 
-        <!-- Action Hub -->
-        <div class="premium-card p-8 md:p-10">
-            <h3 class="text-[10px] font-black uppercase tracking-[0.4em] text-[#5c5e66] dark:text-[#b5bac1] mb-8 flex items-center gap-3">
-                <i data-lucide="zap" class="w-4 h-4 text-discord-green"></i> Critical Actions
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <a href="{{ route('admin.slip.index') }}" class="flex items-center gap-4 p-6 bg-[#f2f3f5] dark:bg-[#1e1f22] hover:bg-discord-green hover:text-white dark:hover:bg-discord-green rounded-[24px] transition-all group border border-[#e3e5e8] dark:border-transparent">
-                    <div class="w-10 h-10 rounded-[14px] bg-white dark:bg-[#2b2d31] flex items-center justify-center text-discord-green shadow-sm group-hover:bg-white/20 group-hover:text-white transition-all">
-                        <i data-lucide="scan" class="w-5 h-5"></i>
+                                    <div class="flex items-center gap-3 pt-4 border-t border-[#e3e5e8] dark:border-[#313338]">
+                                        <div class="flex-1 flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-[#2b2d31] text-xs font-black text-slate-700 dark:text-slate-300">
+                                {{ $template->slips()->count() }}
+                            </span>
+                                            <span class="text-[10px] font-black uppercase tracking-widest text-[#80848e]">Extracted Slips</span>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips') }}?template={{ $template->id }}" class="flex items-center justify-center px-4 py-2 bg-[#f2f3f5] hover:bg-[#e3e5e8] dark:bg-[#2b2d31] dark:hover:bg-[#313338] text-[#5c5e66] dark:text-[#b5bac1] text-[10px] font-black uppercase tracking-widest rounded-[12px] transition-all">
+                                                View Data
+                                            </a>
+                                            <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips') }}" title="Process New Slip" class="flex items-center justify-center w-9 h-9 bg-discord-green hover:bg-[#1f8b4c] text-white rounded-[12px] transition-all shadow-sm active:scale-95">
+                                                <i data-lucide="scan-line" class="w-4 h-4"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                    <span class="text-[11px] font-black uppercase tracking-widest text-[#1e1f22] dark:text-[#f2f3f5] group-hover:text-white">Process Slip</span>
-                </a>
-                <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-4 p-6 bg-[#f2f3f5] dark:bg-[#1e1f22] hover:bg-[#1e1f22] dark:hover:bg-[#f2f3f5] hover:text-white dark:hover:text-[#1e1f22] rounded-[24px] transition-all group border border-[#e3e5e8] dark:border-transparent">
-                    <div class="w-10 h-10 rounded-[14px] bg-white dark:bg-[#2b2d31] flex items-center justify-center text-[#5c5e66] dark:text-[#b5bac1] group-hover:text-[#1e1f22] dark:group-hover:text-[#f2f3f5] shadow-sm group-hover:bg-white/20 dark:group-hover:bg-black/10 transition-all">
-                        <i data-lucide="settings-2" class="w-5 h-5"></i>
-                    </div>
-                    <span class="text-[11px] font-black uppercase tracking-widest text-[#1e1f22] dark:text-[#f2f3f5] group-hover:text-white dark:group-hover:text-[#1e1f22]">Manage Rules</span>
-                </a>
-                <a href="{{ route('admin.slip.export') }}" class="flex items-center gap-4 p-6 bg-[#f2f3f5] dark:bg-[#1e1f22] hover:bg-[#1f8b4c] hover:text-white rounded-[24px] transition-all group border border-[#e3e5e8] dark:border-transparent">
-                    <div class="w-10 h-10 rounded-[14px] bg-white dark:bg-[#2b2d31] flex items-center justify-center text-[#1f8b4c] shadow-sm group-hover:bg-white/20 group-hover:text-white transition-all">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                    </div>
-                    <span class="text-[11px] font-black uppercase tracking-widest text-[#1e1f22] dark:text-[#f2f3f5] group-hover:text-white">Export Data</span>
-                </a>
+                @endif
             </div>
         </div>
     </div>

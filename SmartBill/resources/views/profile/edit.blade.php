@@ -1,4 +1,9 @@
 <x-app-layout>
+    @php
+        $profileExitUrl = isset($activeTenant)
+            ? \App\Support\WorkspaceUrl::current(request(), 'dashboard')
+            : route('dashboard');
+    @endphp
     <!-- Ultra-Minimal Premium Settings Hub -->
     <div x-data="{ activeTab: 'account' }" class="flex flex-col md:flex-row min-h-screen md:min-h-[calc(100vh-64px)] bg-[#fafafa] dark:bg-[#1e1f22] animate-in fade-in duration-700 pb-20 md:pb-0 font-sans tracking-tight relative">
         
@@ -60,7 +65,7 @@
 
         <!-- Desktop Close/Escape Button -->
         <div class="hidden lg:flex flex-col items-center justify-start pt-10 pr-10 w-24 shrink-0">
-            <a href="{{ route('admin.slip.index') }}" class="group flex flex-col items-center gap-2">
+            <a href="{{ $profileExitUrl }}" class="group flex flex-col items-center gap-2">
                 <div class="w-10 h-10 border-2 border-[#80848e] rounded-full flex items-center justify-center text-[#80848e] group-hover:bg-[#80848e] group-hover:text-white dark:group-hover:bg-[#b5bac1] dark:group-hover:text-[#1e1f22] transition-all">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </div>

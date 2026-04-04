@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            if (!Schema::hasColumn('users', 'status')) {
+                $table->string('status')->default('active')->after('role');
+            }
+        });
+
+        Schema::table('merchants', function (Blueprint $table) {
+            if (!Schema::hasColumn('merchants', 'status')) {
+                $table->string('status')->default('active')->after('subdomain');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('merchants', function (Blueprint $table) {
+            if (Schema::hasColumn('merchants', 'status')) {
+                $table->dropColumn('status');
+            }
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'status')) {
+                $table->dropColumn('status');
+            }
+        });
+    }
+};

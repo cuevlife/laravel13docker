@@ -62,7 +62,7 @@
                             </td>
                             <td class="absolute top-5 right-5 sm:static sm:table-cell sm:px-4 sm:py-4">
                                 <div class="flex items-center justify-end gap-1.5 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a href="{{ route('admin.templates.edit', $template->id, false) }}" class="p-2 bg-white dark:bg-[#313338] rounded-[10px] text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#1e1f22] dark:hover:text-white transition-all shadow-sm relative z-20">
+                                    <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'templates/' . $template->id . '/edit') }}" class="p-2 bg-white dark:bg-[#313338] rounded-[10px] text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#1e1f22] dark:hover:text-white transition-all shadow-sm relative z-20">
                                         <span class="text-[10px] font-black pr-1 uppercase tracking-widest hidden lg:inline-block">Schema</span>
                                         <i data-lucide="settings-2" class="w-4 h-4 lg:hidden"></i>
                                     </a>
@@ -136,6 +136,11 @@
 
     @push('scripts')
     <script>
+        window.templateRegistryConfig = {
+            storeRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'templates/store')),
+            deleteBaseRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'templates/delete')),
+        };
+
         function templateRegistry() {
             return {
                 modalOpen: false,
@@ -156,7 +161,7 @@
                     this.loading = true;
                     try {
                         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-                        const res = await fetch('/templates/store', {
+                        const res = await fetch(window.templateRegistryConfig.storeRoute, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -202,7 +207,7 @@
                     if (confirm.isConfirmed) {
                         try {
                             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-                            const res = await fetch(`/templates/delete/${id}`, {
+                            const res = await fetch(`${window.templateRegistryConfig.deleteBaseRoute}/${id}`, {
                                 method: 'DELETE',
                                 headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
                             });

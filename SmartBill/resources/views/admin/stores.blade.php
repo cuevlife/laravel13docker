@@ -24,6 +24,7 @@
                 <thead class="hidden sm:table-header-group">
                     <tr class="border-b border-[#e3e5e8] dark:border-[#313338] text-[10px] uppercase font-black tracking-widest text-[#80848e] bg-transparent">
                         <th class="px-6 py-4">Store Name</th>
+                        <th class="px-6 py-4">Project</th>
                         <th class="px-6 py-4">Address / Details</th>
                         <th class="px-6 py-4 text-center">Connected Templates</th>
                         <th class="px-6 py-4 text-right">Actions</th>
@@ -41,6 +42,13 @@
                                         <h4 class="text-sm font-black text-[#1e1f22] dark:text-white truncate max-w-[200px] sm:max-w-none">{{ $store->name }}</h4>
                                         <p class="text-[10px] font-bold text-[#80848e] mt-0.5">Tax ID: {{ $store->tax_id ?: '---' }}</p>
                                     </div>
+                                </div>
+                            </td>
+                            <td class="block sm:table-cell px-0 py-2 sm:px-4 sm:py-4">
+                                <div class="sm:hidden text-[9px] font-black uppercase text-[#80848e] tracking-widest mb-1">Project</div>
+                                <div class="inline-flex items-center gap-2 rounded-[12px] border border-[#e3e5e8] bg-white px-3 py-2 text-[10px] font-black text-[#1e1f22] dark:border-[#313338] dark:bg-[#2b2d31] dark:text-white">
+                                    <i data-lucide="briefcase-business" class="w-3.5 h-3.5 text-discord-green"></i>
+                                    <span>Project {{ str_pad((string) $store->id, 2, '0', STR_PAD_LEFT) }}</span>
                                 </div>
                             </td>
                             <td class="block sm:table-cell px-0 py-2 sm:px-4 sm:py-4">
@@ -92,7 +100,7 @@
                     <form @submit.prevent="submitForm" class="space-y-5">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Store Name *</label>
-                            <input type="text" x-model="form.name" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[16px] text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="e.g. 7-Eleven Branch 123">
+                            <input type="text" x-model="form.name" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[16px] text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="e.g. Home, Client A, Branch 01">
                         </div>
 
                         <div class="space-y-1.5">
@@ -143,7 +151,9 @@
 
                 closeModal() {
                     this.modalOpen = false;
-                    setTimeout(() => this.form = { id: null, name: '', tax_id: '', address: '' }, 300);
+                    setTimeout(() => {
+                        this.form = { id: null, name: '', tax_id: '', address: '' };
+                    }, 300);
                 },
 
                 async submitForm() {
@@ -162,7 +172,11 @@
                             body: JSON.stringify(this.form)
                         });
                         
-                        if (!res.ok) throw new Error('Submission Failed');
+                        if (!res.ok) {
+                            const payload = await res.json().catch(() => ({}));
+                            const firstError = payload.errors ? Object.values(payload.errors)[0]?.[0] : null;
+                            throw new Error(firstError || payload.message || 'Submission Failed');
+                        }
 
                         Swal.fire({
                             toast: true,

@@ -1,10 +1,10 @@
 <x-app-layout>
-    <div x-data="slipEditor()" class="max-w-5xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8 mt-8 animate-in fade-in duration-500">
+    <div x-data="slipEditor(window.initialSlipConfig)" class="max-w-5xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8 mt-8 animate-in fade-in duration-500">
         
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-                <a href="{{ route('admin.slip.index', [], false) }}" class="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-all">
+                <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips') }}" class="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-all">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 </a>
                 <div>
@@ -43,19 +43,25 @@
 
             <!-- Items Section -->
             <div x-show="showItems" class="space-y-4">
+                <!-- Math Validator Warning -->
+                <div x-show="mathMismatch" x-cloak class="px-5 py-3 mb-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-500"></i>
+                    <p class="text-xs font-black uppercase tracking-wide text-rose-600" x-text="mathMismatch"></p>
+                </div>
+
                 <div class="flex items-center justify-between px-4">
                     <h3 class="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Transaction Items</h3>
                     <button @click="addItem()" class="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:scale-105 transition-transform">+ New Entry</button>
                 </div>
                 <div class="grid grid-cols-1 gap-3">
                     <template x-for="(item, index) in items" :key="item.uid">
-                        <div class="bg-white p-4 pl-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-6 group hover:shadow-md transition-all">
-                            <div class="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-300 group-hover:text-rose-500 transition-colors" x-text="index + 1"></div>
+                        <div class="bg-white p-4 pl-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-6 group hover:shadow-md transition-all" :class="{'border-rose-300 bg-rose-50/50': mathMismatch}">
+                            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-[10px] font-black transition-colors" :class="mathMismatch ? 'bg-rose-100 text-rose-500' : 'bg-slate-50 text-slate-300 group-hover:text-rose-500'" x-text="index + 1"></div>
                             <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input type="text" x-model="item.name" class="bg-transparent border-0 p-0 text-sm font-bold text-slate-700 focus:ring-0 " placeholder="Description...">
+                                <input type="text" x-model="item.name" :id="'item-name-' + index" @keydown.enter.prevent="document.getElementById('item-price-' + index)?.focus()" class="bg-transparent border-0 p-0 text-sm font-bold focus:ring-0 transition-colors" :class="mathMismatch ? 'text-rose-900' : 'text-slate-700'" placeholder="Description...">
                                 <div class="flex items-center justify-end gap-2">
                                     <span class="text-[10px] font-black text-rose-500">฿</span>
-                                    <input type="text" x-model="item.price" class="w-28 bg-transparent border-0 p-0 text-base font-black text-emerald-500 text-right focus:ring-0" placeholder="0.00">
+                                    <input type="text" x-model="item.price" :id="'item-price-' + index" @keydown.enter.prevent="handleEnterPress(index)" class="w-28 bg-transparent border-0 p-0 text-base font-black text-emerald-500 text-right focus:ring-0" placeholder="0.00">
                                 </div>
                             </div>
                             <button @click="removeItem(index)" class="p-2 text-slate-200 hover:text-rose-500 transition-colors">
@@ -105,51 +111,14 @@
 
     @push('scripts')
     <script>
-        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-        function slipEditor() {
-            const originalData = @json($slip->extracted_data);
-            const columns = @json($exportColumns).map(c => ({ key: c.key, label: c.label }));
-            return {
-                viewMode: 'ui', showImage: false, saving: false,
-                originalData, columns,
-                jsonContent: JSON.stringify(originalData, null, 4),
-                fields: columns.reduce((a, c) => { a[c.key] = originalData[c.key] ?? ''; return a; }, {}),
-                items: Array.isArray(originalData.items) ? originalData.items.map((i, idx) => ({ uid: Date.now()+idx, name: i.name||'', price: i.price||'' })) : [],
-                showItems: Array.isArray(originalData.items) || columns.some(c => c.key === 'items'),
-                init() { lucide.createIcons(); },
-                switchMode(mode) {
-                    if (mode === 'json') { this.jsonContent = JSON.stringify(this.getCombined(), null, 4); }
-                    else { try { this.syncFrom(JSON.parse(this.jsonContent)); } catch(e) { return Toast.fire({icon:'error', title:'Invalid JSON'}); } }
-                    this.viewMode = mode; this.$nextTick(() => lucide.createIcons());
-                },
-                getCombined() {
-                    const data = {...this.originalData, ...this.fields};
-                    if (this.showItems) data.items = this.items.map(i => ({ name: i.name, price: i.price }));
-                    return data;
-                },
-                syncFrom(data) {
-                    this.originalData = data;
-                    this.columns.forEach(c => this.fields[c.key] = data[c.key] ?? '');
-                    if (Array.isArray(data.items)) this.items = data.items.map((i, idx) => ({ uid: Date.now()+idx, name: i.name||'', price: i.price||'' }));
-                },
-                addItem() { this.items.push({ uid: Date.now(), name: '', price: '' }); this.$nextTick(() => lucide.createIcons()); },
-                removeItem(idx) { this.items.splice(idx, 1); },
-                prettifyJson() { try { this.jsonContent = JSON.stringify(JSON.parse(this.jsonContent), null, 4); } catch(e) {} },
-                async save() {
-                    this.saving = true;
-                    try {
-                        const data = this.viewMode === 'json' ? JSON.parse(this.jsonContent) : this.getCombined();
-                        const res = await fetch('{{ route('admin.slip.update', $slip->id, false) }}', {
-                            method: 'POST', body: JSON.stringify({ data, _token: '{{ csrf_token() }}' }),
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-                        });
-                        if (!res.ok) throw new Error('Update failed');
-                        Toast.fire({ icon: 'success', title: 'Registry Synced' });
-                        setTimeout(() => window.location.href = '{{ route('admin.slip.index', [], false) }}', 900);
-                    } catch (e) { Toast.fire({ icon: 'error', title: e.message }); } finally { this.saving = false; }
-                }
-            };
-        }
+        window.initialSlipConfig = {
+            originalData: @json($slip->extracted_data),
+            columns: @json($exportColumns),
+            updateRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'slips/update/' . $slip->id)),
+            indexRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'slips')),
+            csrfToken: '{{ csrf_token() }}'
+        };
     </script>
+    <script src="{{ asset('js/admin/slip-edit.js') }}"></script>
     @endpush
 </x-app-layout>

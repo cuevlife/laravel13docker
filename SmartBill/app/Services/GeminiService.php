@@ -17,6 +17,49 @@ class GeminiService
         $this->model = config('services.gemini.model', 'gemini-1.5-flash');
     }
 
+    public function identifyStoreFromImage(string $imagePath, array $templateNames): ?string
+    {
+        if (!$this->apiKey || empty($templateNames)) return null;
+
+        $base64Image = base64_encode(file_get_contents($imagePath));
+        $storeList = implode(', ', array_map(fn($t) => '"' . $t . '"', $templateNames));
+        
+        $prompt = "Look at this receipt/invoice. Which of the following stores or profiles does it belong to?\n" .
+                  "Choices: [" . $storeList . "]\n\n" .
+                  "If you are confident it belongs to one of the choices, reply ONLY with the EXACT name from the choices. Do not add any punctuation or extra words.\n" .
+                  "If it does not match ANY of the choices, reply ONLY with the word 'UNKNOWN'.";
+
+        try {
+            $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                ->post($this->baseUrl . "gemini-1.5-flash:generateContent?key=" . $this->apiKey, [
+                    "contents" => [
+                        [
+                            "parts" => [
+                                ["text" => $prompt],
+                                ["inline_data" => ["mime_type" => "image/jpeg", "data" => $base64Image]]
+                            ]
+                        ]
+                    ],
+                    "generationConfig" => ["temperature" => 0.0] // Very strict, minimal hallucination
+                ]);
+
+            if ($response->failed()) return null;
+
+            $data = $response->json();
+            $responseText = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? 'UNKNOWN');
+            
+            if ($responseText === 'UNKNOWN' || $responseText === '') return null;
+            
+            // Post-process to aggressively strip quotes
+            $responseText = trim($responseText, '"\' ');
+            
+            return $responseText;
+        } catch (\Exception $e) {
+            Log::error("Gemini Auto-Detect Error: " . $e->getMessage());
+            return null;
+        }
+    }
+
     public function suggestSchemaFromImage(string $imagePath): array
     {
         if (!$this->apiKey) {
@@ -99,7 +142,12 @@ class GeminiService
                             ]
                         ]
                     ],
-                    "generationConfig" => ["response_mime_type" => "application/json"]
+                    "generationConfig" => [
+                        "response_mime_type" => "application/json",
+                        "temperature" => 0.0,
+                        "topP" => 0.1,
+                        "topK" => 1
+                    ]
                 ]);
 
             if ($response->failed()) {
@@ -129,15 +177,18 @@ class GeminiService
             $headerGuide .= "- {$field['key']}: {$this->fieldInstruction($field)}\n";
         }
 
-        $prompt = "EXTRACT DATA FROM THIS RECEIPT IMAGE STRICTLY ACCORDING TO THESE HEADERS:\n\n" . 
+        $prompt = "### ROLE: PRO-DATA ARCHIVAL EXTRACTOR\n" .
+                  "### GOAL: EXTRACT DATA FROM THIS RECEIPT IMAGE WITH 100% PRECISION\n\n" .
+                  "### HEADERS TO EXTRACT:\n" . 
                   $headerGuide . 
-                  "\nSTRICT RULES:\n" .
+                  "\n### STRICT RULES:\n" .
                   "1. Return ONLY raw JSON.\n" .
                   "2. Use the exact technical keys provided above.\n" .
-                  "3. Every key must exist in the JSON output. Use null if not found.\n" .
-                  "4. For numbers, return as float/int without currency symbols.\n" .
-                  "5. Use YYYY-MM-DD for dates.\n" .
-                  "6. " . ($config['main_instruction'] ?? "Extract all data accurately.");
+                  "3. Every key must exist in the JSON output. If the data is missing or you are less than 90% sure, use null.\n" .
+                  "4. For numbers: Return as float/int. Remove commas and currency symbols (e.g. '1,234.50 THB' -> 1234.5).\n" .
+                  "5. For dates: Use YYYY-MM-DD format only. If year is missing, assume current year.\n" .
+                  "6. For text: Maintain the original case unless specified otherwise.\n" .
+                  "7. " . ($config['main_instruction'] ?? "Extract all data accurately.");
 
         return $prompt;
     }
@@ -246,7 +297,26 @@ class GeminiService
             $normalized[$fieldKey] = $value;
         }
 
+        $normalized['__metadata'] = [
+            'confidence_score' => count(array_filter($normalized, fn($v) => !is_null($v))) / max(count($normalized), 1),
+            'is_reliable' => $this->checkReliability($normalized, $fieldDefinitions),
+        ];
+
         return $normalized;
+    }
+
+    protected function checkReliability(array $data, array $fields): bool
+    {
+        // Must have at least shop_name and total_amount for a receipt to be "reliable"
+        $requiredKeys = ['shop_name', 'total_amount', 'date'];
+        foreach ($requiredKeys as $key) {
+            foreach ($fields as $f) {
+                if ($f['key'] === $key && (empty($data[$key]) || $data[$key] == 0)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     protected function guessFieldType(string $key): string

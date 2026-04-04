@@ -4,48 +4,23 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ config('app.name', 'SmartBill') }}</title>
+        <title>Slips - {{ config('app.name', 'SmartBill') }}</title>
+
+        <!-- Favicon (Receipt Icon) -->
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2323a559' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z'/><path d='M16 8h-6'/><path d='M16 12H8'/><path d='M13 16H8'/></svg>">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
         
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
         
-        <script>
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        fontFamily: { sans: ['Plus Jakarta Sans', 'Noto Sans Thai', 'sans-serif'] },
-                        colors: { 
-                            discord: { green: '#23a559', red: '#ed4245', black: '#1e1f22', darkbg: '#313338' },
-                            brand: { primary: '#23a559', secondary: '#ed4245' } 
-                        }
-                    }
-                }
-            }
-        </script>
-
-        <style type="text/tailwindcss">
-            [x-cloak] { display: none !important; }
-            body { font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', 'sans-serif'; @apply bg-[#fafafa] text-[#1e1f22] dark:bg-[#1e1f22] dark:text-[#f2f3f5] transition-colors duration-300 tracking-tight; }
-            .sidebar-rail { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-            .nav-wrapper { @apply relative flex items-center justify-center w-full py-1; }
-            .nav-indicator { @apply absolute left-0 w-1 bg-discord-green rounded-r-full transition-all duration-300 scale-y-0 opacity-0; height: 20px; }
-            .nav-wrapper.active .nav-indicator { @apply scale-y-100 opacity-100; height: 32px; }
-            .nav-btn { @apply flex items-center transition-all duration-200 text-slate-400 bg-transparent h-12 w-12 justify-center rounded-[14px]; }
-            .nav-btn:hover { @apply bg-black/5 dark:bg-white/5 text-discord-green; }
-            .nav-btn.active { @apply bg-discord-green text-white shadow-lg shadow-green-500/30 !important; }
-            .premium-card { @apply bg-white dark:bg-[#2b2d31] border border-black/5 dark:border-white/5 shadow-sm hover:shadow-xl hover:border-discord-green/20 transition-all duration-300 rounded-[2.5rem]; }
-            .modal-open-blur { filter: blur(12px); transition: filter 0.3s ease; }
-        </style>
+        @livewireStyles
+        @livewireScripts
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <!-- Prevent Dark Mode Flicker -->
         <script>
@@ -73,8 +48,20 @@
                 </div>
 
                 <!-- Main Content (Unified Spacing) -->
-                <main class="flex-1 overflow-y-auto p-6 lg:p-10" :class="{'modal-open-blur': modalActive}">
+                <main class="flex-1 overflow-y-auto p-4 pb-24 md:p-5 md:pb-24 lg:p-8 lg:pb-10" :class="{'modal-open-blur': modalActive}">
                     <div class="max-w-7xl mx-auto">
+                        @if (session('status'))
+                            <div class="mb-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+                                {{ session('status') }}
+                            </div>
+                        @endif
+
+                        @if ($errors->any())
+                            <div class="mb-6 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
+                                {{ $errors->first() }}
+                            </div>
+                        @endif
+
                         {{ $slot }}
                     </div>
                 </main>
@@ -86,10 +73,8 @@
             </div>
         </div>
 
-        <script>
-            window.addEventListener('load', () => { lucide.createIcons(); });
-            document.addEventListener('alpine:initialized', () => { lucide.createIcons(); });
-        </script>
         @stack('scripts')
+    </body>
+</html>
     </body>
 </html>

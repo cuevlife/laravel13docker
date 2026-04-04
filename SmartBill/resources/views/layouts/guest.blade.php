@@ -4,8 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <title>Welcome - {{ config('app.name', 'SmartBill') }}</title>
 
-        <title>SmartBill</title>
+        <!-- Favicon (Receipt Icon) -->
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ed4245' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z'/><path d='M16 8h-6'/><path d='M16 12H8'/><path d='M13 16H8'/></svg>">
 
         <!-- Anti-Flicker Script -->
         <script>
@@ -20,54 +22,9 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-        <script>
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
-                        colors: {
-                            discord: {
-                                main: '#313338',
-                                darker: '#1e1f22',
-                                black: '#0f172a',
-                                green: '#23a55a',
-                                red: '#f23f43'
-                            }
-                        }
-                    }
-                }
-            }
-        </script>
-        
-        <style>
-            [x-cloak] { display: none !important; }
-            body { 
-                font-family: 'Plus Jakarta Sans', 'sans-serif';
-                letter-spacing: -0.02em;
-                transition: background-color 0.5s ease;
-            }
-            .auth-bg { background-color: #ffffff; }
-            .dark .auth-bg { background-color: #020617; }
-
-            /* Advanced SmartBill Shimmer */
-            @keyframes shimmerFlow {
-                0% { background-position: -200% center; }
-                100% { background-position: 200% center; }
-            }
-            .animate-smartbill {
-                background: linear-gradient(90deg, #f23f43, #fb7185, #f23f43);
-                background-size: 200% auto;
-                -webkit-background-clip: text;
-                background-clip: text;
-                -webkit-text-fill-color: transparent;
-                animation: shimmerFlow 4s linear infinite;
-                display: inline-block;
-            }
-        </style>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
+        @livewireScripts
     </head>
     <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0 overflow-x-hidden" 
           x-data="{ 
