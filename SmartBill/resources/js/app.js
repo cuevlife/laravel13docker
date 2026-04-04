@@ -17,9 +17,6 @@ import {
     Edit3, ChevronsUpDown, Zap, AlertCircle, CheckCircle
 } from 'lucide';
 
-// Global access for Lucide
-window.lucide = { createIcons };
-
 const icons = {
     Menu, X, Bell, User, Settings, LogOut, ChevronRight, Search, Plus, 
     Filter, Download, Trash2, Edit, Check, Eye, Save, XCircle, MoreVertical, LayoutGrid, 
@@ -44,6 +41,10 @@ const initializeIcons = () => {
         // Silently defer if not ready
     }
 };
+
+// Global access
+window.initializeIcons = initializeIcons;
+window.lucide = { createIcons, icons };
 
 // Listeners
 document.addEventListener('DOMContentLoaded', initializeIcons);

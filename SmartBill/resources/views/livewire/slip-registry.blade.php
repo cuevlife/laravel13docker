@@ -476,7 +476,7 @@
             };
 
             initFlatpickr();
-            Livewire.hook('morph.updated', (el, component) => { initFlatpickr(); if (typeof lucide !== 'undefined') lucide.createIcons(); });
+            Livewire.hook('morph.updated', (el, component) => { initFlatpickr(); if (typeof initializeIcons === 'function') initializeIcons(); });
         });
     </script>
 </div>
