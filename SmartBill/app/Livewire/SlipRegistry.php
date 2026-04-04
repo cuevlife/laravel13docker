@@ -437,7 +437,31 @@ class SlipRegistry extends Component
     {
         $data = $slip->extracted_data ?: [];
         $slip->display_shop = $data['shop_name'] ?? $data['store_name'] ?? $slip->template?->merchant?->name ?? 'Unknown';
+        
+        // Base display date (Short)
         $slip->display_date = $data['date'] ?? $data['transaction_date'] ?? optional($slip->processed_at)->format('d/m/Y');
+        
+        // Full Buddhist Era Date for Detail Modal
+        try {
+            $dateObj = null;
+            if (isset($data['date']) || isset($data['transaction_date'])) {
+                $rawDate = $data['date'] ?? $data['transaction_date'];
+                // Basic attempt to parse extracted string
+                $dateObj = \Carbon\Carbon::parse($rawDate);
+            } else {
+                $dateObj = $slip->processed_at;
+            }
+
+            if ($dateObj) {
+                $months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                $slip->display_date_be = $dateObj->day . ' ' . $months[$dateObj->month - 1] . ' ' . ($dateObj->year + 543);
+            } else {
+                $slip->display_date_be = $slip->display_date;
+            }
+        } catch (\Exception $e) {
+            $slip->display_date_be = $slip->display_date;
+        }
+
         $slip->display_amount = $data['total_amount'] ?? $data['total'] ?? $data['final_total'] ?? 0;
         $fields = [];
         foreach ($data as $key => $value) {

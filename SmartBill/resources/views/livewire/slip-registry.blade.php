@@ -1,4 +1,13 @@
-<div class="space-y-5 pb-20" x-data="{ selected: @entangle('selectedIds') }">
+<div class="space-y-5 pb-20" x-data="{ 
+    selected: @entangle('selectedIds'), 
+    localSearch: '',
+    matchesSearch(el) {
+        if (!this.localSearch) return true;
+        const text = el.innerText.toLowerCase();
+        const search = this.localSearch.toLowerCase();
+        return text.includes(search);
+    }
+}">
     <section class="rounded-[1rem] border border-black/5 bg-white shadow-sm dark:border-white/10 dark:bg-[#2b2d31]">
         <!-- Table Header / Actions -->
         <div class="flex items-center gap-1 border-b border-[#e3e5e8] px-4 py-3 dark:border-[#313338]">
@@ -18,13 +27,17 @@
         <!-- Search & Quick Filters -->
         <div class="border-b border-[#e3e5e8] px-4 py-3 dark:border-[#313338] md:px-5 md:py-4">
             <div class="space-y-4">
-                <div class="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_240px_200px_auto]">
-                    <div class="relative">
+                <div class="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_240px_280px_auto]">
+                    <div class="relative" wire:ignore wire:key="filter-search-box">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#80848e]"></i>
-                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="ค้นหา UID, ชื่อร้าน..." class="h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] pl-10 pr-3 text-sm font-bold text-[#162033] outline-none transition focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
+                        <input type="text" 
+                               x-model="localSearch"
+                               @input.debounce.500ms="$wire.set('search', localSearch)"
+                               placeholder="ค้นหาด่วน (ชื่อร้าน, UID, ยอดเงิน)..." 
+                               class="h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] pl-10 pr-3 text-sm font-bold text-[#162033] outline-none transition focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
                     </div>
 
-                    <div class="relative">
+                    <div class="relative" wire:ignore wire:key="filter-status-box">
                         <select wire:model.live="workflow_status" class="w-full appearance-none rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] px-3 py-2.5 text-sm font-bold text-[#162033] outline-none transition dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
                             <option value="">ทุกสถานะ</option>
                             @foreach($workflowOptions as $key => $label) 
@@ -36,47 +49,18 @@
                         <i data-lucide="chevron-down" class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#80848e]"></i>
                     </div>
 
-                    <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" type="button" class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[0.85rem] border border-[#e3e5e8] bg-white px-4 text-xs font-bold text-[#5c5e66] hover:bg-[#f2f3f5] transition-all dark:bg-[#1e1f22] dark:border-[#313338] dark:text-[#b5bac1]">
-                            <i data-lucide="calendar" class="h-4 w-4 text-discord-green"></i>
-                            <span>ช่วงวันที่ (พ.ศ.)</span>
-                        </button>
-                        
-                        <div x-show="open" @click.away="open = false" x-transition class="absolute top-12 right-0 z-30 w-72 p-4 bg-white dark:bg-[#2b2d31] rounded-2xl shadow-2xl border border-black/5 dark:border-white/10">
-                            <div class="space-y-4">
-                                <div class="space-y-1.5">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">เริ่มต้น</label>
-                                    <div class="relative">
-                                        <input type="text" id="date_from" wire:model.live="date_from" placeholder="เลือกวันที่เริ่ม" class="date-be h-10 w-full rounded-[0.75rem] border border-[#e3e5e8] dark:border-[#313338] bg-[#f8fafb] dark:bg-[#1e1f22] px-3 text-xs font-bold dark:text-white outline-none">
-                                        <i data-lucide="calendar-range" class="absolute right-3 top-3 w-3.5 h-3.5 text-slate-300 pointer-events-none"></i>
-                                    </div>
-                                </div>
-                                <div class="space-y-1.5">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">สิ้นสุด</label>
-                                    <div class="relative">
-                                        <input type="text" id="date_to" wire:model.live="date_to" placeholder="เลือกวันที่จบ" class="date-be h-10 w-full rounded-[0.75rem] border border-[#e3e5e8] dark:border-[#313338] bg-[#f8fafb] dark:bg-[#1e1f22] px-3 text-xs font-bold dark:text-white outline-none">
-                                        <i data-lucide="calendar-range" class="absolute right-3 top-3 w-3.5 h-3.5 text-slate-300 pointer-events-none"></i>
-                                    </div>
-                                </div>
-                                <button @click="open = false" class="w-full py-2.5 bg-[#162033] dark:bg-discord-green text-white text-[10px] font-black uppercase tracking-widest rounded-[0.75rem] shadow-lg">ยืนยันช่วงเวลา</button>
-                            </div>
-                        </div>
+                    <div class="relative" wire:ignore wire:key="filter-date-range">
+                        <i data-lucide="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-discord-green"></i>
+                        <input type="text" 
+                               id="date_range_picker" 
+                               placeholder="ช่วงวันที่ พ.ศ. (เริ่ม — จบ)" 
+                               class="date-be-range h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] pl-10 pr-3 text-sm font-bold text-[#162033] outline-none transition focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white cursor-pointer">
                     </div>
 
-                    <button wire:click="$set('search', ''); $set('workflow_status', ''); $set('date_from', ''); $set('date_to', '')" class="inline-flex h-10 items-center justify-center gap-2 rounded-[0.85rem] border border-rose-200 bg-rose-50 px-5 text-[10px] font-black uppercase tracking-[0.18em] text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10" title="ล้างการกรอง">
-                        <i data-lucide="filter-x" class="h-4 w-4"></i> ล้างการกรอง
+                    <button wire:click="$set('search', ''); $set('workflow_status', ''); $set('date_from', ''); $set('date_to', ''); localSearch = ''" class="inline-flex h-10 items-center justify-center gap-2 rounded-[0.85rem] border border-rose-200 bg-rose-50 px-5 text-[10px] font-black uppercase tracking-[0.18em] text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10" title="ล้างการค้นหา">
+                        <i data-lucide="filter-x" class="h-4 w-4"></i> ล้าง
                     </button>
                 </div>
-
-                @if($date_from || $date_to)
-                    <div class="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
-                        <div class="px-3 py-1 rounded-full bg-discord-green/10 text-discord-green text-[10px] font-black flex items-center gap-2 border border-discord-green/20">
-                            <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
-                            <span>ตัวกรองวันที่: {{ $date_from ? \Carbon\Carbon::parse($date_from)->addYears(543)->format('j/m/Y') : 'เริ่มต้น' }} — {{ $date_to ? \Carbon\Carbon::parse($date_to)->addYears(543)->format('j/m/Y') : 'สิ้นสุด' }}</span>
-                            <button wire:click="$set('date_from', ''); $set('date_to', '')" class="ml-1 p-0.5 hover:bg-rose-500 hover:text-white rounded-full transition-all"><i data-lucide="x" class="w-3 h-3"></i></button>
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
 
@@ -106,7 +90,7 @@
 
         <!-- Table -->
         <div class="overflow-x-auto px-2 py-1 md:px-4">
-            <table class="min-w-full text-left text-sm">
+            <table class="min-w-full text-left text-sm" wire:loading.class="opacity-50 transition-opacity">
                 <thead>
                     <tr class="border-b border-[#e3e5e8] text-[10px] font-black uppercase tracking-[0.22em] text-[#80848e] dark:border-[#313338]">
                         <th class="px-3 py-3 w-10">
@@ -119,7 +103,7 @@
                             <div class="flex items-center gap-1">
                                 รายละเอียดสลิป
                                 @if($sortField === 'uid')
-                                    <i data-lucide="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="h-3.5 w-3.5 text-discord-green"></i>
+                                    <i data-lucide="chevron-up" class="h-3.5 w-3.5 text-discord-green" :class="{ 'rotate-180': '{{ $sortDirection }}' === 'desc' }"></i>
                                 @else
                                     <i data-lucide="chevrons-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity"></i>
                                 @endif
@@ -130,7 +114,7 @@
                             <div class="flex items-center gap-1">
                                 วันที่ในสลิป
                                 @if($sortField === 'processed_at')
-                                    <i data-lucide="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="h-3.5 w-3.5 text-discord-green"></i>
+                                    <i data-lucide="chevron-up" class="h-3.5 w-3.5 text-discord-green" :class="{ 'rotate-180': '{{ $sortDirection }}' === 'desc' }"></i>
                                 @else
                                     <i data-lucide="chevrons-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity"></i>
                                 @endif
@@ -145,7 +129,10 @@
                 </thead>
                 <tbody class="divide-y divide-[#e3e5e8] dark:divide-[#313338]">
                     @forelse($slips as $slip)
-                        <tr class="transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02]" :class="selected.includes('{{ $slip->id }}') ? 'bg-emerald-50/60 dark:bg-emerald-500/5' : ''">
+                        <tr wire:key="slip-row-{{ $slip->id }}" 
+                            x-show="matchesSearch($el)"
+                            class="transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02]" 
+                            :class="selected.includes('{{ $slip->id }}') ? 'bg-emerald-50/60 dark:bg-emerald-500/5' : ''">
                             <td class="px-3 py-3 align-top">
                                 <input type="checkbox" x-model="selected" value="{{ $slip->id }}" class="h-4 w-4 rounded border-[#cfd4db] text-[#23a559] focus:ring-0 cursor-pointer">
                             </td>
@@ -338,9 +325,9 @@
 
                         <div class="grid grid-cols-2 gap-4">
                             <div class="rounded-[1rem] bg-[#f8fafb] p-4 dark:bg-[#1e1f22]">
-                                <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[#80848e]">ยอดเงินรวม</div>
-                                <div class="mt-1.5 text-lg font-black text-[#162033] dark:text-discord-green">
-                                    THB {{ number_format($activeSlip->display_amount, 2) }}
+                                <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[#80848e]">วันที่ในสลิป</div>
+                                <div class="mt-1.5 text-sm font-bold text-[#162033] dark:text-white">
+                                    {{ $activeSlip->display_date_be }}
                                 </div>
                             </div>
                             <div class="rounded-[1rem] bg-[#f8fafb] p-4 dark:bg-[#1e1f22]">
@@ -419,40 +406,9 @@
             Livewire.on('trigger-download', (event) => { const url = event.url ?? event[0].url; window.location.href = url; });
             
             const initFlatpickr = () => {
+                // Single Date Pickers (if any left)
                 document.querySelectorAll('.date-be').forEach(el => {
                     if (el._flatpickr) el._flatpickr.destroy();
-                    
-                    const updateYearToBE = (instance) => {
-                        const yearInput = instance.currentYearElement;
-                        if (yearInput) {
-                            const adYear = instance.currentYear;
-                            
-                            let beSelect = instance.calendarContainer.querySelector('.numInputWrapper .flatpickr-be-year-select');
-                            if (!beSelect) {
-                                beSelect = document.createElement('select');
-                                beSelect.className = 'flatpickr-be-year-select h-full border-0 bg-transparent text-sm font-bold text-[#162033] dark:text-white focus:ring-0 cursor-pointer py-0 pr-6 pl-1';
-                                beSelect.style.appearance = 'none';
-                                
-                                const currentBE = new Date().getFullYear() + 543;
-                                for (let y = currentBE + 1; y >= currentBE - 10; y--) {
-                                    const opt = document.createElement('option');
-                                    opt.value = y - 543;
-                                    opt.textContent = y;
-                                    opt.className = 'bg-white dark:bg-[#2b2d31]';
-                                    beSelect.appendChild(opt);
-                                }
-                                
-                                yearInput.style.display = 'none';
-                                yearInput.parentNode.insertBefore(beSelect, yearInput);
-                                
-                                beSelect.addEventListener('change', (e) => {
-                                    instance.changeYear(parseInt(e.target.value));
-                                });
-                            }
-                            beSelect.value = adYear;
-                        }
-                    };
-
                     flatpickr(el, {
                         locale: 'th',
                         altInput: true,
@@ -473,10 +429,64 @@
                         }
                     });
                 });
+
+                // Range Date Picker (Direct)
+                document.querySelectorAll('.date-be-range').forEach(el => {
+                    if (el._flatpickr) el._flatpickr.destroy();
+                    flatpickr(el, {
+                        mode: 'range',
+                        locale: 'th',
+                        altInput: true,
+                        altFormat: 'j M y',
+                        dateFormat: 'Y-m-d',
+                        formatDate(date, format) {
+                            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                            return `${date.getDate()} ${months[date.getMonth()]} ${String(date.getFullYear() + 543).slice(-2)}`;
+                        },
+                        onReady: (dObj, dStr, instance) => updateYearToBE(instance),
+                        onMonthChange: (dObj, dStr, instance) => updateYearToBE(instance),
+                        onYearChange: (dObj, dStr, instance) => updateYearToBE(instance),
+                        onClose: (selectedDates) => {
+                            if (selectedDates.length === 2) {
+                                const start = flatpickr.formatDate(selectedDates[0], 'Y-m-d');
+                                const end = flatpickr.formatDate(selectedDates[1], 'Y-m-d');
+                                @this.set('date_from', start);
+                                @this.set('date_to', end);
+                            }
+                        }
+                    });
+                });
+            };
+
+            const updateYearToBE = (instance) => {
+                const yearInput = instance.currentYearElement;
+                if (yearInput) {
+                    const adYear = instance.currentYear;
+                    let beSelect = instance.calendarContainer.querySelector('.numInputWrapper .flatpickr-be-year-select');
+                    if (!beSelect) {
+                        beSelect = document.createElement('select');
+                        beSelect.className = 'flatpickr-be-year-select h-full border-0 bg-transparent text-sm font-bold text-[#162033] dark:text-white focus:ring-0 cursor-pointer py-0 pr-6 pl-1';
+                        beSelect.style.appearance = 'none';
+                        const currentBE = new Date().getFullYear() + 543;
+                        for (let y = currentBE + 1; y >= currentBE - 10; y--) {
+                            const opt = document.createElement('option');
+                            opt.value = y - 543;
+                            opt.textContent = y;
+                            opt.className = 'bg-white dark:bg-[#2b2d31]';
+                            beSelect.appendChild(opt);
+                        }
+                        yearInput.style.display = 'none';
+                        yearInput.parentNode.insertBefore(beSelect, yearInput);
+                        beSelect.addEventListener('change', (e) => {
+                            instance.changeYear(parseInt(e.target.value));
+                        });
+                    }
+                    beSelect.value = adYear;
+                }
             };
 
             initFlatpickr();
-            Livewire.hook('morph.updated', (el, component) => { initFlatpickr(); if (typeof initializeIcons === 'function') initializeIcons(); });
+            Livewire.hook('morph.updated', (el, component) => { initFlatpickr(); });
         });
     </script>
 </div>

@@ -14,7 +14,8 @@ import {
     // Additional & Missing
     ChartColumnBig, BriefcaseBusiness, Users, BadgeDollarSign, HelpCircle, 
     ScanLine, PanelsTopLeft, Settings2, ListChecks, Wallet, ArrowBigRightDash,
-    Edit3, ChevronsUpDown, Zap, AlertCircle, CheckCircle
+    Edit3, ChevronsUpDown, Zap, AlertCircle, CheckCircle,
+    Inbox, CalendarDays, CalendarRange, CalendarCheck, ChevronUp
 } from 'lucide';
 
 const icons = {
@@ -28,7 +29,8 @@ const icons = {
     PanelRightOpen,
     ChartColumnBig, BriefcaseBusiness, Users, BadgeDollarSign, HelpCircle, 
     ScanLine, PanelsTopLeft, Settings2, ListChecks, Wallet, ArrowBigRightDash,
-    Edit3, ChevronsUpDown, Zap, AlertCircle, CheckCircle
+    Edit3, ChevronsUpDown, Zap, AlertCircle, CheckCircle,
+    Inbox, CalendarDays, CalendarRange, CalendarCheck, ChevronUp
 };
 
 // Unified Icon Initialization
