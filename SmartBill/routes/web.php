@@ -128,12 +128,15 @@ Route::middleware(['web', 'auth', 'verified', \App\Http\Middleware\IdentifyTenan
     Route::delete('/slips/delete/{slip}', [AdminController::class, 'deleteSlip'])->name('workspace.slip.delete');
     Route::get('/slips/export', [AdminController::class, 'exportExcel'])->name('workspace.slip.export');
 
-    Route::get('/templates', [AdminController::class, 'merchants'])->name('workspace.templates.index');
-    Route::get('/templates/{merchant}/edit', [AdminController::class, 'editMerchant'])->name('workspace.templates.edit');
-    Route::post('/templates/suggest', [AdminController::class, 'suggestPrompt'])->name('workspace.templates.suggest');
-    Route::post('/templates/store', [AdminController::class, 'storeMerchant'])->name('workspace.templates.store');
-    Route::patch('/templates/update/{merchant}', [AdminController::class, 'updateMerchantMapping'])->name('workspace.templates.update');
-    Route::delete('/templates/delete/{merchant}', [AdminController::class, 'deleteMerchant'])->name('workspace.templates.delete');
+    // Restricted to Super Admins (Intelligence Profiles)
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/templates', [AdminController::class, 'merchants'])->name('workspace.templates.index');
+        Route::get('/templates/{merchant}/edit', [AdminController::class, 'editMerchant'])->name('workspace.templates.edit');
+        Route::post('/templates/suggest', [AdminController::class, 'suggestPrompt'])->name('workspace.templates.suggest');
+        Route::post('/templates/store', [AdminController::class, 'storeMerchant'])->name('workspace.templates.store');
+        Route::patch('/templates/update/{merchant}', [AdminController::class, 'updateMerchantMapping'])->name('workspace.templates.update');
+        Route::delete('/templates/delete/{merchant}', [AdminController::class, 'deleteMerchant'])->name('workspace.templates.delete');
+    });
 });
 
 // ============================================

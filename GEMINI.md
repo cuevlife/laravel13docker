@@ -48,19 +48,19 @@
 - Switching project means updating session state, not changing the app into a different project path
 
 ## Product Intent For Users
-- The project picker should feel like a profile chooser:
+- The workspace picker should feel like a profile chooser (Netflix style):
   - simple
   - visual
   - safe
   - hard to get lost in
-- `Add Project` should stay lightweight:
+- `Add Folder` should stay lightweight:
   - modal flow
-  - only ask for project name first
+  - ask for folder name and optional logo upload
   - create and enter immediately
-- `Delete Project` should be guarded:
-  - available only to project owners or super admins
-  - require typing the exact project name before deletion
-  - remove the active project session if that workspace gets deleted
+- `Delete Folder` should be guarded:
+  - available only to folder owners or super admins
+  - require typing the exact folder name before deletion
+  - remove the active selection if that workspace gets deleted
 
 ## Desired Next Direction
 - Keep pushing the split between:
@@ -68,4 +68,17 @@
   - `Workspace App`
 - Rename labels to match the real product better:
   - avoid generic SaaS/accounting wording
-  - prefer wording around projects, workspaces, scan operations, token control, and review queues
+  - prefer wording around profiles, folders, workspaces, scan operations, token control, and review queues. (Successfully renamed Project Hub to Folder Hub).
+
+## Recent UI Updates (04/2026)
+- **Terminology Swap:** Fully translated "Project" semantics into "Folder" across the UI, bringing a neutral, profile-like filing cabinet feel for user slips.
+- **Visual Overhauls:**
+  - `Folder Logo Upload`: Users can optionally add square visual identifiers directly from the Create Modal.
+  - `Search Box Refinement`: Compacted the Hub Search container to `h-10` width for a slicker presentation.
+  - `Long Name Guardails`: Embedded safe text-truncation (`w-full truncate`) with hover tooltips for extensive Folder names.
+- **Authentication Recovery:** Restored the premium split-screen `/login` interface and stabilized the background session logout controller.
+
+## Next Steps To Action
+1. Move inwards to the actual workspace views (e.g., Dashboard, Slips) and apply the same "Folder" terminology everywhere `Project` leaks out.
+2. Ensure the "Control Plane" UI logic gracefully reflects "Folders" and not basic projects.
+3. Address legacy `stdClass` warnings inside the Admin Controller when dealing with these redefined Workspaces.

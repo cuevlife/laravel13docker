@@ -48,7 +48,7 @@
                         <div class="flex items-center justify-between px-1 -mt-4">
                             <label class="flex items-center cursor-pointer group select-none">
                                 <div class="relative">
-                                    <input type="checkbox" name="remember" class="peer sr-only">
+                                    <input type="checkbox" name="remember" value="1" class="peer sr-only">
                                     <div class="w-9 h-5 bg-slate-100 dark:bg-black/40 rounded-full border border-slate-200 dark:border-white/5 transition-all peer-checked:bg-discord-green"></div>
                                     <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-slate-400 dark:bg-slate-600 rounded-full transition-all peer-checked:translate-x-4 peer-checked:bg-white shadow-sm"></div>
                                 </div>

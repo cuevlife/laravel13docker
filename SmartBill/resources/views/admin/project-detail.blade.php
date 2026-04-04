@@ -144,8 +144,13 @@
 
             <div class="space-y-6">
                 <div class="premium-card p-6 md:p-8">
-                    <h2 class="text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white">Profiles</h2>
-                    <div class="mt-6 space-y-3">
+                    <div class="flex items-center justify-between gap-4 mb-6">
+                        <h2 class="text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white">Profiles</h2>
+                        <a href="{{ route('projects.open', ['project' => $merchant->id, 'next' => 'templates']) }}" class="inline-flex h-9 items-center justify-center rounded-[12px] bg-discord-green px-4 text-[10px] font-black uppercase tracking-[0.22em] text-white transition hover:bg-[#1f8b4c]">
+                            <i data-lucide="settings-2" class="w-3.5 h-3.5 mr-2"></i> Manage Profiles
+                        </a>
+                    </div>
+                    <div class="space-y-3">
                         @forelse($merchant->templates as $template)
                             <div class="rounded-[20px] border border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-white/5 dark:bg-white/[0.03]">
                                 <div class="text-sm font-black text-slate-900 dark:text-white">{{ $template->name }}</div>

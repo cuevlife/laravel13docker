@@ -1,100 +1,104 @@
-<div class="space-y-5 pb-20">
-    <!-- Header Summary -->
-    @if($batch_id)
-        @php $currentBatch = $batches->firstWhere('id', $batch_id); @endphp
-        @if($currentBatch)
-            <section class="rounded-[1rem] border border-[#23a559]/10 bg-white px-4 py-3 shadow-sm dark:border-[#23a559]/20 dark:bg-[#2b2d31]">
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 text-[9px] font-black uppercase tracking-[0.14em] text-[#80848e]">
-                            <span class="inline-flex rounded-full bg-[#eef8f1] px-2.5 py-1 text-[#23a559] dark:bg-[#23a559]/10 dark:text-[#7fe0a2]">Collection Focus</span>
-                        </div>
-                        <h2 class="mt-2 text-base font-black tracking-tight text-[#162033] dark:text-white">{{ $currentBatch->name }}</h2>
-                        <p class="mt-1 max-w-3xl truncate text-xs font-bold text-slate-500 dark:text-slate-300">{{ $currentBatch->note ?: 'Grouped receipts for better organization.' }}</p>
-                    </div>
-                    <button wire:click="$set('batch_id', '')" class="inline-flex h-9 items-center justify-center gap-2 rounded-[0.85rem] border border-[#e3e5e8] bg-white px-3 text-[9px] font-black uppercase tracking-[0.14em] text-[#5c5e66] transition hover:text-[#162033] dark:border-[#313338] dark:bg-[#1e1f22] dark:text-[#b5bac1] dark:hover:text-white">
-                        <i data-lucide="arrow-left" class="h-4 w-4"></i> Show All Slips
-                    </button>
-                </div>
-            </section>
-        @endif
-    @endif
-
+<div class="space-y-5 pb-20" x-data="{ selected: @entangle('selectedIds') }">
     <section class="rounded-[1rem] border border-black/5 bg-white shadow-sm dark:border-white/10 dark:bg-[#2b2d31]">
-        <!-- View Mode Toggle -->
-        <div class="flex items-center gap-1 border-b border-[#e3e5e8] px-4 py-2 dark:border-[#313338]">
-            <button wire:click="setArchiveScope('active')" 
-                    class="h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-full transition-all {{ $archive_scope === 'active' ? 'bg-discord-green text-white shadow-md' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300' }}">
-                Active Inbox
-            </button>
-            <button wire:click="setArchiveScope('archived')" 
-                    class="h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-full transition-all {{ $archive_scope === 'archived' ? 'bg-[#ed4245] text-white shadow-md' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300' }}">
-                Historical Archive
-            </button>
+        <!-- Table Header / Actions -->
+        <div class="flex items-center gap-1 border-b border-[#e3e5e8] px-4 py-3 dark:border-[#313338]">
+            <div class="flex items-center gap-2">
+                <i data-lucide="inbox" class="w-4 h-4 text-discord-green"></i>
+                <h2 class="text-sm font-black uppercase tracking-widest text-[#162033] dark:text-white">Workspace Inbox</h2>
+            </div>
 
             <div class="ml-auto flex items-center gap-2">
-                @if($archive_scope === 'active')
-                    <button type="button" wire:click="openBatchModal" class="inline-flex h-8 items-center justify-center gap-2 rounded-[0.75rem] border border-[#e3e5e8] bg-white px-3 text-[9px] font-black uppercase tracking-[0.14em] text-[#5c5e66] transition hover:text-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-[#b5bac1] dark:hover:text-[#7fe0a2]">
-                        <i data-lucide="folder-plus" class="h-3.5 w-3.5"></i> New Collection
-                    </button>
-                    <button type="button" x-on:click="$dispatch('gentle-open-scan')" class="inline-flex h-8 items-center justify-center gap-2 rounded-[0.85rem] bg-discord-green px-4 text-[9px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#1f8b4c] shadow-lg shadow-green-500/10">
-                        <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
-                        <span>Scan Receipt</span>
-                    </button>
-                @endif
+                <button type="button" x-on:click="$dispatch('gentle-open-scan')" class="inline-flex h-9 items-center justify-center gap-2 rounded-[0.85rem] bg-discord-green px-4 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#1f8b4c] shadow-lg shadow-green-500/10">
+                    <i data-lucide="scan-line" class="w-4 h-4"></i>
+                    <span>Scan Receipt</span>
+                </button>
             </div>
         </div>
 
         <!-- Search & Quick Filters -->
         <div class="border-b border-[#e3e5e8] px-4 py-3 dark:border-[#313338] md:px-5 md:py-4">
-            <div class="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.6fr)_220px_220px_auto]">
-                <div class="relative">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#80848e]"></i>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search UID, profile, or collection..." class="h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] pl-10 pr-3 text-sm font-bold text-[#162033] outline-none transition focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_240px_200px_auto]">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#80848e]"></i>
+                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="ค้นหา UID, ชื่อร้าน..." class="h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] pl-10 pr-3 text-sm font-bold text-[#162033] outline-none transition focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
+                    </div>
+
+                    <div class="relative">
+                        <select wire:model.live="workflow_status" class="w-full appearance-none rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] px-3 py-2.5 text-sm font-bold text-[#162033] outline-none transition dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
+                            <option value="">ทุกสถานะ</option>
+                            @foreach($workflowOptions as $key => $label) 
+                                @if($key !== \App\Models\Slip::WORKFLOW_ARCHIVED && $key !== \App\Models\Slip::WORKFLOW_PENDING)
+                                    <option value="{{ $key }}">{{ $label }}</option> 
+                                @endif
+                            @endforeach
+                        </select>
+                        <i data-lucide="chevron-down" class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#80848e]"></i>
+                    </div>
+
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" type="button" class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[0.85rem] border border-[#e3e5e8] bg-white px-4 text-xs font-bold text-[#5c5e66] hover:bg-[#f2f3f5] transition-all dark:bg-[#1e1f22] dark:border-[#313338] dark:text-[#b5bac1]">
+                            <i data-lucide="calendar" class="h-4 w-4 text-discord-green"></i>
+                            <span>ช่วงวันที่ (พ.ศ.)</span>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" x-transition class="absolute top-12 right-0 z-30 w-72 p-4 bg-white dark:bg-[#2b2d31] rounded-2xl shadow-2xl border border-black/5 dark:border-white/10">
+                            <div class="space-y-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">เริ่มต้น</label>
+                                    <div class="relative">
+                                        <input type="text" id="date_from" wire:model.live="date_from" placeholder="เลือกวันที่เริ่ม" class="date-be h-10 w-full rounded-[0.75rem] border border-[#e3e5e8] dark:border-[#313338] bg-[#f8fafb] dark:bg-[#1e1f22] px-3 text-xs font-bold dark:text-white outline-none">
+                                        <i data-lucide="calendar-range" class="absolute right-3 top-3 w-3.5 h-3.5 text-slate-300 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1">สิ้นสุด</label>
+                                    <div class="relative">
+                                        <input type="text" id="date_to" wire:model.live="date_to" placeholder="เลือกวันที่จบ" class="date-be h-10 w-full rounded-[0.75rem] border border-[#e3e5e8] dark:border-[#313338] bg-[#f8fafb] dark:bg-[#1e1f22] px-3 text-xs font-bold dark:text-white outline-none">
+                                        <i data-lucide="calendar-range" class="absolute right-3 top-3 w-3.5 h-3.5 text-slate-300 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <button @click="open = false" class="w-full py-2.5 bg-[#162033] dark:bg-discord-green text-white text-[10px] font-black uppercase tracking-widest rounded-[0.75rem] shadow-lg">ยืนยันช่วงเวลา</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button wire:click="$set('search', ''); $set('workflow_status', ''); $set('date_from', ''); $set('date_to', '')" class="inline-flex h-10 items-center justify-center gap-2 rounded-[0.85rem] border border-rose-200 bg-rose-50 px-5 text-[10px] font-black uppercase tracking-[0.18em] text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10" title="ล้างการกรอง">
+                        <i data-lucide="filter-x" class="h-4 w-4"></i> ล้างการกรอง
+                    </button>
                 </div>
-                <div class="relative">
-                    <select wire:model.live="batch_id" class="w-full appearance-none rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] px-3 py-2.5 text-sm font-bold text-[#162033] outline-none transition dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
-                        <option value="">All Collections</option>
-                        @foreach($batches as $batch) <option value="{{ $batch->id }}">{{ $batch->name }}</option> @endforeach
-                    </select>
-                    <i data-lucide="chevron-down" class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#80848e]"></i>
-                </div>
-                <div class="relative">
-                    <select wire:model.live="workflow_status" class="w-full appearance-none rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] px-3 py-2.5 text-sm font-bold text-[#162033] outline-none transition dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
-                        <option value="">All Statuses</option>
-                        @foreach($workflowOptions as $key => $label) <option value="{{ $key }}">{{ $label }}</option> @endforeach
-                    </select>
-                    <i data-lucide="chevron-down" class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#80848e]"></i>
-                </div>
-                <button wire:click="$set('search', ''); $set('batch_id', ''); $set('workflow_status', '')" class="inline-flex h-9 items-center justify-center gap-2 rounded-[0.85rem] border border-rose-200 bg-rose-50 px-3 text-[10px] font-black uppercase tracking-[0.18em] text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
-                    <i data-lucide="filter-x" class="h-4 w-4"></i> Clear
-                </button>
+
+                @if($date_from || $date_to)
+                    <div class="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+                        <div class="px-3 py-1 rounded-full bg-discord-green/10 text-discord-green text-[10px] font-black flex items-center gap-2 border border-discord-green/20">
+                            <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+                            <span>ตัวกรองวันที่: {{ $date_from ? \Carbon\Carbon::parse($date_from)->addYears(543)->format('j/m/Y') : 'เริ่มต้น' }} — {{ $date_to ? \Carbon\Carbon::parse($date_to)->addYears(543)->format('j/m/Y') : 'สิ้นสุด' }}</span>
+                            <button wire:click="$set('date_from', ''); $set('date_to', '')" class="ml-1 p-0.5 hover:bg-rose-500 hover:text-white rounded-full transition-all"><i data-lucide="x" class="w-3 h-3"></i></button>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
         <!-- Bulk Actions -->
         <div class="border-b border-[#e3e5e8] px-4 py-3 dark:border-[#313338] md:px-5">
-            <div class="flex flex-wrap items-center gap-2">
-                <div class="inline-flex h-8 items-center rounded-[0.75rem] bg-[#f5f9f6] px-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#23a559] dark:bg-[#1e1f22]">{{ count($selectedIds) }} Selected</div>
-                <div class="flex flex-wrap items-center gap-1.5 ml-2">
-                    <button wire:click="setBulkAction('mark_reviewed')" @disabled(count($selectedIds) === 0) class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="Mark Reviewed">
-                        <i data-lucide="check-circle-2" class="h-4 w-4 text-discord-green"></i>
-                    </button>
-                    <button wire:click="setBulkAction('mark_approved')" @disabled(count($selectedIds) === 0) class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="Mark Approved">
-                        <i data-lucide="shield-check" class="h-4 w-4 text-blue-500"></i>
-                    </button>
-                    @if($archive_scope === 'archived')
-                        <button wire:click="setBulkAction('restore')" @disabled(count($selectedIds) === 0) class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="Restore">
-                            <i data-lucide="archive-restore" class="h-4 w-4 text-amber-500"></i>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="inline-flex h-8 items-center rounded-[0.75rem] bg-[#f5f9f6] px-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#23a559] dark:bg-[#1e1f22]"><span x-text="selected.length"></span> รายการที่เลือก</div>
+                    <div class="flex items-center gap-1.5 ml-2">
+                        <button wire:click="setBulkAction('mark_reviewed')" :disabled="selected.length === 0" class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="ทำเครื่องหมายว่าแสกนแล้ว">
+                            <i data-lucide="check-circle-2" class="h-4 w-4 text-discord-green"></i>
                         </button>
-                    @else
-                        <button wire:click="setBulkAction('archive')" @disabled(count($selectedIds) === 0) class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="Archive">
-                            <i data-lucide="archive" class="h-4 w-4 text-slate-400"></i>
+                        <button wire:click="setBulkAction('mark_approved')" :disabled="selected.length === 0" class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="ยืนยันความถูกต้อง">
+                            <i data-lucide="shield-check" class="h-4 w-4 text-blue-500"></i>
                         </button>
-                    @endif
-                    <div class="w-px h-6 bg-[#e3e5e8] dark:bg-[#313338] mx-1"></div>
-                    <button wire:click="setBulkAction('export')" @disabled(count($selectedIds) === 0) class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="Export Selected">
-                        <i data-lucide="download" class="h-4 w-4 text-indigo-500"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button wire:click="setBulkAction('export')" :disabled="selected.length === 0" class="inline-flex h-10 items-center justify-center gap-2 rounded-[0.85rem] bg-indigo-600 px-6 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-indigo-700 disabled:opacity-40 shadow-lg shadow-indigo-500/20 group" title="ดาวน์โหลดไฟล์ Excel">
+                        <i data-lucide="download" class="h-4 w-4 group-hover:translate-y-0.5 transition-transform"></i>
+                        <span>Excel Report</span>
                     </button>
                 </div>
             </div>
@@ -105,10 +109,15 @@
             <table class="min-w-full text-left text-sm">
                 <thead>
                     <tr class="border-b border-[#e3e5e8] text-[10px] font-black uppercase tracking-[0.22em] text-[#80848e] dark:border-[#313338]">
-                        <th class="px-3 py-3 w-10"><input type="checkbox" @click="$wire.toggleAll(@js($slips->pluck('id')->toArray()))" class="h-4 w-4 rounded border-[#cfd4db] text-[#23a559]"></th>
+                        <th class="px-3 py-3 w-10">
+                            <input type="checkbox" 
+                                   @change="if($el.checked) { selected = @js($slips->pluck('id')->map(fn($id) => (string)$id)->toArray()) } else { selected = [] }"
+                                   :checked="selected.length > 0 && selected.length === @js($slips->count())"
+                                   class="h-4 w-4 rounded border-[#cfd4db] text-[#23a559] focus:ring-0 cursor-pointer">
+                        </th>
                         <th class="px-3 py-3 cursor-pointer group" wire:click="sortBy('uid')">
                             <div class="flex items-center gap-1">
-                                Source
+                                รายละเอียดสลิป
                                 @if($sortField === 'uid')
                                     <i data-lucide="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="h-3.5 w-3.5 text-discord-green"></i>
                                 @else
@@ -116,11 +125,10 @@
                                 @endif
                             </div>
                         </th>
-                        <th class="px-3 py-3">Collection</th>
                         
                         <th class="px-3 py-3 cursor-pointer group" wire:click="sortBy('processed_at')">
                             <div class="flex items-center gap-1">
-                                Receipt Date
+                                วันที่ในสลิป
                                 @if($sortField === 'processed_at')
                                     <i data-lucide="{{ $sortDirection === 'asc' ? 'chevron-up' : 'chevron-down' }}" class="h-3.5 w-3.5 text-discord-green"></i>
                                 @else
@@ -129,16 +137,18 @@
                             </div>
                         </th>
 
-                        <th class="px-3 py-3">Processed</th>
-                        <th class="px-3 py-3">Workflow</th>
-                        <th class="px-3 py-3 text-right">Amount</th>
-                        <th class="px-3 py-3 text-right">Actions</th>
+                        <th class="px-3 py-3">ประมวลผลเมื่อ</th>
+                        <th class="px-3 py-3">สถานะ</th>
+                        <th class="px-3 py-3 text-right">ยอดเงินรวม</th>
+                        <th class="px-3 py-3 text-right">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#e3e5e8] dark:divide-[#313338]">
                     @forelse($slips as $slip)
-                        <tr class="transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02] {{ in_array($slip->id, $selectedIds) ? 'bg-emerald-50/60 dark:bg-emerald-500/5' : '' }}">
-                            <td class="px-3 py-3 align-top"><input type="checkbox" wire:model.live="selectedIds" value="{{ $slip->id }}" class="h-4 w-4 rounded border-[#cfd4db] text-[#23a559]"></td>
+                        <tr class="transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02]" :class="selected.includes('{{ $slip->id }}') ? 'bg-emerald-50/60 dark:bg-emerald-500/5' : ''">
+                            <td class="px-3 py-3 align-top">
+                                <input type="checkbox" x-model="selected" value="{{ $slip->id }}" class="h-4 w-4 rounded border-[#cfd4db] text-[#23a559] focus:ring-0 cursor-pointer">
+                            </td>
                             <td class="px-3 py-3 align-top">
                                 <button type="button" wire:click="openSlipDetail('{{ $slip->uid }}')" class="flex min-w-[240px] items-start gap-3 text-left">
                                     <div class="h-10 w-10 overflow-hidden rounded-[0.8rem] border border-[#e3e5e8] bg-white shadow-sm dark:border-[#313338] dark:bg-[#1e1f22]">
@@ -153,36 +163,40 @@
                                             @if(!($slip->extracted_data['__metadata']['is_reliable'] ?? true))
                                                 <span class="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-500 text-[9px] font-black flex items-center gap-1">
                                                     <i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>
-                                                    Check Info
+                                                    ต้องตรวจสอบ
                                                 </span>
                                             @endif
                                         </div>
                                     </div>
                                 </button>
                             </td>
-                            <td class="px-3 py-3 align-top"><span class="inline-flex rounded-full bg-[#f3f7ff] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#4f7cff] dark:bg-white/[0.06] dark:text-[#a8bcff]">{{ $slip->batch?->name ?? 'Inbox' }}</span></td>
                             <td class="px-3 py-3 align-top font-bold text-[#5c5e66] dark:text-[#b5bac1]">{{ $slip->display_date }}</td>
                             <td class="px-3 py-3 align-top font-bold text-[#5c5e66] dark:text-[#b5bac1]">{{ $slip->processed_at->format('d/m/Y H:i') }}</td>
-                            <td class="px-3 py-3 align-top"><span class="text-[10px] font-black uppercase tracking-[0.12em] text-[#162033] dark:text-white px-2 py-1 bg-[#f8fafb] dark:bg-[#1e1f22] rounded-[0.8rem]">{{ $workflowOptions[$slip->workflow_status] ?? $slip->workflow_status }}</span></td>
+                            <td class="px-3 py-3 align-top">
+                                @php
+                                    $statusColor = match($slip->workflow_status) {
+                                        \App\Models\Slip::WORKFLOW_EXPORTED => 'bg-indigo-500/10 text-indigo-500',
+                                        \App\Models\Slip::WORKFLOW_APPROVED => 'bg-blue-500/10 text-blue-500',
+                                        \App\Models\Slip::WORKFLOW_REVIEWED => 'bg-discord-green/10 text-discord-green',
+                                        default => 'bg-[#f8fafb] dark:bg-[#1e1f22] text-slate-400'
+                                    };
+                                @endphp
+                                <span class="text-[10px] font-black uppercase tracking-[0.12em] px-2 py-1 {{ $statusColor }} rounded-[0.8rem]">{{ $workflowOptions[$slip->workflow_status] ?? $slip->workflow_status }}</span>
+                            </td>
                             <td class="px-3 py-3 align-top text-right text-sm font-black text-[#162033] dark:text-white">THB {{ number_format($slip->display_amount, 2) }}</td>
                             <td class="px-3 py-3 align-top text-right">
                                 <div class="flex items-center justify-end gap-1">
-                                    <button wire:click="openSlipDetail('{{ $slip->uid }}')" class="p-1 text-slate-400 hover:text-[#162033] dark:hover:text-white" title="View"><i data-lucide="eye" class="h-4 w-4"></i></button>
-                                    @if($archive_scope === 'active')
-                                        <button wire:click="reprocessSlip({{ $slip->id }})" class="p-1 text-slate-400 hover:text-discord-green" title="Re-scan with AI"><i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i></button>
-                                        <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips/edit/' . $slip->uid) }}" class="p-1 text-slate-400 hover:text-blue-500" title="Edit"><i data-lucide="edit-3" class="h-4 w-4"></i></a>
-                                        <button wire:click="toggleArchive({{ $slip->id }}, true)" class="p-1 text-slate-400 hover:text-amber-500" title="Archive"><i data-lucide="archive" class="h-4 w-4"></i></button>
-                                    @else
-                                        <button wire:click="toggleArchive({{ $slip->id }}, false)" class="p-1 text-slate-400 hover:text-discord-green" title="Restore"><i data-lucide="archive-restore" class="h-4 w-4"></i></button>
-                                    @endif
+                                    <button wire:click="openSlipDetail('{{ $slip->uid }}')" class="p-1 text-slate-400 hover:text-[#162033] dark:hover:text-white" title="ดูรายละเอียด"><i data-lucide="eye" class="h-4 w-4"></i></button>
+                                    <button wire:click="reprocessSlip({{ $slip->id }})" class="p-1 text-slate-400 hover:text-discord-green" title="แสกนซ้ำด้วย AI"><i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i></button>
+                                    <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips/edit/' . $slip->uid) }}" class="p-1 text-slate-400 hover:text-blue-500" title="แก้ไขข้อมูล"><i data-lucide="edit-3" class="h-4 w-4"></i></a>
                                     <button wire:click="deleteSlip({{ $slip->id }})" 
-                                            wire:confirm="Are you sure you want to delete this slip? This action cannot be undone."
-                                            class="p-1 text-slate-400 hover:text-rose-500" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                                            wire:confirm="คุณแน่ใจหรือไม่ว่าต้องการลบสลิปนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+                                            class="p-1 text-slate-400 hover:text-rose-500" title="ลบทิ้ง"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="px-4 py-14 text-center"><div class="text-[10px] font-black uppercase tracking-[0.2em] text-[#80848e]">No slips found</div></td></tr>
+                        <tr><td colspan="7" class="px-4 py-14 text-center"><div class="text-[10px] font-black uppercase tracking-[0.2em] text-[#80848e]">ไม่พบข้อมูลสลิป</div></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -199,7 +213,7 @@
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
                 <h3 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-tight mb-1">Process Receipt</h3>
-                <p class="text-[11px] text-[#5c5e66] dark:text-[#b5bac1] leading-relaxed mb-5 font-medium">Assign the scan to a collection now, add labels if needed, and SmartBill will keep the queue organized for review.</p>
+                <p class="text-[11px] text-[#5c5e66] dark:text-[#b5bac1] leading-relaxed mb-5 font-medium">SmartBill จะวิเคราะห์สลิปและดึงข้อมูลให้อัตโนมัติตามโปรไฟล์ที่คุณเลือก</p>
                 
                 <form wire:submit.prevent="submitScan" class="space-y-6">
                     <!-- Processing Overlay -->
@@ -214,13 +228,13 @@
                             <div class="mt-8 w-48 h-1.5 bg-[#f2f3f5] dark:bg-[#1e1f22] rounded-full overflow-hidden">
                                 <div class="h-full bg-discord-green transition-all duration-500" style="width: {{ ($totalScanCount > 0) ? ($currentScanCount / $totalScanCount) * 100 : 0 }}%"></div>
                             </div>
-                            <p class="mt-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ $currentScanCount }} / {{ $totalScanCount }} Completed</p>
+                            <p class="mt-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ $currentScanCount }} / {{ $totalScanCount }} รายการสำเร็จ</p>
                         </div>
                     @endif
 
                     <!-- Image Upload Section -->
                     <div class="space-y-1.5 w-full" x-data="{ isUploading: false, progress: 0 }" x-on:livewire-upload-start="isUploading = true; progress = 0" x-on:livewire-upload-finish="isUploading = false" x-on:livewire-upload-error="isUploading = false" x-on:livewire-upload-progress="progress = $event.detail.progress">
-                        <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Receipt Images (Multi-select) *</label>
+                        <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">รูปภาพสลิป (เลือกได้หลายรูป) *</label>
                         
                         <div x-show="isUploading" class="mb-2 h-1 w-full bg-[#f2f3f5] dark:bg-[#1e1f22] rounded-full overflow-hidden">
                             <div class="h-full bg-discord-green transition-all duration-300" :style="`width: ${progress}%`"></div>
@@ -231,10 +245,8 @@
                                 <div class="w-full p-2 rounded-[24px] border-2 border-discord-green bg-black/5 relative">
                                     <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[200px] overflow-y-auto p-1">
                                         @foreach($fileQueue as $index => $image)
-                                            <div wire:key="queue-file-{{ $image->getClientOriginalName() }}-{{ $loop->index }}" class="aspect-square rounded-[12px] overflow-hidden border border-white/20 shadow-sm relative group/item">
-                                                @php $previewUrl = null; try { $previewUrl = $image->temporaryUrl(); } catch (\Exception $e) { } @endphp
-                                                @if($previewUrl) <img src="{{ $previewUrl }}" class="w-full h-full object-cover">
-                                                @else <div class="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center"><i data-lucide="image" class="w-4 h-4 text-slate-400"></i></div> @endif
+                                            <div wire:key="queue-file-{{ $image }}-{{ $loop->index }}" class="aspect-square rounded-[12px] overflow-hidden border border-white/20 shadow-sm relative group/item">
+                                                <img src="{{ asset('storage/livewire-tmp/' . $image) }}" class="w-full h-full object-cover">
                                                 
                                                 <!-- Increased click area for remove button -->
                                                 <div class="absolute top-0 right-0 p-1.5 z-30">
@@ -247,63 +259,42 @@
                                             </div>
                                         @endforeach
                                         <label class="aspect-square rounded-[12px] bg-discord-green/10 flex flex-col items-center justify-center text-discord-green border border-dashed border-discord-green/30 cursor-pointer hover:bg-discord-green/20 transition-colors">
-                                            <i data-lucide="plus" class="w-4 h-4"></i><span class="text-[8px] font-black mt-1">Add More</span>
-                                            <input type="file" wire:model="fileQueue" accept="image/jpeg,image/png,image/webp" multiple class="hidden">
+                                            <i data-lucide="plus" class="w-4 h-4"></i><span class="text-[8px] font-black mt-1">เพิ่มรูป</span>
+                                            <input type="file" wire:model="uploadTemp" accept="image/jpeg,image/png,image/webp" multiple class="hidden">
                                         </label>
                                     </div>
                                     <div class="mt-2 py-1 px-3 flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-2 relative z-20">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ count($fileQueue) }} Files Selected</p>
-                                        <button type="button" x-on:click="$wire.set('fileQueue', [])" class="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline cursor-pointer">Clear All</button>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">เลือกแล้ว {{ count($fileQueue) }} ไฟล์</p>
+                                        <button type="button" x-on:click="$wire.clearFileQueue()" class="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline cursor-pointer">ล้างทั้งหมด</button>
                                     </div>
                                 </div>
                             @else
                                 <div class="relative group">
-                                    <input type="file" wire:model="fileQueue" accept="image/jpeg,image/png,image/webp" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                    <input type="file" wire:model="uploadTemp" accept="image/jpeg,image/png,image/webp" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                                     <div class="w-full min-h-[120px] px-5 py-6 bg-[#f2f3f5] dark:bg-[#1e1f22] border-2 border-dashed border-[#e3e5e8] dark:border-[#313338] rounded-[24px] flex flex-col items-center justify-center text-center transition-all group-hover:border-discord-green/50 group-hover:bg-discord-green/5">
                                         <div class="w-10 h-10 rounded-full bg-white dark:bg-[#2b2d31] flex items-center justify-center shadow-sm mb-3 text-discord-green"><i data-lucide="image-plus" class="w-4 h-4"></i></div>
-                                        <p class="text-xs font-bold text-[#1e1f22] dark:text-white mb-1">Click to upload receipts</p>
-                                        <p class="text-[10px] font-medium text-[#80848e]">Select multiple JPG, PNG, WEBP</p>
+                                        <p class="text-xs font-bold text-[#1e1f22] dark:text-white mb-1">คลิกเพื่ออัปโหลดสลิป</p>
+                                        <p class="text-[10px] font-medium text-[#80848e]">เลือกได้หลายรูป JPG, PNG, WEBP</p>
                                     </div>
                                 </div>
                             @endif
                         </div>
-                        @error('fileQueue.*') <span class="text-[10px] font-bold text-rose-500 pl-2">{{ $message }}</span> @enderror
+                        @error('uploadTemp.*') <span class="text-[10px] font-bold text-rose-500 pl-2">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Profile & Collection -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="space-y-1.5 relative">
-                            <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Extraction Profile *</label>
+                            <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">โปรไฟล์การดึงข้อมูล *</label>
                             <select wire:model="scanForm.template_id" required class="h-10 w-full px-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[0.85rem] text-[#1e1f22] dark:text-white font-bold text-xs focus:ring-2 focus:ring-discord-green/50 appearance-none outline-none">
-                                <option value="auto">Auto-Detect Store</option>
+                                <option value="auto">ตรวจจับร้านค้าอัตโนมัติ</option>
                                 @foreach($templates as $template) <option value="{{ $template->id }}">{{ $template->name }}</option> @endforeach
                             </select>
                             <i data-lucide="chevron-down" class="absolute right-4 top-[38px] w-4 h-4 text-[#80848e] pointer-events-none"></i>
                         </div>
-                        <div class="space-y-1.5 relative">
-                            <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Existing Collection</label>
-                            <select wire:model="scanForm.batch_id" class="h-10 w-full px-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[0.85rem] text-[#1e1f22] dark:text-white font-bold text-xs focus:ring-2 focus:ring-discord-green/50 appearance-none outline-none">
-                                <option value="">Use today's inbox</option>
-                                @foreach($batches as $batch) <option value="{{ $batch->id }}">{{ $batch->name }}</option> @endforeach
-                            </select>
-                            <i data-lucide="chevron-down" class="absolute right-4 top-[38px] w-4 h-4 text-[#80848e] pointer-events-none"></i>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">ป้ายกำกับ (Labels)</label>
+                            <input type="text" wire:model="scanForm.labels" placeholder="เช่น ด่วน, อาหาร" class="h-10 w-full rounded-[0.85rem] border-0 bg-[#f2f3f5] dark:bg-[#1e1f22] px-3 text-xs font-bold text-[#1e1f22] dark:text-white outline-none focus:ring-2 focus:ring-discord-green/50">
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="space-y-1.5"><label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">New Collection</label><input type="text" wire:model="scanForm.batch_name" placeholder="Optional" class="h-10 w-full rounded-[0.85rem] border-0 bg-[#f2f3f5] dark:bg-[#1e1f22] px-3 text-xs font-bold text-[#1e1f22] dark:text-white outline-none focus:ring-2 focus:ring-discord-green/50"></div>
-                        <div class="space-y-1.5"><label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Labels</label><input type="text" wire:model="scanForm.labels" placeholder="e.g. urgent, branch-a" class="h-10 w-full rounded-[0.85rem] border-0 bg-[#f2f3f5] dark:bg-[#1e1f22] px-3 text-xs font-bold text-[#1e1f22] dark:text-white outline-none focus:ring-2 focus:ring-discord-green/50"></div>
-                    </div>
-
-                    <!-- Custom Prompt / Instructions -->
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between pl-2">
-                            <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest">Additional AI Instructions</label>
-                            <span class="text-[8px] font-bold text-discord-green bg-discord-green/10 px-1.5 py-0.5 rounded uppercase">Experimental</span>
-                        </div>
-                        <textarea wire:model="scanForm.custom_instruction" rows="2" 
-                                  placeholder="e.g. 'Extract all items and specify tax per item' or 'Find the branch code'"
-                                  class="w-full px-5 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-2 border-transparent focus:border-discord-green rounded-[15px] text-sm text-[#1e1f22] dark:text-white transition-all outline-none resize-none"></textarea>
                     </div>
 
                     @if (session()->has('scan_error'))
@@ -311,27 +302,13 @@
                     @endif
 
                     <div class="pt-1 flex gap-2">
-                        <button type="button" wire:click="closeScanModal" class="flex-1 py-3 bg-[#f2f3f5] dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[0.85rem]">Cancel</button>
+                        <button type="button" wire:click="closeScanModal" class="flex-1 py-3 bg-[#f2f3f5] dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[0.85rem]">ยกเลิก</button>
                         <button type="submit" wire:loading.attr="disabled" class="flex-1 py-3 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[0.85rem] transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
-                            <span wire:loading.remove wire:target="submitScan">Start Scan</span>
+                            <span wire:loading.remove wire:target="submitScan">เริ่มแสกน</span>
                             <span wire:loading wire:target="submitScan" class="flex items-center gap-2"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span x-text="$wire.scanStatus"></span></span>
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    @endif
-
-    @if($batchModalOpen)
-        <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div class="fixed inset-0 bg-white/5 dark:bg-black/5 backdrop-blur-xl" wire:click="closeBatchModal"></div>
-            <div class="relative z-10 w-full max-w-md rounded-[1.5rem] bg-white p-6 shadow-2xl dark:bg-[#313338] border border-white/20 dark:border-white/10">
-                <h3 class="text-lg font-black uppercase tracking-tight text-[#1e1f22] dark:text-white">New Collection</h3>
-                <div class="mt-5 space-y-4">
-                    <div><label class="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Collection Name</label><input type="text" wire:model="batchForm.name" class="h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] px-3 text-sm font-bold text-[#162033] outline-none dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white"></div>
-                    <div><label class="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Note</label><textarea wire:model="batchForm.note" rows="3" class="w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] px-3 py-2.5 text-sm font-bold text-[#162033] outline-none dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white"></textarea></div>
-                    <div class="flex gap-2"><button wire:click="closeBatchModal" class="flex-1 py-2.5 bg-[#f2f3f5] text-[10px] font-black uppercase tracking-[0.18em] rounded-[0.85rem]">Cancel</button><button wire:click="submitBatch" class="flex-1 py-2.5 bg-[#162033] text-[10px] font-black uppercase tracking-[0.18em] text-white rounded-[0.85rem]">Create</button></div>
-                </div>
             </div>
         </div>
     @endif
@@ -346,7 +323,7 @@
              class="relative z-10 flex h-full w-full max-w-2xl max-h-[90vh] flex-col bg-white rounded-[1.5rem] shadow-2xl dark:bg-[#2b2d31] border border-white/20 dark:border-white/10 overflow-hidden">
             
             <div class="flex items-center justify-between border-b border-[#e3e5e8] px-6 py-4 dark:border-[#313338]">
-                <h3 class="text-lg font-black text-[#162033] dark:text-white">{{ $activeSlip?->display_shop ?? 'Slip Detail' }}</h3>
+                <h3 class="text-lg font-black text-[#162033] dark:text-white">{{ $activeSlip?->display_shop ?? 'รายละเอียดสลิป' }}</h3>
                 <button @click="open = false" class="p-2 text-slate-400 hover:text-rose-500 transition-colors">
                     <i data-lucide="x" class="h-5 w-5"></i>
                 </button>
@@ -361,22 +338,22 @@
 
                         <div class="grid grid-cols-2 gap-4">
                             <div class="rounded-[1rem] bg-[#f8fafb] p-4 dark:bg-[#1e1f22]">
-                                <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[#80848e]">Total Amount</div>
+                                <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[#80848e]">ยอดเงินรวม</div>
                                 <div class="mt-1.5 text-lg font-black text-[#162033] dark:text-discord-green">
                                     THB {{ number_format($activeSlip->display_amount, 2) }}
                                 </div>
                             </div>
                             <div class="rounded-[1rem] bg-[#f8fafb] p-4 dark:bg-[#1e1f22]">
-                                <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[#80848e]">Workflow Status</div>
+                                <div class="text-[10px] font-black uppercase tracking-[0.16em] text-[#80848e]">สถานะ Workflow</div>
                                 <div class="mt-1.5 inline-flex text-xs font-black text-[#162033] dark:text-white uppercase px-3 py-1 bg-white dark:bg-[#2b2d31] rounded-full border border-[#e3e5e8] dark:border-[#313338]">
-                                    {{ $activeSlip->workflow_status }}
+                                    {{ $workflowOptions[$activeSlip->workflow_status] ?? $activeSlip->workflow_status }}
                                 </div>
                             </div>
                         </div>
 
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <h4 class="text-[11px] font-black uppercase tracking-[0.2em] text-[#80848e]">Extracted Intelligence</h4>
+                                <h4 class="text-[11px] font-black uppercase tracking-[0.2em] text-[#80848e]">ข้อมูลที่ดึงได้จาก AI</h4>
                                 <span class="h-px flex-1 bg-[#e3e5e8] dark:bg-[#313338] ml-4"></span>
                             </div>
                             
@@ -394,49 +371,112 @@
             </div>
 
             <div class="bg-[#f8fafb] dark:bg-[#1e1f22] px-6 py-4 border-t border-[#e3e5e8] dark:border-[#313338]">
-                <div class="flex flex-col gap-4">
-                    @if($archive_scope === 'active')
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Adjust AI Extraction (Optional)</label>
-                            <textarea wire:model="reprocess_instruction" rows="1" 
-                                      placeholder="e.g. 'try to find the tax id again' or 'items are in a list'"
-                                      class="w-full px-4 py-2 bg-white dark:bg-[#2b2d31] border border-[#e3e5e8] dark:border-[#313338] rounded-[0.75rem] text-xs font-bold text-[#162033] dark:text-white outline-none focus:border-discord-green transition-all resize-none"></textarea>
-                        </div>
-                    @endif
+                <div class="flex justify-end gap-3">
+                    <button @click="open = false" class="px-6 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#162033] dark:hover:text-white transition-colors">ปิดหน้าต่าง</button>
                     
-                    <div class="flex justify-end gap-3">
-                        <button @click="open = false" class="px-6 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#162033] dark:hover:text-white transition-colors">Close</button>
-                        
-                        @if($archive_scope === 'active')
-                            <button wire:click="reprocessSlip({{ $activeSlip?->id }})" 
-                                    wire:loading.attr="disabled"
-                                    class="px-4 py-2 bg-[#f2f3f5] dark:bg-[#2b2d31] text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 dark:text-slate-300 rounded-[0.85rem] hover:bg-discord-green hover:text-white transition-all flex items-center gap-2 disabled:opacity-50">
-                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5" wire:loading.class="animate-spin" wire:target="reprocessSlip"></i>
-                                <span wire:loading.remove wire:target="reprocessSlip">Re-scan</span>
-                                <span wire:loading wire:target="reprocessSlip">Processing...</span>
-                            </button>
-                            <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips/edit/' . $activeSlip?->uid) }}" class="px-6 py-2 bg-[#162033] dark:bg-discord-green text-white text-[11px] font-black uppercase tracking-[0.18em] rounded-[0.85rem] shadow-lg hover:opacity-90 transition-all flex items-center gap-2">
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                                Edit Data
-                            </a>
-                        @else
-                            <button wire:click="toggleArchive({{ $activeSlip?->id }}, false)" class="px-6 py-2 bg-discord-green text-white text-[11px] font-black uppercase tracking-[0.18em] rounded-[0.85rem] shadow-lg hover:opacity-90 transition-all flex items-center gap-2">
-                                <i data-lucide="archive-restore" class="w-4 h-4"></i>
-                                Restore to Inbox
-                            </button>
-                        @endif
-                    </div>
+                    <button wire:click="reprocessSlip({{ $activeSlip?->id }})" 
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 bg-[#f2f3f5] dark:bg-[#2b2d31] text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 dark:text-slate-300 rounded-[0.85rem] hover:bg-discord-green hover:text-white transition-all flex items-center gap-2 disabled:opacity-50">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5" wire:loading.class="animate-spin" wire:target="reprocessSlip"></i>
+                        <span wire:loading.remove wire:target="reprocessSlip">แสกนซ้ำ</span>
+                        <span wire:loading wire:target="reprocessSlip">กำลังประมวลผล...</span>
+                    </button>
+                    <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips/edit/' . $activeSlip?->uid) }}" class="px-6 py-2 bg-[#162033] dark:bg-discord-green text-white text-[11px] font-black uppercase tracking-[0.18em] rounded-[0.85rem] shadow-lg hover:opacity-90 transition-all flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        แก้ไขข้อมูล
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        /* Flatpickr Premium B.E. Styles */
+        .flatpickr-be-year-select {
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            border-radius: 6px;
+            padding: 2px 8px;
+        }
+        .flatpickr-be-year-select:hover {
+            background: rgba(35, 165, 89, 0.1);
+            color: #23a559 !important;
+        }
+        .dark .flatpickr-calendar { background: #2b2d31; border-color: rgba(255,255,255,0.1); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4); }
+        .dark .flatpickr-day { color: #dbdee1; }
+        .dark .flatpickr-day.today { border-color: #23a559; }
+        .dark .flatpickr-day.selected { background: #23a559; border-color: #23a559; }
+        .dark .flatpickr-current-month, .dark .flatpickr-month { color: white; fill: white; }
+        .dark .flatpickr-be-year-select { color: white; background: #1e1f22; }
+    </style>
 
     <script>
         document.addEventListener('livewire:initialized', () => {
             const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true, didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); } });
             Livewire.on('notify', (event) => { const data = Array.isArray(event) ? event[0] : event; Swal.close(); if (typeof data === 'string') { Toast.fire({ icon: 'success', title: data }); } else { Toast.fire({ icon: data.type || 'success', title: data.title || 'Notification', text: data.message || '', timer: data.loading ? 15000 : 3000, timerProgressBar: !data.loading, didOpen: (toast) => { if (data.loading) Swal.showLoading(); } }); } });
             Livewire.on('trigger-next-scan', (event) => { const index = event.index ?? event[0].index; setTimeout(() => { @this.processSingleReceipt(index); }, 600); });
-            Livewire.hook('message.processed', (message, component) => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+            Livewire.on('trigger-download', (event) => { const url = event.url ?? event[0].url; window.location.href = url; });
+            
+            const initFlatpickr = () => {
+                document.querySelectorAll('.date-be').forEach(el => {
+                    if (el._flatpickr) el._flatpickr.destroy();
+                    
+                    const updateYearToBE = (instance) => {
+                        const yearInput = instance.currentYearElement;
+                        if (yearInput) {
+                            const adYear = instance.currentYear;
+                            
+                            let beSelect = instance.calendarContainer.querySelector('.numInputWrapper .flatpickr-be-year-select');
+                            if (!beSelect) {
+                                beSelect = document.createElement('select');
+                                beSelect.className = 'flatpickr-be-year-select h-full border-0 bg-transparent text-sm font-bold text-[#162033] dark:text-white focus:ring-0 cursor-pointer py-0 pr-6 pl-1';
+                                beSelect.style.appearance = 'none';
+                                
+                                const currentBE = new Date().getFullYear() + 543;
+                                for (let y = currentBE + 1; y >= currentBE - 10; y--) {
+                                    const opt = document.createElement('option');
+                                    opt.value = y - 543;
+                                    opt.textContent = y;
+                                    opt.className = 'bg-white dark:bg-[#2b2d31]';
+                                    beSelect.appendChild(opt);
+                                }
+                                
+                                yearInput.style.display = 'none';
+                                yearInput.parentNode.insertBefore(beSelect, yearInput);
+                                
+                                beSelect.addEventListener('change', (e) => {
+                                    instance.changeYear(parseInt(e.target.value));
+                                });
+                            }
+                            beSelect.value = adYear;
+                        }
+                    };
+
+                    flatpickr(el, {
+                        locale: 'th',
+                        altInput: true,
+                        altFormat: 'j F Y',
+                        dateFormat: 'Y-m-d',
+                        formatDate(date, format) {
+                            if (format === 'j F Y') {
+                                const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                                return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543}`;
+                            }
+                            return flatpickr.formatDate(date, format);
+                        },
+                        onReady: (dObj, dStr, instance) => updateYearToBE(instance),
+                        onMonthChange: (dObj, dStr, instance) => updateYearToBE(instance),
+                        onYearChange: (dObj, dStr, instance) => updateYearToBE(instance),
+                        onChange: (selectedDates, dateStr) => {
+                            el.dispatchEvent(new Event('input'));
+                        }
+                    });
+                });
+            };
+
+            initFlatpickr();
+            Livewire.hook('morph.updated', (el, component) => { initFlatpickr(); if (typeof lucide !== 'undefined') lucide.createIcons(); });
         });
     </script>
 </div>

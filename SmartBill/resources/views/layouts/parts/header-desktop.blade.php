@@ -91,7 +91,7 @@
                 @endif
 
                 {{-- Workspace Actions (when inside a project) --}}
-                @if($isTenant)
+                @if($isTenant && auth()->user()->isSuperAdmin())
                     <div class="px-5 py-2">
                         <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Workspace</div>
                     </div>
@@ -99,7 +99,7 @@
                     <a href="{{ $wsTemplatesRoute }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors">
                         <i data-lucide="settings-2" class="w-4 h-4"></i> Scan Settings
                     </a>
-                    <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
+                    <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:border-[#1e1f22]"></div>
                 @endif
 
                 {{-- Dark Mode Toggle --}}

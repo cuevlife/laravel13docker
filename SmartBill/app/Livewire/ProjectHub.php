@@ -6,9 +6,12 @@ use App\Models\Merchant;
 use App\Support\WorkspaceUrl;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ProjectHub extends Component
 {
+    use WithFileUploads;
+
     public $createOpen = false;
     public $deleteOpen = false;
     public $loading = false;
@@ -27,6 +30,7 @@ class ProjectHub extends Component
     }
 
     public $name = '';
+    public $logo;
     public $deleteId = null;
     public $deleteName = '';
     public $deleteConfirmation = '';
@@ -36,6 +40,7 @@ class ProjectHub extends Component
         $this->createOpen = true;
         $this->errorMessage = '';
         $this->name = '';
+        $this->logo = null;
     }
 
     public function closeCreateModal()
@@ -64,6 +69,7 @@ class ProjectHub extends Component
     {
         $this->validate([
             'name' => 'required|max:255',
+            'logo' => 'nullable|image|max:10240', // Max 10MB
         ]);
 
         $this->loading = true;
@@ -71,10 +77,19 @@ class ProjectHub extends Component
 
         try {
             $user = Auth::user();
+            $config = [];
+            
+            if ($this->logo) {
+                // Store logo directly to storage/app/public/project-logos
+                $logoPath = $this->logo->store('project-logos', 'public');
+                $config['logo'] = $logoPath;
+            }
+
             $project = Merchant::create([
                 'user_id' => $user->id,
                 'name' => trim($this->name),
                 'status' => 'active',
+                'config' => empty($config) ? null : $config,
             ]);
 
             // Link user to project

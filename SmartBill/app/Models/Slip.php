@@ -76,11 +76,11 @@ class Slip extends Model
     public static function workflowOptions()
     {
         return [
-            self::WORKFLOW_PENDING => 'Pending',
-            self::WORKFLOW_REVIEWED => 'Reviewed',
-            self::WORKFLOW_APPROVED => 'Approved',
-            self::WORKFLOW_EXPORTED => 'Exported',
-            self::WORKFLOW_ARCHIVED => 'Archived',
+            self::WORKFLOW_PENDING => 'รอการประมวลผล',
+            self::WORKFLOW_REVIEWED => 'แสกนแล้ว (AI)',
+            self::WORKFLOW_APPROVED => 'ยืนยันความถูกต้องแล้ว',
+            self::WORKFLOW_EXPORTED => 'ส่งออก Excel แล้ว',
+            self::WORKFLOW_ARCHIVED => 'ย้ายเข้ากรุแล้ว',
         ];
     }
 }

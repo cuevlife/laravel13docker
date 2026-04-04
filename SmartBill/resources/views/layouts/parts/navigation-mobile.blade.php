@@ -131,13 +131,15 @@
                                     Export Center
                                     <i data-lucide="chevron-right" class="w-4 h-4 text-[#80848e] ml-auto"></i>
                                 </a>
-                                <a href="{{ $mobileTemplatesRoute }}" class="w-full flex items-center gap-4 px-4 py-4 bg-white dark:bg-[#1e1f22] hover:bg-[#f2f3f5] dark:hover:bg-[#313338] rounded-2xl text-[13px] font-bold text-[#1e1f22] dark:text-white transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                                    <div class="w-9 h-9 rounded-full bg-[#f2f3f5] dark:bg-[#2b2d31] flex items-center justify-center">
-                                        <i data-lucide="settings-2" class="w-4 h-4 text-[#5c5e66] dark:text-[#b5bac1]"></i>
-                                    </div>
-                                    Scan Settings
-                                    <i data-lucide="chevron-right" class="w-4 h-4 text-[#80848e] ml-auto"></i>
-                                </a>
+                                @if(auth()->user()->isSuperAdmin())
+                                    <a href="{{ $mobileTemplatesRoute }}" class="w-full flex items-center gap-4 px-4 py-4 bg-white dark:bg-[#1e1f22] hover:bg-[#f2f3f5] dark:hover:bg-[#313338] rounded-2xl text-[13px] font-bold text-[#1e1f22] dark:text-white transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                                        <div class="w-9 h-9 rounded-full bg-[#f2f3f5] dark:bg-[#2b2d31] flex items-center justify-center">
+                                            <i data-lucide="settings-2" class="w-4 h-4 text-[#5c5e66] dark:text-[#b5bac1]"></i>
+                                        </div>
+                                        Scan Settings
+                                        <i data-lucide="chevron-right" class="w-4 h-4 text-[#80848e] ml-auto"></i>
+                                    </a>
+                                @endif
                             </div>
                         @endif
 
