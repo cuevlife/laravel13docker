@@ -4,12 +4,12 @@
         <!-- SIDE A: Branding -->
         <div class="w-full lg:w-1/2 p-12 lg:p-20 flex flex-col justify-center items-center lg:items-start bg-slate-50 dark:bg-discord-black border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-white/5 relative group">
             <div class="relative z-10 text-center lg:text-left space-y-6">
-                <!-- Added pr-4 and adjusted leading to prevent clipping of italic characters -->
-                <h1 class="text-6xl lg:text-8xl font-black leading-[1.1] tracking-tighter uppercase italic animate-smartbill pr-4">
+                <!-- Added pr-4 and adjusted leading to prevent clipping of  characters -->
+                <h1 class="text-6xl lg:text-8xl font-black leading-[1.1] tracking-tighter uppercase  animate-smartbill pr-4">
                     Smart<br class="hidden lg:block"/>Bill
                 </h1>
                 <div class="h-1.5 w-16 bg-discord-red rounded-full mx-auto lg:mx-0 shadow-lg shadow-rose-500/20"></div>
-                <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] italic">Intelligence System</p>
+                <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] ">Intelligence System</p>
             </div>
         </div>
 
@@ -19,8 +19,8 @@
             <div class="flex-1 flex flex-col justify-center">
                 <div class="w-full max-w-sm mx-auto">
                     <div class="mb-12 text-center lg:text-left">
-                        <h2 class="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none">{{ __('Login') }}</h2>
-                        <p class="mt-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] italic opacity-60">Authorize Secure Pipeline</p>
+                        <h2 class="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter  leading-none">{{ __('Login') }}</h2>
+                        <p class="mt-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]  opacity-60">Authorize Secure Pipeline</p>
                     </div>
 
                     <form method="POST" action="{{ route('login') }}" class="space-y-10">
@@ -29,10 +29,10 @@
                         <!-- Username Node -->
                         <div class="relative group">
                             <label class="absolute -top-6 left-0 text-[10px] font-black text-slate-400 uppercase tracking-widest group-focus-within:text-discord-green transition-colors">{{ __('Username') }}</label>
-                            <input id="username" type="text" name="username" :value="old('username')" required autofocus 
+                            <input id="username" type="text" name="username" value="{{ old('username') }}" required autofocus 
                                    class="block w-full px-0 py-4 bg-transparent border-0 border-b-2 border-slate-100 dark:border-white/10 text-xl font-black text-slate-900 dark:text-white focus:ring-0 focus:border-discord-green transition-all outline-none placeholder-slate-200 dark:placeholder-slate-800"
                                    placeholder="">
-                            <x-input-error :messages="$errors->get('username')" class="mt-2 text-[10px] font-bold text-discord-red uppercase italic" />
+                            <x-input-error :messages="$errors->get('username')" class="mt-2 text-[10px] font-bold text-discord-red uppercase " />
                         </div>
 
                         <!-- Password Node -->
@@ -41,7 +41,7 @@
                             <input id="password" type="password" name="password" required 
                                    class="block w-full px-0 py-4 bg-transparent border-0 border-b-2 border-slate-100 dark:border-white/10 text-xl font-black text-slate-900 dark:text-white focus:ring-0 focus:border-discord-green transition-all outline-none placeholder-slate-200 dark:placeholder-slate-800"
                                    placeholder="">
-                            <x-input-error :messages="$errors->get('password')" class="mt-2 text-[10px] font-bold text-discord-red uppercase italic" />
+                            <x-input-error :messages="$errors->get('password')" class="mt-2 text-[10px] font-bold text-discord-red uppercase " />
                         </div>
 
                         <!-- Remember Me Toggle (Placed directly under Password) -->
