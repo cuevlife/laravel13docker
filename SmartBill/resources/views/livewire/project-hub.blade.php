@@ -73,20 +73,25 @@
         </div>
     </div>
 
-    <div class="flex flex-1 flex-col items-center justify-center py-10">
-        <div class="max-w-3xl text-center">
-            <div class="mx-auto inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#4f7cff] shadow-sm backdrop-blur dark:bg-white/[0.05] dark:text-[#8eabff]">
+    <div class="flex w-full flex-col items-center justify-center py-10">
+        <div class="w-full max-w-3xl text-center">
+            
+            <div class="mx-auto inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#4f7cff] shadow-sm backdrop-blur dark:bg-white/[0.05] dark:text-[#8eabff] mb-8">
                 <i data-lucide="layout-grid" class="h-3.5 w-3.5"></i>
                 Project Hub
             </div>
-            <div class="mt-8 relative max-w-xl mx-auto">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-5 pointer-events-none">
-                    <i data-lucide="search" class="w-5 h-5 text-slate-400 dark:text-slate-500"></i>
+
+            <!-- Robust Search Bar using Flex row -->
+            <div class="relative w-full max-w-2xl mx-auto group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-[#4f7cff]/20 to-[#1ea97c]/20 rounded-[2.5rem] blur opacity-0 group-focus-within:opacity-100 transition duration-500 pointer-events-none"></div>
+                
+                <div class="relative flex items-center w-full bg-white/90 dark:bg-white/5 backdrop-blur-xl border-2 border-[rgba(227,229,232,0.8)] dark:border-white/10 rounded-[2.5rem] px-6 transition-all shadow-sm group-focus-within:border-[#4f7cff]/60 group-focus-within:shadow-[0_8px_30px_rgba(79,124,255,0.15)]">
+                    <i data-lucide="search" class="w-6 h-6 text-slate-400 group-focus-within:text-[#4f7cff] shrink-0 transition-colors"></i>
+                    <input type="text"
+                           wire:model.live="search"
+                           placeholder="ค้นหาโปรเจกต์..."
+                           class="flex-1 w-full border-none bg-transparent py-5 pl-4 pr-2 text-xl font-black text-[#162033] dark:text-white focus:ring-0 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 text-left">
                 </div>
-                <input type="text" 
-                       wire:model.live="search"
-                       placeholder="ค้นหาโปรเจกต์..." 
-                       class="block w-full pl-14 pr-6 py-4 bg-white/70 dark:bg-white/10 backdrop-blur-md border border-white/50 dark:border-white/5 text-lg font-black text-[#162033] dark:text-white rounded-full focus:ring-4 focus:ring-discord-green/20 focus:border-discord-green/50 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm">
             </div>
         </div>
 
