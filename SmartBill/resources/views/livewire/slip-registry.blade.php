@@ -4,8 +4,8 @@
     matchesSearch(el) {
         if (!this.localSearch) return true;
         const text = el.innerText.toLowerCase();
-        const search = this.localSearch.toLowerCase();
-        return text.includes(search);
+        const keywords = this.localSearch.toLowerCase().split(' ').filter(k => k);
+        return keywords.every(kw => text.includes(kw));
     }
 }">
     <section class="rounded-[1rem] border border-black/5 bg-white shadow-sm dark:border-white/10 dark:bg-[#2b2d31]">
@@ -49,12 +49,80 @@
                         <i data-lucide="chevron-down" class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#80848e]"></i>
                     </div>
 
-                    <div class="relative" wire:ignore wire:key="filter-date-range">
-                        <i data-lucide="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-discord-green"></i>
+                    <div class="relative" 
+                         wire:ignore 
+                         wire:key="filter-date-range-container"
+                         x-data="{
+                            start: @entangle('date_from'),
+                            end: @entangle('date_to'),
+                            instance: null,
+                            monthsShort: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
+                            init() {
+                                this.instance = flatpickr($refs.picker, {
+                                    mode: 'range',
+                                    locale: 'th',
+                                    altInput: true,
+                                    altFormat: 'j M y',
+                                    dateFormat: 'Y-m-d',
+                                    defaultDate: [this.start, this.end],
+                                    parseDate: (dateStr) => {
+                                        if (!dateStr) return null;
+                                        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return new Date(dateStr);
+                                        const parts = dateStr.split(/ — | /);
+                                        if (parts.length >= 3) {
+                                            const day = parseInt(parts[0]);
+                                            const month = this.monthsShort.indexOf(parts[1]);
+                                            const yearBE = parseInt(parts[2]);
+                                            const yearAD = yearBE < 100 ? (yearBE + 2000 - 543) : (yearBE - 543);
+                                            return new Date(yearAD, month, day);
+                                        }
+                                        return null;
+                                    },
+                                    formatDate: (date, format) => {
+                                        if (format === 'Y-m-d') {
+                                            const pad = (n) => String(n).padStart(2, '0');
+                                            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                                        }
+                                        return `${date.getDate()} ${this.monthsShort[date.getMonth()]} ${String(date.getFullYear() + 543).slice(-2)}`;
+                                    },
+                                    onReady: (dObj, dStr, instance) => {
+                                        if (typeof window.updateYearToBE === 'function') window.updateYearToBE(instance);
+                                        this.syncDisplay(instance);
+                                    },
+                                    onMonthChange: (dObj, dStr, instance) => typeof window.updateYearToBE === 'function' && window.updateYearToBE(instance),
+                                    onYearChange: (dObj, dStr, instance) => typeof window.updateYearToBE === 'function' && window.updateYearToBE(instance),
+                                    onChange: (selectedDates, dateStr, instance) => {
+                                        this.syncDisplay(instance);
+                                        if (selectedDates.length === 2) {
+                                            $wire.set('date_from', instance.formatDate(selectedDates[0], 'Y-m-d'), true);
+                                            $wire.set('date_to', instance.formatDate(selectedDates[1], 'Y-m-d'), true);
+                                        } else if (selectedDates.length === 0) {
+                                            $wire.set('date_from', '', true);
+                                            $wire.set('date_to', '', true);
+                                        }
+                                    }
+                                });
+
+                                this.$watch('start', value => { 
+                                    if(!value && this.instance.selectedDates.length > 0) {
+                                        this.instance.clear();
+                                        if(this.instance.altInput) this.instance.altInput.value = '';
+                                    }
+                                });
+                            },
+                            syncDisplay(instance) {
+                                if (instance.altInput && instance.selectedDates.length === 2) {
+                                    const s = instance.formatDate(instance.selectedDates[0], 'j M y');
+                                    const e = instance.formatDate(instance.selectedDates[1], 'j M y');
+                                    instance.altInput.value = `${s} — ${e}`;
+                                }
+                            }
+                         }">
+                        <i data-lucide="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-discord-green z-10"></i>
                         <input type="text" 
-                               id="date_range_picker" 
+                               x-ref="picker"
                                placeholder="ช่วงวันที่ พ.ศ. (เริ่ม — จบ)" 
-                               class="date-be-range h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] pl-10 pr-3 text-sm font-bold text-[#162033] outline-none transition focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white cursor-pointer">
+                               class="h-10 w-full rounded-[0.85rem] border border-[#e3e5e8] bg-[#f8fafb] pl-10 pr-3 text-sm font-bold text-[#162033] outline-none transition focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white cursor-pointer">
                     </div>
 
                     <button wire:click="$set('search', ''); $set('workflow_status', ''); $set('date_from', ''); $set('date_to', ''); localSearch = ''" class="inline-flex h-10 items-center justify-center gap-2 rounded-[0.85rem] border border-rose-200 bg-rose-50 px-5 text-[10px] font-black uppercase tracking-[0.18em] text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10" title="ล้างการค้นหา">
@@ -66,8 +134,8 @@
 
         <!-- Bulk Actions -->
         <div class="border-b border-[#e3e5e8] px-4 py-3 dark:border-[#313338] md:px-5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-2">
                     <div class="inline-flex h-8 items-center rounded-[0.75rem] bg-[#f5f9f6] px-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#23a559] dark:bg-[#1e1f22]"><span x-text="selected.length"></span> รายการที่เลือก</div>
                     <div class="flex items-center gap-1.5 ml-2">
                         <button wire:click="setBulkAction('mark_reviewed')" :disabled="selected.length === 0" class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="ทำเครื่องหมายว่าแสกนแล้ว">
@@ -75,6 +143,23 @@
                         </button>
                         <button wire:click="setBulkAction('mark_approved')" :disabled="selected.length === 0" class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-black/5 bg-white transition hover:bg-[#f8f9fb] disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-[#2b2d31]" title="ยืนยันความถูกต้อง">
                             <i data-lucide="shield-check" class="h-4 w-4 text-blue-500"></i>
+                        </button>
+                    </div>
+
+                    <div class="w-px h-6 bg-[#e3e5e8] dark:bg-[#313338] mx-1"></div>
+
+                    {{-- Labels Bulk Action --}}
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <i data-lucide="tag" class="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400"></i>
+                            <input type="text" wire:model.live="bulkLabel" placeholder="ป้ายกำกับ..." class="h-9 w-32 pl-8 pr-3 rounded-[0.75rem] border border-[#e3e5e8] bg-[#f8fafb] text-[10px] font-bold outline-none focus:border-discord-green dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
+                        </div>
+                        <button wire:click="setBulkAction('add_label')" :disabled="selected.length === 0 || !bulkLabel" class="inline-flex h-9 px-3 items-center justify-center gap-2 rounded-[0.85rem] border border-black/5 bg-white text-[10px] font-black uppercase tracking-widest hover:bg-discord-green hover:text-white transition-all disabled:opacity-40 dark:border-white/5 dark:bg-[#1e1f22]">
+                            <i data-lucide="plus" class="w-3 h-3"></i>
+                            <span>ติดป้าย</span>
+                        </button>
+                        <button wire:click="setBulkAction('clear_labels')" :disabled="selected.length === 0" class="inline-flex h-9 w-9 items-center justify-center rounded-[0.85rem] border border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all disabled:opacity-40 dark:bg-rose-500/10 dark:border-rose-500/20" title="ล้างป้ายกำกับทั้งหมด">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
                 </div>
@@ -368,28 +453,15 @@
                         <span wire:loading.remove wire:target="reprocessSlip">แสกนซ้ำ</span>
                         <span wire:loading wire:target="reprocessSlip">กำลังประมวลผล...</span>
                     </button>
-                    <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips/edit/' . $activeSlip?->uid) }}" class="px-6 py-2 bg-[#162033] dark:bg-discord-green text-white text-[11px] font-black uppercase tracking-[0.18em] rounded-[0.85rem] shadow-lg hover:opacity-90 transition-all flex items-center gap-2">
-                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                        แก้ไขข้อมูล
-                    </a>
+                    <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips/edit/' . $activeSlip?->uid) }}" class="p-1 text-slate-400 hover:text-blue-500" title="แก้ไขข้อมูล"><i data-lucide="edit-3" class="h-4 w-4"></i></a>
                 </div>
             </div>
         </div>
     </div>
 
     <style>
-        /* Flatpickr Premium B.E. Styles */
-        .flatpickr-be-year-select {
-            cursor: pointer;
-            outline: none;
-            transition: all 0.2s;
-            border-radius: 6px;
-            padding: 2px 8px;
-        }
-        .flatpickr-be-year-select:hover {
-            background: rgba(35, 165, 89, 0.1);
-            color: #23a559 !important;
-        }
+        .flatpickr-be-year-select { cursor: pointer; outline: none; transition: all 0.2s; border-radius: 6px; padding: 2px 8px; }
+        .flatpickr-be-year-select:hover { background: rgba(35, 165, 89, 0.1); color: #23a559 !important; }
         .dark .flatpickr-calendar { background: #2b2d31; border-color: rgba(255,255,255,0.1); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4); }
         .dark .flatpickr-day { color: #dbdee1; }
         .dark .flatpickr-day.today { border-color: #23a559; }
@@ -399,6 +471,30 @@
     </style>
 
     <script>
+        // Move to Global Scope
+        window.updateYearToBE = (instance) => {
+            const yearInput = instance.currentYearElement;
+            if (yearInput) {
+                const adYear = instance.currentYear;
+                let beSelect = instance.calendarContainer.querySelector('.numInputWrapper .flatpickr-be-year-select');
+                if (!beSelect) {
+                    beSelect = document.createElement('select');
+                    beSelect.className = 'flatpickr-be-year-select h-full border-0 bg-transparent text-sm font-bold text-[#162033] dark:text-white focus:ring-0 cursor-pointer py-0 pr-6 pl-1';
+                    beSelect.style.appearance = 'none';
+                    const currentBE = new Date().getFullYear() + 543;
+                    for (let y = currentBE + 1; y >= currentBE - 10; y--) {
+                        const opt = document.createElement('option');
+                        opt.value = y - 543; opt.textContent = y; opt.className = 'bg-white dark:bg-[#2b2d31]';
+                        beSelect.appendChild(opt);
+                    }
+                    yearInput.style.display = 'none';
+                    yearInput.parentNode.insertBefore(beSelect, yearInput);
+                    beSelect.addEventListener('change', (e) => instance.changeYear(parseInt(e.target.value)));
+                }
+                beSelect.value = adYear;
+            }
+        };
+
         document.addEventListener('livewire:initialized', () => {
             const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true, didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); } });
             Livewire.on('notify', (event) => { const data = Array.isArray(event) ? event[0] : event; Swal.close(); if (typeof data === 'string') { Toast.fire({ icon: 'success', title: data }); } else { Toast.fire({ icon: data.type || 'success', title: data.title || 'Notification', text: data.message || '', timer: data.loading ? 15000 : 3000, timerProgressBar: !data.loading, didOpen: (toast) => { if (data.loading) Swal.showLoading(); } }); } });
@@ -406,87 +502,25 @@
             Livewire.on('trigger-download', (event) => { const url = event.url ?? event[0].url; window.location.href = url; });
             
             const initFlatpickr = () => {
-                // Single Date Pickers (if any left)
+                const monthsFull = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
                 document.querySelectorAll('.date-be').forEach(el => {
                     if (el._flatpickr) el._flatpickr.destroy();
                     flatpickr(el, {
-                        locale: 'th',
-                        altInput: true,
-                        altFormat: 'j F Y',
-                        dateFormat: 'Y-m-d',
+                        locale: 'th', altInput: true, altFormat: 'j F Y', dateFormat: 'Y-m-d',
                         formatDate(date, format) {
-                            if (format === 'j F Y') {
-                                const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-                                return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear() + 543}`;
-                            }
+                            if (format === 'j F Y') return `${date.getDate()} ${monthsFull[date.getMonth()]} ${date.getFullYear() + 543}`;
                             return flatpickr.formatDate(date, format);
                         },
-                        onReady: (dObj, dStr, instance) => updateYearToBE(instance),
-                        onMonthChange: (dObj, dStr, instance) => updateYearToBE(instance),
-                        onYearChange: (dObj, dStr, instance) => updateYearToBE(instance),
-                        onChange: (selectedDates, dateStr) => {
-                            el.dispatchEvent(new Event('input'));
-                        }
+                        onReady: (dObj, dStr, instance) => window.updateYearToBE(instance),
+                        onMonthChange: (dObj, dStr, instance) => window.updateYearToBE(instance),
+                        onYearChange: (dObj, dStr, instance) => window.updateYearToBE(instance),
+                        onChange: () => el.dispatchEvent(new Event('input'))
                     });
                 });
-
-                // Range Date Picker (Direct)
-                document.querySelectorAll('.date-be-range').forEach(el => {
-                    if (el._flatpickr) el._flatpickr.destroy();
-                    flatpickr(el, {
-                        mode: 'range',
-                        locale: 'th',
-                        altInput: true,
-                        altFormat: 'j M y',
-                        dateFormat: 'Y-m-d',
-                        formatDate(date, format) {
-                            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-                            return `${date.getDate()} ${months[date.getMonth()]} ${String(date.getFullYear() + 543).slice(-2)}`;
-                        },
-                        onReady: (dObj, dStr, instance) => updateYearToBE(instance),
-                        onMonthChange: (dObj, dStr, instance) => updateYearToBE(instance),
-                        onYearChange: (dObj, dStr, instance) => updateYearToBE(instance),
-                        onClose: (selectedDates) => {
-                            if (selectedDates.length === 2) {
-                                const start = flatpickr.formatDate(selectedDates[0], 'Y-m-d');
-                                const end = flatpickr.formatDate(selectedDates[1], 'Y-m-d');
-                                @this.set('date_from', start);
-                                @this.set('date_to', end);
-                            }
-                        }
-                    });
-                });
-            };
-
-            const updateYearToBE = (instance) => {
-                const yearInput = instance.currentYearElement;
-                if (yearInput) {
-                    const adYear = instance.currentYear;
-                    let beSelect = instance.calendarContainer.querySelector('.numInputWrapper .flatpickr-be-year-select');
-                    if (!beSelect) {
-                        beSelect = document.createElement('select');
-                        beSelect.className = 'flatpickr-be-year-select h-full border-0 bg-transparent text-sm font-bold text-[#162033] dark:text-white focus:ring-0 cursor-pointer py-0 pr-6 pl-1';
-                        beSelect.style.appearance = 'none';
-                        const currentBE = new Date().getFullYear() + 543;
-                        for (let y = currentBE + 1; y >= currentBE - 10; y--) {
-                            const opt = document.createElement('option');
-                            opt.value = y - 543;
-                            opt.textContent = y;
-                            opt.className = 'bg-white dark:bg-[#2b2d31]';
-                            beSelect.appendChild(opt);
-                        }
-                        yearInput.style.display = 'none';
-                        yearInput.parentNode.insertBefore(beSelect, yearInput);
-                        beSelect.addEventListener('change', (e) => {
-                            instance.changeYear(parseInt(e.target.value));
-                        });
-                    }
-                    beSelect.value = adYear;
-                }
             };
 
             initFlatpickr();
-            Livewire.hook('morph.updated', (el, component) => { initFlatpickr(); });
+            Livewire.hook('morph.updated', (el, component) => { initFlatpickr(); if (typeof initializeIcons === 'function') initializeIcons(); });
         });
     </script>
 </div>

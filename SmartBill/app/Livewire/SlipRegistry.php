@@ -51,6 +51,7 @@ class SlipRegistry extends Component
     // Bulk Actions
     public $selectedIds = [];
     public $bulkAction = 'mark_reviewed';
+    public $bulkLabel = '';
 
     protected $listeners = [
         'gentle-open-scan' => 'openScanModal',
@@ -426,9 +427,19 @@ class SlipRegistry extends Component
             switch ($this->bulkAction) {
                 case 'mark_reviewed': $slip->update(['workflow_status' => Slip::WORKFLOW_REVIEWED, 'reviewed_at' => now()]); break;
                 case 'mark_approved': $slip->update(['workflow_status' => Slip::WORKFLOW_APPROVED, 'approved_at' => now()]); break;
+                case 'add_label':
+                    $newLabels = $this->normalizeLabels($this->bulkLabel);
+                    $existing = is_array($slip->labels) ? $slip->labels : [];
+                    $combined = array_unique(array_merge($existing, $newLabels));
+                    $slip->update(['labels' => $combined]);
+                    break;
+                case 'clear_labels':
+                    $slip->update(['labels' => []]);
+                    break;
             }
         }
 
+        $this->bulkLabel = ''; // Clear input
         $this->selectedIds = [];
         $this->dispatch('notify', 'ดำเนินการสำเร็จเรียบร้อยแล้ว');
     }
@@ -501,12 +512,15 @@ class SlipRegistry extends Component
             ->whereNull('archived_at');
 
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('uid', 'like', '%'.$this->search.'%')
-                  ->orWhere('image_path', 'like', '%'.$this->search.'%')
-                  ->orWhereHas('template', fn($qt) => $qt->where('name', 'like', '%'.$this->search.'%'))
-                  ->orWhereHas('batch', fn($qb) => $qb->where('name', 'like', '%'.$this->search.'%'));
-            });
+            $keywords = array_filter(explode(' ', $this->search));
+            foreach ($keywords as $kw) {
+                $query->where(function($q) use ($kw) {
+                    $q->where('uid', 'like', '%'.$kw.'%')
+                      ->orWhere('image_path', 'like', '%'.$kw.'%')
+                      ->orWhereHas('template', fn($qt) => $qt->where('name', 'like', '%'.$kw.'%'))
+                      ->orWhereHas('batch', fn($qb) => $qb->where('name', 'like', '%'.$kw.'%'));
+                });
+            }
         }
 
         if ($this->workflow_status) $query->where('workflow_status', $this->workflow_status);
