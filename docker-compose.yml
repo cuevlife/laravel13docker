@@ -1,4 +1,4 @@
-services:  
+﻿services:  
   smartbill-app:  
     build: .  
     container_name: smartbill-app  
@@ -9,10 +9,12 @@ services:
       - ./SmartBill:/app  
       - smartbill_vendor:/app/vendor  
     networks:  
-      - dev-network  
-volumes:  
-  smartbill_vendor:  
-networks:  
-  dev-network:  
+      - shared-network
+
+networks:
+  shared-network:
     external: true
-    name: shared-services_dev-network
+    name: shared-network
+
+volumes:
+  smartbill_vendor:
