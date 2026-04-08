@@ -64,6 +64,21 @@
                                 {{ __('Login') }}
                             </button>
                         </div>
+
+                        @if (app()->environment('local'))
+                            <div class="flex flex-col space-y-2 pt-4">
+                                <div class="relative flex items-center">
+                                    <div class="flex-grow h-px bg-slate-100 dark:bg-white/10"></div>
+                                    <span class="mx-4 text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Developer Gateway</span>
+                                    <div class="flex-grow h-px bg-slate-100 dark:bg-white/10"></div>
+                                </div>
+                                <button type="button" 
+                                        @click="document.getElementById('username').value = 'admin'; document.getElementById('password').value = '123123'; document.querySelector('form').submit()"
+                                        class="w-full py-4 border-2 border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-400 dark:text-slate-500 hover:text-discord-green dark:hover:text-discord-green font-black rounded-2xl transition-all text-[10px] uppercase tracking-[0.2em]">
+                                    Log In as Super Admin
+                                </button>
+                            </div>
+                        @endif
                     </form>
                 </div>
             </div>

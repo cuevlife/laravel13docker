@@ -23,8 +23,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
         
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @livewireStyles
-        @livewireScripts
+        
+        
     </head>
     <body class="antialiased auth-bg min-h-screen flex items-center justify-center m-0 p-0 overflow-x-hidden" 
           x-data="{ 
@@ -41,3 +41,4 @@
         </div>
     </body>
 </html>
+

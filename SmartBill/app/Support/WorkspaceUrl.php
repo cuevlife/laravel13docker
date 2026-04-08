@@ -10,18 +10,9 @@ class WorkspaceUrl
 {
     public static function usesPathMode(Request $request): bool
     {
-        $host = $request->getHost();
-        $appDomain = trim((string) env('APP_DOMAIN', 'localhost'));
-
-        if (filter_var($host, FILTER_VALIDATE_IP)) {
-            return true;
-        }
-
-        if ($appDomain === 'localhost') {
-            return !($host === 'localhost' || Str::endsWith($host, '.localhost'));
-        }
-
-        return false;
+        // The main UX is no longer subdomain based. 
+        // We prefer path-based routing (/admin/... or /workspace/...)
+        return true;
     }
 
     public static function centralBase(Request $request): string

@@ -122,25 +122,22 @@ Do not fall back to the old subdomain-first architecture unless explicitly reque
 - **Crystal Clear Backdrop**: All modals and drawers MUST use `fixed inset-0` with `backdrop-blur-xl` and a very subtle tint (`bg-white/5` or `bg-black/5`). Avoid solid dark overlays.
 - **Calm Operations Mood**: Use a soft white background (`#fafafa`) with Discord-inspired green/red accents for primary actions.
 - **Dense Data Tables**: Prefer high data density in tables with small fonts (`text-[10px]` for headers, `text-sm` for content) and minimal padding.
+- **Full-Width Canvas**: All operational and CRUD pages MUST utilize the full width of the screen. Avoid `max-w-7xl` or similar constraints on the main content container to maximize screen real estate on large displays.
+- **Minimalist Corner Radius**: Use `rounded-xl` (12px) as the standard for all main container cards and forms. Avoid oversized rounding (like `rounded-[2rem]`) unless explicitly requested for small decorative elements.
 
-## 🚀 ROADMAP & TODO LIST (SaaS + Livewire)
+## 🚀 NEW ARCHITECTURE MANDATES (Vanilla + Alpine)
+- **Data Handling**: Prefer fetching JSON objects over HTML partials. Use Alpine.js `x-for` for rendering lists (e.g., Folder Hub, Slip Registry).
+- **Client-Side Search**: For small-to-medium datasets (like Folder Hub), perform filtering on the client-side using the pre-fetched JSON array for instant results without network lag.
+- **Optimistic UI**: Implement instant feedback for user actions (Delete, Status Update). Update the UI state immediately before the server request completes, with automatic rollback logic on failure.
+- **Server-Side Pagination**: Use for large datasets (Slip Registry). Fetch small chunks (JSON) and update Alpine state to maintain speed and low memory footprint.
 
-### ⚡ Infrastructure & Build
-- [x] Install Laravel Livewire (v4.x)
-- [x] Migrate Tailwind CDN to Vite (Build Mode)
-- [x] Unified CSS/JS across all Layouts (App, Guest, Hub, Owner)
-- [x] **Enforce MySQL Connection**: Transition back from SQLite to MySQL (Active)
-- [ ] Implement Livewire SPA (Navigate) to reduce page reload latency
-- [ ] Setup production build pipeline (npm run build)
+## 🚀 ROADMAP & TODO LIST (SaaS + Vanilla/Alpine)
+- [x] **Folder Hub**: Converted to Alpine.js JSON-based rendering with client-side instant search.
+- [x] **Slip Registry**: Converted to Alpine.js JSON-based rendering with Server-Side Pagination.
+- [x] **Optimistic UI**: Implemented for slip deletion.
+- [ ] **Data Sync (Polling)**: Add background polling for Slip Registry (Page 1 only).
+- [ ] **ScanModal**: Migrate to Vanilla/Alpine architecture.
 
-### 🛠️ Livewire Component Conversion
-- [x] **SlipRegistry**: Convert main slip table to Livewire for instant filtering/search
-- [x] **ProjectHub**: Make project selection feel instant using Livewire
-- [x] **ScanModal**: Rebuild scan workflow as a Livewire component
-    - [x] ย้าย Logic การแสกนจาก Controller มาไว้ใน Livewire
-    - [x] รองรับการอัพโหลดรูปภาพแบบ Real-time preview (Multi-select)
-    - [x] เชื่อมต่อกับ Gemini AI เพื่อดึงข้อมูลอัตโนมัติแบบ Sequential Loop
-    - [x] อัพเดตจำนวน Token ทันทีเมื่อแต่ละใบแสกนสำเร็จ (Real-time Balance)
 
 - [ ] **CollectionManager**: Compact inline actions for managing batches/collections
 - [ ] **NotificationSystem**: Real-time toast notifications for background tasks (OCR, Export)

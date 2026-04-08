@@ -9,18 +9,16 @@
         <!-- Favicon (Receipt Icon) -->
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2323a559' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z'/><path d='M16 8h-6'/><path d='M16 12H8'/><path d='M13 16H8'/></svg>">
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
+        <!-- Local Assets -->
+        <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('vendor/flatpickr/flatpickr.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('vendor/app.css') }}">
         
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
-        
-        @livewireStyles
-        @livewireScripts
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
+        <script src="{{ asset('vendor/flatpickr/flatpickr.js') }}"></script>
+        <script src="{{ asset('vendor/flatpickr/th.js') }}"></script>
+        <script src="{{ asset('vendor/alpine.min.js') }}" defer></script>
+        <script src="{{ asset('vendor/app.js') }}" defer></script>
 
         <!-- Prevent Dark Mode Flicker -->
         <script>
@@ -33,8 +31,8 @@
     </head>
     <body x-data="{ modalActive: false, profileOpen: false }" :class="{'overflow-hidden': modalActive}" class="bg-[#fafafa] dark:bg-[#1e1f22] font-sans tracking-tight">
         <div class="flex h-[100dvh] overflow-hidden">
-            <!-- Sidebar -->
-            <aside class="hidden lg:flex flex-col w-20 bg-[#fafafa] dark:bg-[#1e1f22] border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 z-30 transition-colors" :class="{'modal-open-blur': modalActive}">
+            <!-- Sidebar (Standard Slim Version) -->
+            <aside class="flex flex-col w-20 shrink-0 bg-[#fafafa] dark:bg-[#1e1f22] border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 z-30 transition-colors">
                 @include('layouts.parts.sidebar-desktop')
             </aside>
 
@@ -42,22 +40,17 @@
                 <!-- Header -->
                 @include('layouts.parts.header-desktop')
 
-                <!-- Mobile Header -->
-                <div :class="{'modal-open-blur': modalActive}">
-                    @include('layouts.parts.header-mobile')
-                </div>
-
-                <!-- Main Content (Unified Spacing) -->
-                <main class="flex-1 overflow-y-auto p-4 pb-24 md:p-5 md:pb-24 lg:p-8 lg:pb-10" :class="{'modal-open-blur': modalActive}">
-                    <div class="max-w-7xl mx-auto">
+                <!-- Main Content (Full Width) -->
+                <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8" :class="{'modal-open-blur': modalActive}">
+                    <div class="w-full">
                         @if (session('status'))
-                            <div class="mb-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+                            <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
                                 {{ session('status') }}
                             </div>
                         @endif
 
                         @if ($errors->any())
-                            <div class="mb-6 rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
+                            <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
                                 {{ $errors->first() }}
                             </div>
                         @endif
@@ -65,16 +58,9 @@
                         {{ $slot }}
                     </div>
                 </main>
-
-                <!-- Mobile Nav -->
-                <div :class="{'modal-open-blur': modalActive}">
-                    @include('layouts.parts.navigation-mobile')
-                </div>
             </div>
         </div>
 
         @stack('scripts')
-    </body>
-</html>
     </body>
 </html>

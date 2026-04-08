@@ -17,7 +17,7 @@ class CentralController extends Controller
             ])
             ->get();
 
-        return view('admin.central-dashboard', compact('stores'));
+        return view('main.central-dashboard', compact('stores'));
     }
 
     public function openProject(Request $request, Merchant $project)

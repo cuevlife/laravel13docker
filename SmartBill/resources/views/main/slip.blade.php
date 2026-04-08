@@ -1,0 +1,526 @@
+<x-app-layout>
+    <div class="w-full px-4 py-8 sm:px-6 lg:px-8" x-data="slipRegistry()">
+        <div class="rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:bg-[#2b2d31] dark:border-white/5">
+            <!-- Header Section -->
+            <div class="mb-8 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green">
+                        <i data-lucide="inbox" class="h-6 w-6"></i>
+                    </div>
+                    <h1 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">Workspace Inbox</h1>
+                </div>
+                
+                <button @click="triggerScan()" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">
+                    <i data-lucide="scan-line" class="h-4 w-4"></i>
+                    <span>Scan Receipt</span>
+                </button>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-12">
+                <div class="relative sm:col-span-5">
+                    <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e]"></i>
+                    <input type="text" x-model.debounce.500ms="filters.q" @input="fetchSlips()" placeholder="ค้นหาด่วน (ชื่อร้าน, UID, ยอดเงิน)..." class="h-11 w-full rounded-full border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white">
+                </div>
+                
+                <div class="sm:col-span-3">
+                    <select x-model="filters.workflow_status" @change="fetchSlips()" class="h-11 w-full rounded-full border border-black/5 bg-white px-4 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white">
+                        <option value="">ทุกสถานะ</option>
+                        @foreach($workflowOptions ?? [] as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="sm:col-span-3">
+                    <div class="relative">
+                        <i data-lucide="calendar" class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#80848e]"></i>
+                        <input type="text" id="date-range-picker" placeholder="ช่วงวันที่ พ.ศ. (เริ่ม — จบ)" class="h-11 w-full rounded-full border border-black/5 bg-white pl-11 pr-4 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white">
+                    </div>
+                </div>
+
+                <div class="sm:col-span-1">
+                    <button @click="resetFilters()" class="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-rose-100 bg-rose-50 text-[11px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
+                        <i data-lucide="filter-x" class="h-4 w-4"></i> ล้าง
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bulk Actions Row -->
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-4 border-t border-black/[0.04] pt-4 dark:border-white/[0.04]">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex h-9 items-center rounded-full bg-[#f2f7ff] px-4 text-[10px] font-black text-[#4f86f7]">
+                        <span x-text="selectedSlips.length">0</span> รายการที่เลือก
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <button class="flex h-9 w-9 items-center justify-center rounded-full border border-black/5 bg-white text-[#80848e] transition hover:border-[#4f86f7] hover:text-[#4f86f7] shadow-sm dark:bg-[#1e1f22]">
+                            <i data-lucide="shield-check" class="h-4 w-4"></i>
+                        </button>
+                        <button @click="bulkDelete()" :disabled="selectedSlips.length === 0" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-500 transition hover:bg-rose-100 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/10 disabled:opacity-50">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <a :href="selectedSlips.length > 0 ? ('{{ route('workspace.slip.export') }}?' + new URLSearchParams({...filters, ids: selectedSlips.join(',')}).toString()) : '#'" 
+                   :class="selectedSlips.length > 0 ? 'bg-[#c5c8ff] text-[#5359ff] hover:bg-[#b0b4ff] cursor-pointer' : 'bg-[#e3e5e8] text-[#80848e] cursor-not-allowed dark:bg-[#313338] dark:text-[#5c5e66]'"
+                   class="inline-flex h-10 items-center justify-center gap-2 rounded-full px-6 text-[10px] font-black uppercase tracking-widest transition">
+                    <i data-lucide="download" class="h-4 w-4"></i>
+                    <span>Excel Report</span>
+                </a>
+            </div>
+
+            <!-- Table Section -->
+            <div class="overflow-hidden relative min-h-[400px]">
+                <div x-show="is_loading" class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center dark:bg-black/20" x-cloak>
+                    <i data-lucide="loader-2" class="h-8 w-8 animate-spin text-discord-green"></i>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[11px] font-bold text-[#1e1f22] dark:text-[#b5bac1]">
+                        <thead class="border-y border-black/[0.04] text-[10px] font-black uppercase tracking-widest text-[#80848e] dark:border-white/[0.04]">
+                            <tr>
+                                <th class="px-4 py-4 w-10">
+                                    <input type="checkbox" @click="toggleSelectAll()" :checked="selectedSlips.length === slips.length && slips.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
+                                </th>
+                                <th class="px-4 py-4">รายละเอียดสลิป</th>
+                                <th class="px-4 py-4 text-center">วันที่ในสลิป <i data-lucide="chevron-down" class="inline h-3 w-3 text-discord-green"></i></th>
+                                <th class="px-4 py-4 text-center">ประมวลผลเมื่อ</th>
+                                <th class="px-4 py-4 text-center">สถานะ</th>
+                                <th class="px-4 py-4 text-right">ยอดเงินรวม</th>
+                                <th class="px-4 py-4 text-right">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
+                            <template x-for="slip in slips" :key="slip.id">
+                                <tr class="group transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02]">
+                                    <td class="px-4 py-5 align-top">
+                                        <input type="checkbox" x-model="selectedSlips" :value="slip.id" class="slip-checkbox h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
+                                    </td>
+                                    <td class="px-4 py-5 align-top">
+                                        <div class="flex items-start gap-4">
+                                            <div class="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-[1rem] border border-black/5 shadow-sm dark:border-white/5 bg-white dark:bg-[#1e1f22]">
+                                                <img :src="'/storage/' + slip.image_path" class="h-full w-full object-cover opacity-90 transition-opacity group-hover:opacity-100">
+                                            </div>
+                                            <div class="flex flex-col pt-0.5">
+                                                <span class="text-[13px] font-black leading-tight text-[#1e1f22] dark:text-white transition-colors group-hover:text-[#4f86f7]" x-text="slip.display_shop"></span>
+                                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                                    <span class="text-[10px] font-black tracking-widest text-[#80848e]" x-text="slip.uid"></span>
+                                                    <span class="h-1 w-1 rounded-full bg-[#e3e5e8]"></span>
+                                                    <span class="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:bg-emerald-500/10" x-text="slip.template ? slip.template.name : 'Auto Detection'"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-center text-[11px] font-black text-[#5c5e66] dark:text-[#b5bac1] pt-6" x-text="slip.display_date"></td>
+                                    <td class="px-4 py-5 align-top text-center text-[11px] font-black text-[#5c5e66] dark:text-[#b5bac1] pt-6" x-text="formatDate(slip.processed_at)"></td>
+                                    <td class="px-4 py-5 align-top text-center pt-5">
+                                        <span class="inline-flex items-center rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest"
+                                              :class="{
+                                                  'bg-[#e0f5ea] text-[#12a170]': slip.workflow_status === 'reviewed',
+                                                  'bg-[#f2f7ff] text-[#4f86f7]': slip.workflow_status === 'exported',
+                                                  'bg-slate-50 text-slate-600': slip.workflow_status !== 'reviewed' && slip.workflow_status !== 'exported'
+                                              }"
+                                              x-text="slip.workflow_status === 'reviewed' ? 'แสกนแล้ว (AI)' : (slip.workflow_status === 'exported' ? 'ส่งออก Excel แล้ว' : slip.workflow_status)">
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-right pt-6">
+                                        <span class="text-[13px] font-black tracking-tight text-[#1e1f22] dark:text-white" x-text="'THB ' + Number(slip.display_amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-right pt-5">
+                                        <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                            <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
+                                                <i data-lucide="eye" class="h-4 w-4"></i>
+                                            </a>
+                                            <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
+                                                <i data-lucide="edit-3" class="h-4 w-4"></i>
+                                            </a>
+                                            <button @click="deleteSlip(slip.id)" class="flex h-8 w-8 items-center justify-center rounded-full text-discord-red transition hover:bg-rose-50 dark:hover:bg-rose-500/10">
+                                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-if="slips.length === 0 && !is_loading">
+                                <tr>
+                                    <td colspan="7" class="py-24 text-center">
+                                        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5">
+                                            <i data-lucide="receipt" class="h-8 w-8 text-[#80848e]"></i>
+                                        </div>
+                                        <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">ไม่พบสลิปในโฟลเดอร์นี้</h3>
+                                        <p class="mt-1 text-xs font-bold text-[#80848e]">ลองค้นหาด้วยคำอื่น หรือกด Scan Receipt เพื่อเพิ่มสลิปใหม่</p>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6 flex items-center justify-between border-t border-black/[0.04] pt-6 dark:border-white/[0.04]" x-show="pagination && pagination.total > 0">
+                <div class="text-[11px] font-bold text-[#80848e]">
+                    Showing <span class="font-black text-[#1e1f22] dark:text-white" x-text="slips.length"></span> of <span class="font-black text-[#1e1f22] dark:text-white" x-text="pagination.total"></span> slips
+                </div>
+                <div class="flex items-center gap-2">
+                    <template x-for="link in pagination.links">
+                        <button @click="fetchSlips(link.url)" 
+                                :disabled="!link.url || link.active"
+                                class="h-8 min-w-[32px] rounded-lg px-2 text-[10px] font-black uppercase transition-all"
+                                :class="{
+                                    'bg-discord-green text-white shadow-lg shadow-green-500/20': link.active,
+                                    'bg-[#f8fafb] text-[#5c5e66] hover:bg-black/5 dark:bg-[#1e1f22] dark:text-[#b5bac1]': !link.active && link.url,
+                                    'opacity-30 cursor-not-allowed': !link.url
+                                }"
+                                x-html="link.label">
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan Modal -->
+        <div x-show="scanModalOpen" 
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+             x-transition.opacity
+             x-cloak>
+            <div class="bg-white dark:bg-[#2b2d31] w-full max-w-2xl rounded-[2.5rem] shadow-2xl border border-black/5 overflow-hidden"
+                 @click.away="!isScanning && (scanModalOpen = false)">
+                
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green">
+                                <i data-lucide="scan-line" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Auto-Scan Receipt</h2>
+                                <p class="text-xs font-bold text-[#80848e]">เลือกไฟล์รูปสลิปเพื่อแสกนและบันทึกอัตโนมัติ</p>
+                            </div>
+                        </div>
+                        <button @click="scanModalOpen = false" :disabled="isScanning" class="text-[#80848e] hover:text-rose-500 transition disabled:opacity-50">
+                            <i data-lucide="x" class="h-6 w-6"></i>
+                        </button>
+                    </div>
+
+                    <!-- Dropzone -->
+                    <label class="group relative flex flex-col items-center justify-center py-12 border-2 border-dashed border-[#e3e5e8] dark:border-[#313338] rounded-[2rem] bg-[#f8fafb] dark:bg-[#1e1f22] cursor-pointer hover:border-discord-green/50 transition-colors mb-6">
+                        <input type="file" multiple accept="image/*" class="hidden" @change="handleFileSelect">
+                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-[#2b2d31] shadow-sm mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="image-plus" class="h-8 w-8 text-discord-green"></i>
+                        </div>
+                        <p class="text-sm font-black text-[#1e1f22] dark:text-white">คลิกเพื่อเลือก หรือลากไฟล์มาวางที่นี่</p>
+                        <p class="text-[10px] font-bold text-[#80848e] mt-1">รองรับ JPG, PNG (สูงสุด 10MB ต่อไฟล์)</p>
+                    </label>
+
+                    <!-- File Queue -->
+                    <div class="max-h-[250px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                        <template x-for="(f, index) in scanFiles" :key="index">
+                            <div class="flex items-center gap-4 p-4 rounded-2xl border border-black/5 bg-white dark:bg-[#232428] dark:border-white/5 shadow-sm">
+                                <div class="h-10 w-10 shrink-0 rounded-lg bg-[#f8fafb] dark:bg-[#1e1f22] flex items-center justify-center border border-black/5">
+                                    <i data-lucide="image" class="h-5 w-5 text-[#80848e]"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[11px] font-black text-[#1e1f22] dark:text-white truncate" x-text="f.name"></span>
+                                        <span class="text-[10px] font-bold text-[#80848e]" x-text="f.size"></span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-discord-green transition-all duration-500" 
+                                             :style="'width: ' + (f.status === 'completed' || f.status === 'duplicate' ? '100%' : (f.status === 'uploading' ? '50%' : '0%'))"></div>
+                                    </div>
+                                    <div class="mt-1 flex items-center justify-between">
+                                        <span class="text-[9px] font-black uppercase tracking-widest"
+                                              :class="{
+                                                  'text-[#80848e]': f.status === 'pending',
+                                                  'text-[#4f86f7]': f.status === 'uploading',
+                                                  'text-discord-green': f.status === 'completed',
+                                                  'text-amber-500': f.status === 'duplicate',
+                                                  'text-rose-500': f.status === 'error'
+                                              }"
+                                              x-text="f.status === 'error' ? 'Error: ' + f.error : (f.status === 'duplicate' ? 'มีสลิปนี้อยู่แล้ว' : f.status)"></span>
+                                        <button @click="removeFile(index)" x-show="f.status !== 'uploading'" class="text-[#80848e] hover:text-rose-500 transition p-1">
+                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                        </button>
+                                        <div x-show="f.status === 'uploading'" class="p-1">
+                                            <i data-lucide="loader-2" class="h-3.5 w-3.5 text-[#4f86f7] animate-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        
+                        <template x-if="scanFiles.length === 0">
+                            <div class="py-8 text-center text-[#80848e]">
+                                <i data-lucide="inbox" class="h-8 w-8 mx-auto mb-2 opacity-50"></i>
+                                <p class="text-xs font-bold">ยังไม่มีไฟล์ในคิวแสกน</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="bg-[#f2f3f5] dark:bg-[#232428] p-6 flex items-center justify-between border-t border-black/5 dark:border-white/5">
+                    <div class="text-[10px] font-black uppercase tracking-widest text-[#80848e]">
+                        <span x-text="scanFiles.filter(f => f.status === 'completed' || f.status === 'duplicate').length"></span> / 
+                        <span x-text="scanFiles.length"></span> เสร็จสิ้น
+                    </div>
+                    <div class="flex gap-3">
+                        <button @click="scanFiles = []; scanModalOpen = false" 
+                                :disabled="isScanning"
+                                class="px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition rounded-full disabled:opacity-50">
+                            ปิดหน้าต่าง
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('slipRegistry', () => ({
+                slips: [],
+                pagination: { total: 0, links: [] },
+                is_loading: false,
+                filters: {
+                    q: {!! json_encode($activeFilters['q'] ?? '') !!},
+                    workflow_status: {!! json_encode($activeFilters['workflow_status'] ?? '') !!},
+                    date_from: '',
+                    date_to: '',
+                    sort: {!! json_encode($activeFilters['sort'] ?? 'latest') !!}
+                },
+                selectedSlips: [],
+                scanModalOpen: false,
+                isScanning: false,
+                scanFiles: [],
+
+                async init() {
+                    this.setupDatePicker();
+                    await this.fetchSlips();
+                },
+
+                setupDatePicker() {
+                    if (typeof flatpickr !== 'undefined') {
+                        flatpickr('#date-range-picker', {
+                            mode: 'range',
+                            dateFormat: 'Y-m-d',
+                            locale: 'th',
+                            onClose: (selectedDates, dateStr) => {
+                                if (selectedDates.length === 2) {
+                                    const format = (d) => {
+                                        const year = d.getFullYear();
+                                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                                        const day = String(d.getDate()).padStart(2, '0');
+                                        return `${year}-${month}-${day}`;
+                                    };
+                                    this.filters.date_from = format(selectedDates[0]);
+                                    this.filters.date_to = format(selectedDates[1]);
+                                    this.fetchSlips();
+                                }
+                            }
+                        });
+                    }
+                },
+
+                async fetchSlips(url = null) {
+                    this.is_loading = true;
+                    if (!url) {
+                        url = new URL(window.location.href);
+                        Object.keys(this.filters).forEach(key => {
+                            if (this.filters[key]) url.searchParams.set(key, this.filters[key]);
+                            else url.searchParams.delete(key);
+                        });
+                    }
+
+                    try {
+                        const response = await fetch(url, { 
+                            headers: { 
+                                'Accept': 'application/json', 
+                                'X-Requested-With': 'XMLHttpRequest' 
+                            } 
+                        });
+                        const json = await response.json();
+                        this.slips = json.data || [];
+                        this.pagination = json.pagination || { total: 0, links: [] };
+                        window.history.pushState({}, '', url);
+                        
+                        if (window.lucide) {
+                            this.$nextTick(() => window.lucide.createIcons({ icons: window.lucide.icons }));
+                        }
+                    } catch (error) {
+                        console.error('Fetch error:', error);
+                    } finally {
+                        this.is_loading = false;
+                    }
+                },
+
+                toggleSelectAll() {
+                    if (this.selectedSlips.length < this.slips.length) {
+                        this.selectedSlips = this.slips.map(s => s.id);
+                    } else {
+                        this.selectedSlips = [];
+                    }
+                },
+
+                triggerScan() {
+                    this.scanModalOpen = true;
+                },
+
+                resetFilters() {
+                    this.filters = { q: '', workflow_status: '', date_from: '', date_to: '', sort: 'latest' };
+                    const picker = document.querySelector('#date-range-picker');
+                    if (picker && picker._flatpickr) picker._flatpickr.clear();
+                    this.fetchSlips();
+                },
+
+                formatDate(dateStr) {
+                    if (!dateStr) return '-';
+                    try {
+                        const date = new Date(dateStr);
+                        return date.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    } catch (e) { return dateStr; }
+                },
+
+                getCsrfToken() {
+                    const meta = document.querySelector('meta[name=csrf-token]');
+                    return meta ? meta.content : '';
+                },
+
+                async deleteSlip(id) {
+                    if(!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสลิปนี้?')) return;
+                    const originalSlips = [...this.slips];
+                    const originalTotal = this.pagination.total;
+                    this.slips = this.slips.filter(slip => slip.id !== id);
+                    this.pagination.total = Math.max(0, (this.pagination.total || 1) - 1);
+
+                    try {
+                        const res = await fetch('/workspace/slips/delete/' + id, {
+                            method: 'DELETE',
+                            headers: { 
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': this.getCsrfToken()
+                            }
+                        });
+                        if (!res.ok) throw new Error('Server error');
+                        const data = await res.json();
+                        if(data.status !== 'success') throw new Error(data.message || 'Delete failed');
+                        if(this.slips.length < 5 && this.pagination.total > 0) this.fetchSlips();
+                    } catch (error) {
+                        alert('เกิดข้อผิดพลาด: ' + error.message);
+                        this.slips = originalSlips;
+                        this.pagination.total = originalTotal;
+                    }
+                },
+
+                async bulkDelete() {
+                    if (this.selectedSlips.length === 0) return;
+                    if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ ' + this.selectedSlips.length + ' รายการที่เลือก?')) return;
+                    const originalSlips = [...this.slips];
+                    const originalTotal = this.pagination.total;
+                    this.slips = this.slips.filter(s => !this.selectedSlips.includes(s.id));
+                    this.pagination.total = Math.max(0, this.pagination.total - this.selectedSlips.length);
+
+                    try {
+                        const res = await fetch('/workspace/slips/bulk', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': this.getCsrfToken()
+                            },
+                            body: JSON.stringify({ slip_ids: this.selectedSlips, bulk_action: 'delete' })
+                        });
+                        if (!res.ok) throw new Error('Bulk action failed');
+                        this.selectedSlips = [];
+                        this.fetchSlips(); 
+                    } catch (error) {
+                        alert('เกิดข้อผิดพลาดในการลบหลายรายการ');
+                        this.slips = originalSlips;
+                        this.pagination.total = originalTotal;
+                    }
+                },
+
+                handleFileSelect(event) {
+                    const files = Array.from(event.target.files);
+                    files.forEach(file => {
+                        this.scanFiles.push({ file, name: file.name, size: (file.size / 1024).toFixed(2) + ' KB', status: 'pending', progress: 0, error: null });
+                    });
+                    event.target.value = ''; 
+                    this.processQueue();
+                },
+
+                async processQueue() {
+                    if (this.isScanning) return;
+                    const pendingFile = this.scanFiles.find(f => f.status === 'pending');
+                    if (!pendingFile) {
+                        this.isScanning = false;
+                        const completedCount = this.scanFiles.filter(f => f.status === 'completed').length;
+                        const duplicateCount = this.scanFiles.filter(f => f.status === 'duplicate').length;
+                        const errorCount = this.scanFiles.filter(f => f.status === 'error').length;
+                        if (completedCount > 0 || duplicateCount > 0 || errorCount > 0) {
+                            if (window.Swal) {
+                                Swal.fire({
+                                    title: 'Scan Summary',
+                                    html: `<div class="text-sm">
+                                        ${completedCount > 0 ? `<p class="text-discord-green font-bold">แสกนสำเร็จ: ${completedCount}</p>` : ''}
+                                        ${duplicateCount > 0 ? `<p class="text-amber-500 font-bold">ไฟล์ซ้ำ: ${duplicateCount}</p>` : ''}
+                                        ${errorCount > 0 ? `<p class="text-rose-500 font-bold">ผิดพลาด: ${errorCount}</p>` : ''}
+                                    </div>`,
+                                    icon: errorCount > 0 ? 'warning' : 'success',
+                                    confirmButtonColor: '#5865f2',
+                                    background: document.documentElement.classList.contains('dark') ? '#2b2d31' : '#ffffff',
+                                    color: document.documentElement.classList.contains('dark') ? '#ffffff' : '#1e1f22'
+                                });
+                            }
+                        }
+                        return;
+                    }
+
+                    this.isScanning = true;
+                    pendingFile.status = 'uploading';
+                    const formData = new FormData();
+                    formData.append('image', pendingFile.file);
+                    formData.append('template_id', 'auto');
+
+                    try {
+                        const res = await fetch('/workspace/slips/process', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': this.getCsrfToken(), 'Accept': 'application/json' },
+                            body: formData
+                        });
+                        if (!res.ok) {
+                            const errorData = await res.json().catch(() => ({}));
+                            throw new Error(errorData.message || 'Process error');
+                        }
+                        const data = await res.json();
+                        if (data.status === 'duplicate') {
+                            pendingFile.status = 'duplicate';
+                            pendingFile.progress = 100;
+                        } else {
+                            pendingFile.status = 'completed';
+                            pendingFile.progress = 100;
+                            await this.fetchSlips();
+                        }
+                    } catch (error) {
+                        pendingFile.status = 'error';
+                        pendingFile.error = error.message;
+                    } finally {
+                        this.isScanning = false;
+                        if (window.lucide) this.$nextTick(() => window.lucide.createIcons({ icons: window.lucide.icons }));
+                        this.processQueue();
+                    }
+                },
+
+                removeFile(index) {
+                    if (this.scanFiles[index].status === 'uploading') return;
+                    this.scanFiles.splice(index, 1);
+                }
+            }));
+        });
+    </script>
+    @endpush
+</x-app-layout>

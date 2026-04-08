@@ -51,7 +51,7 @@ class AdminController extends Controller
             ->whereYear('created_at', now()->year)
             ->sum('delta');
 
-        return view('admin.billing', [
+        return view('main.billing', [
             'tokenLogs' => $tokenLogs,
             'topupRequests' => $topupRequests,
             'usageThisMonth' => abs((int) $usageThisMonth),
@@ -68,6 +68,7 @@ class AdminController extends Controller
             'note' => 'nullable|string|max:1000',
         ]);
 
+        \App\Support\ImageOptimizer::optimizeUpload($request->file('payment_slip'), 1200, 1200, 85);
         $path = $request->file('payment_slip')->store('topups', 'public');
 
         TokenTopupRequest::create([
@@ -86,7 +87,7 @@ class AdminController extends Controller
     public function stores()
     {
         $stores = Merchant::withCount('templates')->where('user_id', auth()->id())->latest()->get();
-        return view('admin.stores', compact('stores'));
+        return view('main.stores', compact('stores'));
     }
 
     public function showStore(Merchant $merchant): JsonResponse
@@ -170,7 +171,7 @@ class AdminController extends Controller
         $tenant = app('tenant');
         $templates = SlipTemplate::with('merchant')->where('merchant_id', $tenant->id)->latest()->get();
         $stores = collect([$tenant]);
-        return view('admin.templates', compact('templates', 'stores'));
+        return view('main.templates', compact('templates', 'stores'));
     }
 
     public function storeMerchant(Request $request): JsonResponse
@@ -201,7 +202,7 @@ class AdminController extends Controller
         $promptFields = $this->normalizedAiFieldDefinitions($merchant->ai_fields ?? []);
         $exportLayout = $this->resolvedExportLayoutForTemplate($merchant);
         $stores = collect([$tenant]);
-        return view('admin.template-edit', compact('merchant', 'promptFields', 'exportLayout', 'stores'));
+        return view('main.template-edit', compact('merchant', 'promptFields', 'exportLayout', 'stores'));
     }
 
     public function updateMerchantMapping(Request $request, SlipTemplate $merchant): JsonResponse
@@ -262,6 +263,19 @@ class AdminController extends Controller
         $slips = $slipsQuery->paginate(50)->withQueryString();
         $slips->getCollection()->transform(fn (Slip $slip) => $this->decorateSlipForDisplay($slip));
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $slips->items(),
+                'pagination' => [
+                    'current_page' => $slips->currentPage(),
+                    'last_page' => $slips->lastPage(),
+                    'total' => $slips->total(),
+                    'links' => $slips->linkCollection(),
+                ]
+            ]);
+        }
+
         $workflowOptions = array_filter(
             Slip::workflowOptions(),
             fn (string $key) => $key !== Slip::WORKFLOW_ARCHIVED,
@@ -297,7 +311,7 @@ class AdminController extends Controller
 
         $isArchivedView = $request->routeIs('admin.slip.archived') || $request->routeIs('workspace.slip.archived');
 
-        return view('admin.slip', [
+        return view('main.slip', [
             'templates' => $templates,
             'batches' => $batches,
             'slips' => $slips,
@@ -391,7 +405,7 @@ class AdminController extends Controller
     {
         $this->authorizeSlip($slip);
         $exportColumns = $slip->template->ai_fields ?? [];
-        return view('admin.slip-edit', compact('slip', 'exportColumns'));
+        return view('main.slip-edit', compact('slip', 'exportColumns'));
     }
 
     public function processSlip(Request $request): JsonResponse
@@ -405,14 +419,34 @@ class AdminController extends Controller
         ]);
 
         $user = auth()->user();
+        \App\Support\ImageOptimizer::optimizeUpload($request->file('image'), 1600, 1600, 85);
+        
+        // Calculate hash to prevent duplicates
+        $imageHash = md5_file($request->file('image')->getRealPath());
+        $tenant = app('tenant');
+
+        $exists = Slip::where('image_hash', $imageHash)
+            ->whereHas('template', function($q) use ($tenant) {
+                $q->where('merchant_id', $tenant->id);
+            })->exists();
+
+        if ($exists) {
+            return response()->json([
+                'status' => 'duplicate',
+                'message' => 'Duplicate slip detected. This receipt has already been uploaded to this folder.',
+            ]);
+        }
+
         $path = $request->file('image')->store('slips', 'public');
         $fullPath = Storage::disk('public')->path($path);
 
         try {
-            $tenant = app('tenant');
-            $template = $request->template_id === 'auto'
-                ? $this->detectTemplateForUser($tenant->id, $fullPath)
-                : SlipTemplate::where('merchant_id', $tenant->id)->findOrFail($request->template_id);
+            // Resolve template (auto-detect or manual)
+            if ($request->template_id === 'auto') {
+                $template = $this->detectTemplateForUser($tenant->id, $fullPath);
+            } else {
+                $template = SlipTemplate::where('merchant_id', $tenant->id)->findOrFail($request->template_id);
+            }
             $batch = $this->resolveSlipBatch($request, $tenant, $user);
 
             $data = $this->geminiService->extractDataFromImage($fullPath, [
@@ -425,6 +459,7 @@ class AdminController extends Controller
                 'slip_template_id' => $template->id,
                 'slip_batch_id' => $batch->id,
                 'image_path' => $path,
+                'image_hash' => $imageHash,
                 'extracted_data' => $data,
                 'workflow_status' => Slip::WORKFLOW_REVIEWED,
                 'processed_at' => now(),
@@ -472,7 +507,7 @@ class AdminController extends Controller
         $data = $request->validate([
             'slip_ids' => 'required|array|min:1',
             'slip_ids.*' => 'integer',
-            'bulk_action' => 'required|string|in:mark_reviewed,mark_approved,mark_exported,archive,restore,add_label,remove_label',
+            'bulk_action' => 'required|string|in:mark_reviewed,mark_approved,mark_exported,archive,restore,add_label,remove_label,delete',
             'bulk_label' => 'nullable|string|max:255',
         ]);
 
@@ -526,7 +561,18 @@ class AdminController extends Controller
                         'labels' => array_values(array_filter($existingLabels, fn ($label) => !in_array($label, $labels, true))),
                     ]);
                     break;
+                case 'delete':
+                    Storage::disk('public')->delete($slip->image_path);
+                    $slip->delete();
+                    break;
             }
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => count($slipIds) . ' slip(s) updated successfully.'
+            ]);
         }
 
         return back()->with('status', count($slipIds) . ' slip(s) updated successfully.');
@@ -623,7 +669,7 @@ class AdminController extends Controller
             ARRAY_FILTER_USE_KEY
         );
 
-        return view('admin.exports', [
+        return view('main.exports', [
             'templates' => $templates,
             'collections' => $collections,
             'workflowOptions' => $workflowOptions,
@@ -936,6 +982,7 @@ class AdminController extends Controller
     public function suggestPrompt(Request $request): JsonResponse
     {
         $file = $request->file('image');
+        \App\Support\ImageOptimizer::optimizeUpload($file, 1600, 1600, 85);
         $path = $file->store('temp', 'public');
         $fullPath = Storage::disk('public')->path($path);
 
@@ -970,64 +1017,31 @@ class AdminController extends Controller
     public function superAdminDashboard()
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
-
-        $users = User::query()->latest()->get();
-        $projects = Merchant::query()->with(['owner', 'users'])->withCount(['templates', 'slips'])->latest()->get();
-        $topupRequests = TokenTopupRequest::query()->with(['user', 'reviewer'])->latest()->limit(8)->get();
-        $tokenLogs = TokenLog::query()->latest()->limit(12)->get();
-
-        $stats = [
-            'users' => $users->count(),
-            'activeUsers' => $users->where('status', 'active')->count(),
-            'projects' => $projects->count(),
-            'tokens' => (int) $users->sum('tokens'),
-            'slips' => Slip::count(),
-            'pendingTopups' => TokenTopupRequest::where('status', 'pending')->count(),
-            'monthlyUsage' => abs((int) TokenLog::where('type', 'usage')
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->sum('delta')),
-            'monthlyCredits' => (int) TokenLog::whereIn('type', ['manual_credit', 'manual_topup_approved', 'manual_settlement'])
-                ->where('delta', '>', 0)
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->sum('delta'),
-        ];
-
-        $highBalanceUsers = $users->sortByDesc('tokens')->take(5)->values();
-        $activeProjects = $projects->sortByDesc('slips_count')->take(5)->values();
-        $recentUsers = $users->take(6);
-
-        return view('admin.super-dashboard', compact(
-            'stats',
-            'topupRequests',
-            'tokenLogs',
-            'highBalanceUsers',
-            'activeProjects',
-            'recentUsers',
-        ));
+        
+        // Super Admin doesn't need a summary dashboard, they need to manage data.
+        return redirect()->to(\App\Support\OwnerUrl::path(request(), 'users'));
     }
 
     public function projects()
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
-        $projects = Merchant::with(['owner', 'users'])
+        $merchants = Merchant::with(['owner', 'users'])
             ->withCount(['templates', 'slips'])
             ->latest()
             ->get();
 
-        $owners = User::query()->orderBy('name')->get();
+        $candidateOwners = User::query()->orderBy('name')->get();
 
         $stats = [
-            'projects' => $projects->count(),
-            'archived' => $projects->where('status', 'archived')->count(),
-            'memberships' => (int) $projects->sum(fn (Merchant $merchant) => $merchant->users->count()),
-            'templates' => (int) $projects->sum('templates_count'),
-            'slips' => (int) $projects->sum('slips_count'),
+            'projects' => $merchants->count(),
+            'archived' => $merchants->where('status', 'archived')->count(),
+            'memberships' => (int) $merchants->sum(fn (Merchant $merchant) => $merchant->users->count()),
+            'templates' => (int) $merchants->sum('templates_count'),
+            'slips' => (int) $merchants->sum('slips_count'),
         ];
 
-        return view('admin.projects', compact('projects', 'owners', 'stats'));
+        return view('admin.projects', compact('merchants', 'candidateOwners', 'stats'));
     }
 
     public function storeProjectForAdmin(Request $request)
@@ -1539,15 +1553,36 @@ class AdminController extends Controller
     private function detectTemplateForUser(int $tenantId, string $fullPath): SlipTemplate
     {
         $templates = SlipTemplate::where('merchant_id', $tenantId)->get();
+        
+        // If no templates exist, let's create one automatically based on intelligence presets
         if ($templates->isEmpty()) {
-            throw new \Exception('You have no Profiles to auto-detect against. Please create one first.');
+            $presets = \App\Support\IntelligencePresets::all();
+            $presetKeys = array_keys($presets);
+            
+            // Ask AI to identify which preset fits best
+            $detectedType = $this->geminiService->identifyStoreFromImage($fullPath, $presetKeys) ?: 'retail';
+            if (!isset($presets[$detectedType])) {
+                $detectedType = 'retail';
+            }
+            
+            $preset = $presets[$detectedType];
+            
+            // Create the first profile for this folder automatically
+            return SlipTemplate::create([
+                'merchant_id' => $tenantId,
+                'user_id' => auth()->id(),
+                'name' => "Auto: " . $preset['name'],
+                'main_instruction' => $preset['main_instruction'],
+                'ai_fields' => $preset['ai_fields'],
+            ]);
         }
 
         $templateNames = $templates->pluck('name')->toArray();
         $detectedName = $this->geminiService->identifyStoreFromImage($fullPath, $templateNames);
 
         if (!$detectedName || $detectedName === 'UNKNOWN') {
-            throw new \Exception('Intelligence could not confidently map this receipt to any of your Profiles. Please select manually.');
+            // Fallback to the first available template if AI is unsure
+            return $templates->first();
         }
 
         $template = $templates->first(function ($candidate) use ($detectedName) {
@@ -1555,7 +1590,7 @@ class AdminController extends Controller
         });
 
         if (!$template) {
-            throw new \Exception("Intelligence mapped to '{$detectedName}' but it does not match your active profiles.");
+            return $templates->first();
         }
 
         return $template;
@@ -1678,6 +1713,3 @@ class AdminController extends Controller
         return $candidate;
     }
 }
-
-
-

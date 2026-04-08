@@ -1,7 +1,18 @@
 FROM php:8.4-cli-alpine
 
 # ติดตั้ง Extensions และ Composer
-RUN apk add --no-cache bash git icu-dev libpng-dev libzip-dev zip unzip \
+RUN apk add --no-cache \
+    bash \
+    git \
+    icu-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    freetype-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql gd intl zip opcache
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

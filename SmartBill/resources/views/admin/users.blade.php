@@ -1,215 +1,334 @@
 <x-owner-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-black tracking-tightest uppercase dark:text-white">SaaS Control Center</h2>
-    </x-slot>
+    <div class="w-full px-4 py-8 sm:px-6 lg:px-8" x-data="userRegistry()">
+        <div class="rounded-xl bg-white p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:bg-[#2b2d31] dark:border-white/5">
+            <!-- Header Section -->
+            <div class="mb-8 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green text-2xl">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">User Management</h1>
+                        <p class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest mt-1">Control Plane / System Registry</p>
+                    </div>
+                </div>
+                
+                <button @click="showCreateModal = true" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">
+                    <i class="bi bi-person-plus-fill text-base"></i>
+                    <span>Add Account</span>
+                </button>
+            </div>
 
-    <div class="space-y-8 animate-in fade-in duration-700">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
-            <div class="premium-card p-5">
-                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Users</div>
-                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['users']) }}</div>
-                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Registered accounts</div>
-            </div>
-            <div class="premium-card p-5">
-                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Admins</div>
-                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['admins']) }}</div>
-                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Tenant operators</div>
-            </div>
-            <div class="premium-card p-5">
-                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Token Pool</div>
-                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['tokens']) }}</div>
-                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Current balance across users</div>
-            </div>
-            <div class="premium-card p-5">
-                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Active Users</div>
-                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['activeUsers']) }}</div>
-                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Accounts available for login</div>
-            </div>
-            <div class="premium-card p-5">
-                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Pending Topups</div>
-                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['pendingTopups']) }}</div>
-                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Waiting for owner review</div>
-            </div>
-            <div class="premium-card p-5 border-l-4 border-l-amber-500">
-                <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Suspended</div>
-                <div class="mt-3 text-3xl font-black text-slate-900 dark:text-white">{{ number_format($stats['suspended']) }}</div>
-                <div class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Accounts blocked from login</div>
-            </div>
-        </div>
+            <!-- Filters Section -->
+            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-12">
+                <div class="relative sm:col-span-5">
+                    <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e]"></i>
+                    <input type="text" x-model.debounce.300ms="filters.q" placeholder="ค้นหา (ชื่อ, อีเมล)..." class="h-11 w-full rounded-full border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white">
+                </div>
+                
+                <div class="sm:col-span-3">
+                    <select x-model="filters.role" class="h-11 w-full rounded-full border border-black/5 bg-white px-4 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white">
+                        <option value="">ทุกระดับสิทธิ์ (Role)</option>
+                        <option value="1">User</option>
+                        <option value="5">Tenant Admin</option>
+                        <option value="9">Super Admin</option>
+                    </select>
+                </div>
 
-        <div class="premium-card p-6 md:p-8">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <div class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Create User</div>
-                    <h2 class="mt-3 text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white">Provision New Account</h2>
-                    <p class="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400">Create a user, assign the first role, optional starting project, and opening token balance in one step.</p>
+                <div class="sm:col-span-3">
+                    <select x-model="filters.status" class="h-11 w-full rounded-full border border-black/5 bg-white px-4 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white">
+                        <option value="">ทุกสถานะ (Status)</option>
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+
+                <div class="sm:col-span-1">
+                    <button @click="resetFilters()" class="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-rose-100 bg-rose-50 text-[11px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
+                        <i class="bi bi-funnel-fill text-xs"></i> ล้าง
+                    </button>
                 </div>
             </div>
 
-            <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-4">
-                @csrf
-                <input type="text" name="name" value="{{ old('name') }}" required class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white" placeholder="Full name">
-                <input type="text" name="username" value="{{ old('username') }}" required class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white" placeholder="username">
-                <input type="email" name="email" value="{{ old('email') }}" required class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white" placeholder="email@example.com">
-                <select name="role" class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white">
-                    <option value="{{ \App\Models\User::ROLE_USER }}">User</option>
-                    <option value="{{ \App\Models\User::ROLE_TENANT_ADMIN }}">Tenant Admin</option>
-                    <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}">Super Admin</option>
-                </select>
+            <!-- Bulk Actions Row -->
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-4 border-t border-black/[0.04] pt-4 dark:border-white/[0.04]">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex h-9 items-center rounded-full bg-[#f2f7ff] px-4 text-[10px] font-black text-[#4f86f7]">
+                        <span x-text="selectedUsers.length">0</span> รายการที่เลือก
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <button class="flex h-9 w-9 items-center justify-center rounded-full border border-black/5 bg-white text-[#80848e] transition hover:border-[#4f86f7] hover:text-[#4f86f7] shadow-sm dark:bg-[#1e1f22]">
+                            <i class="bi bi-shield-check text-sm"></i>
+                        </button>
+                        <button :disabled="selectedUsers.length === 0" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-500 transition hover:bg-rose-100 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/10 disabled:opacity-50">
+                            <i class="bi bi-trash-fill text-sm"></i>
+                        </button>
+                    </div>
+                </div>
 
-                <input type="password" name="password" required class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white" placeholder="Password">
-                <input type="password" name="password_confirmation" required class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white" placeholder="Confirm password">
-                <input type="number" name="tokens" min="0" step="1" value="{{ old('tokens', 0) }}" class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white" placeholder="Opening tokens">
-
-                <select name="merchant_id" class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white xl:col-span-2">
-                    <option value="">No initial project</option>
-                    @foreach($merchants as $merchant)
-                        <option value="{{ $merchant->id }}">{{ $merchant->name }} / Project {{ str_pad((string) $merchant->id, 2, '0', STR_PAD_LEFT) }}</option>
-                    @endforeach
-                </select>
-                <select name="workspace_role" class="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white">
-                    <option value="employee">Project Employee</option>
-                    <option value="admin">Project Admin</option>
-                    <option value="owner">Project Owner</option>
-                </select>
-                <button type="submit" class="rounded-[16px] bg-discord-green px-5 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-[#1f8b4c]">
-                    Create User
-                </button>
-            </form>
-        </div>
-
-        <div class="bg-white dark:bg-discord-main rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-2xl shadow-slate-200/20 dark:shadow-none overflow-hidden">
-            <div class="px-8 py-6 border-b border-slate-50 dark:border-white/5 bg-slate-50/30 dark:bg-black/5 flex items-center justify-between">
-                <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em]">Tenant Registry</span>
-                <span class="text-[9px] font-bold text-discord-red uppercase">{{ count($users) }} Nodes Active</span>
+                <a href="#" class="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#e3e5e8] px-6 text-[10px] font-black uppercase tracking-widest text-[#80848e] cursor-not-allowed dark:bg-[#313338] dark:text-[#5c5e66] transition">
+                    <i class="bi bi-download text-sm"></i>
+                    <span>Export</span>
+                </a>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-slate-50/50 dark:bg-white/5 text-slate-400 dark:text-slate-600">
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Identity</th>
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Access Layer</th>
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Token Mode</th>
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Workspaces</th>
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Tokens</th>
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Activity</th>
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Controls</th>
-                            <th class="px-8 py-4 text-[9px] font-black uppercase tracking-widest">Temporal Node</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-                        @foreach($users as $user)
-                            <tr class="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-discord-black flex items-center justify-center text-rose-500 font-black shadow-inner">
-                                            {{ strtoupper(substr($user->name, 0, 1)) }}
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-black text-slate-900 dark:text-white uppercase leading-none">{{ $user->name }}</div>
-                                            <div class="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-tighter">{{ $user->email }}</div>
-                                            <div class="text-[9px] text-slate-300 dark:text-slate-600 font-bold mt-2 uppercase tracking-[0.2em]">@ {{ $user->username }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex flex-col gap-2">
-                                        <span class="px-3 py-1 bg-slate-100 dark:bg-black/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-white/5 shadow-sm">
-                                            {{ $user->roleLabel() }}
-                                        </span>
-                                        <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm
-                                            {{ $user->status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20' : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20' }}">
-                                            {{ $user->statusLabel() }}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="text-sm font-black text-slate-900 dark:text-white uppercase leading-none">Manual Control</div>
-                                    <div class="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">{{ number_format($user->token_logs_count) }} Ledger Events</div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    @if($user->merchants->isNotEmpty())
-                                        <div x-data="{ open: false }" class="relative">
-                                            <button @click="open = !open" class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-black/20 text-slate-600 dark:text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-white/5 shadow-sm hover:bg-slate-100 transition-colors">
-                                                {{ $user->merchants->count() }} Workspaces
-                                                <i data-lucide="chevron-down" class="w-3 h-3" :class="{'rotate-180': open}"></i>
-                                            </button>
-                                            <div x-show="open" @click.away="open = false" x-cloak class="absolute left-0 mt-2 w-48 bg-white dark:bg-[#2b2d31] border border-slate-200 dark:border-white/5 rounded-xl shadow-xl z-50 py-2">
-                                                @foreach($user->merchants as $m)
-                                                    @php
-                                                        $mUrl = \App\Support\WorkspaceUrl::workspace(request(), $m, 'dashboard');
-                                                    @endphp
-                                                    <a href="{{ $mUrl }}" target="_blank" class="block px-4 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-indigo-600 transition-colors">
-                                                        {{ $m->name }} (Project {{ str_pad((string) $m->id, 2, '0', STR_PAD_LEFT) }})
-                                                    </a>
-                                                @endforeach
+            <!-- Table Section -->
+            <div class="overflow-hidden relative min-h-[400px]">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[11px] font-bold text-[#1e1f22] dark:text-[#b5bac1]">
+                        <thead class="border-y border-black/[0.04] text-[10px] font-black uppercase tracking-widest text-[#80848e] dark:border-white/[0.04]">
+                            <tr>
+                                <th class="px-4 py-4 w-10">
+                                    <input type="checkbox" @click="toggleSelectAll()" :checked="selectedUsers.length === filteredUsers.length && filteredUsers.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
+                                </th>
+                                <th class="px-4 py-4">Identity</th>
+                                <th class="px-4 py-4 text-center">Access Layer</th>
+                                <th class="px-4 py-4 text-center">Tokens</th>
+                                <th class="px-4 py-4 text-center">Workspaces</th>
+                                <th class="px-4 py-4 text-center">Slips</th>
+                                <th class="px-4 py-4 text-right">Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
+                            <template x-for="user in filteredUsers" :key="user.id">
+                                <tr class="group transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02]">
+                                    <td class="px-4 py-5 align-top">
+                                        <input type="checkbox" x-model="selectedUsers" :value="user.id" class="user-checkbox h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
+                                    </td>
+                                    <td class="px-4 py-5 align-top">
+                                        <div class="flex items-start gap-4">
+                                            <div class="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-[1rem] border border-black/5 shadow-sm dark:border-white/5 bg-white dark:bg-[#1e1f22] flex items-center justify-center text-lg font-black text-rose-500" x-text="user.name.substring(0, 1).toUpperCase()">
+                                            </div>
+                                            <div class="flex flex-col pt-0.5">
+                                                <span class="text-[13px] font-black leading-tight text-[#1e1f22] dark:text-white transition-colors group-hover:text-[#4f86f7]" x-text="user.name"></span>
+                                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                                    <span class="text-[10px] font-black tracking-widest text-[#80848e]" x-text="user.email"></span>
+                                                    <template x-if="user.username">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="h-1 w-1 rounded-full bg-[#e3e5e8]"></span>
+                                                            <span class="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:bg-emerald-500/10" x-text="'@' + user.username"></span>
+                                                        </div>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </div>
-                                    @else
-                                        <span class="text-[10px] font-bold text-slate-400 italic">No stores</span>
-                                    @endif
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="text-sm font-black text-slate-900 dark:text-white">{{ number_format($user->tokens) }}</div>
-                                    <div class="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">Available balance</div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="text-sm font-black text-slate-900 dark:text-white">{{ number_format($user->slips_count) }} Slips</div>
-                                    <div class="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">{{ number_format($user->token_topup_requests_count) }} Topup Requests</div>
-                                </td>
-                                <td class="px-8 py-6">
-                                    <div class="flex flex-col gap-3 min-w-[220px]">
-                                        <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'users/' . $user->id . '/role') }}" class="flex items-center gap-2">
-                                            @csrf
-                                            @method('PATCH')
-                                            <select name="role" class="flex-1 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-slate-700 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white">
-                                                <option value="{{ \App\Models\User::ROLE_USER }}" @selected((int) $user->role === \App\Models\User::ROLE_USER)>User</option>
-                                                <option value="{{ \App\Models\User::ROLE_TENANT_ADMIN }}" @selected((int) $user->role === \App\Models\User::ROLE_TENANT_ADMIN)>Tenant Admin</option>
-                                                <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}" @selected((int) $user->role === \App\Models\User::ROLE_SUPER_ADMIN)>Super Admin</option>
-                                            </select>
-                                            <button type="submit" class="rounded-[12px] bg-indigo-600 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-indigo-500">
-                                                Role
-                                            </button>
-                                        </form>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-center pt-6">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="inline-flex items-center rounded-full border border-slate-200 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:border-white/10 dark:text-slate-300" x-text="getRoleLabel(user.role)">
+                                            </span>
+                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest border"
+                                                :class="{
+                                                    'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-emerald-100': user.status === 'active',
+                                                    'bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-amber-100': user.status !== 'active'
+                                                }"
+                                                x-text="user.status === 'active' ? 'ACTIVE' : 'SUSPENDED'">
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-center pt-6">
+                                        <span class="text-[13px] font-black tracking-tight text-[#1e1f22] dark:text-white" x-text="Number(user.tokens).toLocaleString()"></span>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-center pt-6 text-[11px] font-bold text-[#5c5e66] dark:text-[#b5bac1]">
+                                        <span x-text="user.merchants_count"></span>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-center pt-6 text-[11px] font-bold text-[#5c5e66] dark:text-[#b5bac1]">
+                                        <span x-text="user.slips_count"></span>
+                                    </td>
+                                    <td class="px-4 py-5 align-top text-right pt-6">
+                                        <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                            <a :href="'{{ \App\Support\OwnerUrl::base(request()) }}/users/' + user.id" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
+                                                <i class="bi bi-gear-wide-connected text-sm"></i>
+                                            </a>
+                                            <form method="POST" :action="'{{ \App\Support\OwnerUrl::base(request()) }}/users/' + user.id + '/status'" class="m-0">
+                                                @csrf @method('PATCH')
+                                                <input type="hidden" name="status" :value="user.status === 'active' ? 'suspended' : 'active'">
+                                                <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 dark:hover:bg-white/5" :class="user.status === 'active' ? 'hover:text-amber-500' : 'hover:text-emerald-500'" :title="user.status === 'active' ? 'Suspend User' : 'Reactivate User'">
+                                                    <i :class="user.status === 'active' ? 'bi bi-person-x-fill' : 'bi bi-person-check-fill'" class="text-sm"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-if="filteredUsers.length === 0">
+                                <tr>
+                                    <td colspan="7" class="py-24 text-center">
+                                        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5 text-3xl text-[#80848e]">
+                                            <i class="bi bi-people"></i>
+                                        </div>
+                                        <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">ไม่พบผู้ใช้งาน</h3>
+                                        <p class="mt-1 text-xs font-bold text-[#80848e]">ลองค้นหาด้วยคำอื่น หรือกด Add Account เพื่อเพิ่มใหม่</p>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                                        <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'users/' . $user->id . '/tokens') }}" class="flex items-center gap-2">
-                                            @csrf
-                                            <select name="operation" class="w-24 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-slate-700 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white">
-                                                <option value="add">Add</option>
-                                                <option value="deduct">Deduct</option>
-                                                <option value="set">Set</option>
-                                            </select>
-                                            <input type="number" name="tokens" min="0" step="1" value="50" class="w-24 rounded-[12px] border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-700 dark:border-white/10 dark:bg-[#1e1f22] dark:text-white">
-                                            <button type="submit" class="rounded-[12px] bg-discord-green px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#1f8b4c]">
-                                                Apply Tokens
-                                            </button>
-                                        </form>
+            <!-- Footer Stats (Like Pagination) -->
+            <div class="mt-6 flex items-center justify-between border-t border-black/[0.04] pt-6 dark:border-white/[0.04]">
+                <div class="text-[11px] font-bold text-[#80848e]">
+                    Showing <span class="font-black text-[#1e1f22] dark:text-white" x-text="filteredUsers.length"></span> of <span class="font-black text-[#1e1f22] dark:text-white" x-text="allUsers.length"></span> users
+                </div>
+            </div>
+        </div>
 
-                                        <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'users/' . $user->id . '/status') }}" class="flex items-center gap-2">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="status" value="{{ $user->status === 'active' ? 'suspended' : 'active' }}">
-                                            <button type="submit" class="flex-1 rounded-[12px] {{ $user->status === 'active' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-600 hover:bg-emerald-500' }} px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white transition">
-                                                {{ $user->status === 'active' ? 'Suspend' : 'Activate' }}
-                                            </button>
-                                        </form>
+        <!-- Add Account Modal -->
+        <div x-show="showCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-transition.opacity x-cloak>
+            <div class="bg-white dark:bg-[#2b2d31] w-full max-w-xl rounded-xl shadow-2xl overflow-hidden border border-black/5" @click.away="showCreateModal = false">
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green text-2xl">
+                                <i class="bi bi-person-plus-fill"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Add Account</h2>
+                                <p class="text-xs font-bold text-[#80848e]">Create a new node in the registry.</p>
+                            </div>
+                        </div>
+                        <button @click="showCreateModal = false" class="text-[#80848e] hover:text-rose-500 transition">
+                            <i class="bi bi-x-lg text-xl"></i>
+                        </button>
+                    </div>
 
-                                        <a href="{{ \App\Support\OwnerUrl::path(request(), 'users/' . $user->id) }}" class="inline-flex items-center justify-center rounded-[12px] border border-slate-200 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600 dark:border-white/10 dark:text-white dark:hover:text-indigo-300">
-                                            Open Detail
-                                        </a>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">{{ optional($user->created_at)->format('d M Y') ?? 'Unknown date' }}</div>
-                                    <div class="text-[9px] text-slate-300 dark:text-slate-700 font-medium uppercase mt-1">Registry Log Established</div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                    <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="mt-6 space-y-4">
+                        @csrf
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Full Name</label>
+                                <input type="text" name="name" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner" placeholder="John Doe">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Username</label>
+                                <input type="text" name="username" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner" placeholder="johndoe">
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Email Address</label>
+                            <input type="email" name="email" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner" placeholder="john@example.com">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Initial Role</label>
+                                <select name="role" class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner">
+                                    <option value="{{ \App\Models\User::ROLE_USER }}">User</option>
+                                    <option value="{{ \App\Models\User::ROLE_TENANT_ADMIN }}">Tenant Admin</option>
+                                    <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}">Super Admin</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Opening Tokens</label>
+                                <input type="number" name="tokens" value="50" class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Password</label>
+                                <input type="password" name="password" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Confirm</label>
+                                <input type="password" name="password_confirmation" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner">
+                            </div>
+                        </div>
+                        <div class="pt-4 flex justify-end gap-3">
+                            <button type="button" @click="showCreateModal = false" class="px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition rounded-full">Cancel</button>
+                            <button type="submit" class="px-6 py-2.5 rounded-full bg-discord-green text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">Create Node</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</x-owner-layout>
 
+    @push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('userRegistry', () => ({
+                allUsers: [],
+                filteredUsers: [],
+                selectedUsers: [],
+                showCreateModal: false,
+                filters: {
+                    q: '',
+                    role: '',
+                    status: ''
+                },
+
+                init() {
+                    const rawUsers = {!! json_encode($users->map(function($u) {
+                        return [
+                            'id' => $u->id,
+                            'name' => $u->name,
+                            'email' => $u->email,
+                            'username' => $u->username,
+                            'role' => $u->role,
+                            'status' => $u->status,
+                            'tokens' => $u->tokens,
+                            'merchants_count' => $u->merchants()->count(),
+                            'slips_count' => $u->slips_count,
+                            'created_at' => optional($u->created_at)->format('Y-m-d H:i:s')
+                        ];
+                    })) !!};
+                    
+                    this.allUsers = rawUsers;
+                    this.filteredUsers = rawUsers;
+
+                    this.$watch('filters', (value) => {
+                        this.applyFilters();
+                    }, { deep: true });
+                },
+
+                applyFilters() {
+                    let result = this.allUsers;
+                    
+                    if (this.filters.q.trim() !== '') {
+                        const term = this.filters.q.toLowerCase();
+                        result = result.filter(u => 
+                            u.name.toLowerCase().includes(term) || 
+                            u.email.toLowerCase().includes(term) ||
+                            (u.username && u.username.toLowerCase().includes(term))
+                        );
+                    }
+
+                    if (this.filters.role !== '') {
+                        result = result.filter(u => u.role == parseInt(this.filters.role));
+                    }
+
+                    if (this.filters.status !== '') {
+                        result = result.filter(u => u.status === this.filters.status);
+                    }
+
+                    this.filteredUsers = result;
+                },
+
+                resetFilters() {
+                    this.filters.q = '';
+                    this.filters.role = '';
+                    this.filters.status = '';
+                },
+
+                toggleSelectAll() {
+                    if (this.selectedUsers.length < this.filteredUsers.length) {
+                        this.selectedUsers = this.filteredUsers.map(u => u.id);
+                    } else {
+                        this.selectedUsers = [];
+                    }
+                },
+
+                getRoleLabel(roleId) {
+                    switch (parseInt(roleId)) {
+                        case 9: return 'Super Admin';
+                        case 5: return 'Tenant Admin';
+                        default: return 'User';
+                    }
+                }
+            }));
+        });
+    </script>
+    @endpush
+</x-owner-layout>

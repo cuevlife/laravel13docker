@@ -34,6 +34,33 @@ class Slip extends Model
         'archived_at' => 'datetime',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($slip) {
+            if (!$slip->uid) {
+                $slip->uid = static::generateUid();
+            }
+        });
+    }
+
+    public static function generateUid(): string
+    {
+        $prefix = 'SB-' . now()->format('ym') . '-';
+        $latest = static::where('uid', 'like', $prefix . '%')
+            ->orderBy('uid', 'desc')
+            ->first();
+
+        $number = 1;
+        if ($latest) {
+            $lastNumber = (int) substr($latest->uid, -5);
+            $number = $lastNumber + 1;
+        }
+
+        return $prefix . str_pad($number, 5, '0', STR_PAD_LEFT);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
