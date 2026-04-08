@@ -11,10 +11,6 @@ const initializeIcons = () => {
 
 // Global access for compatibility
 window.initializeIcons = initializeIcons;
-window.lucide = { 
-    createIcons: () => {}, 
-    icons: {} 
-};
 
 // Listeners
 document.addEventListener('DOMContentLoaded', initializeIcons);

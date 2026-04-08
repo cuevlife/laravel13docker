@@ -7,7 +7,7 @@
                         <input type="checkbox" @click="toggleSelectAll()" :checked="selectedSlips.length === document.querySelectorAll('.slip-checkbox').length && selectedSlips.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm transition hover:border-discord-green/50">
                     </th>
                     <th class="px-4 py-4">รายละเอียดสลิป</th>
-                    <th class="px-4 py-4 text-center">วันที่ในสลิป <i data-lucide="chevron-down" class="inline h-3 w-3 text-discord-green"></i></th>
+                    <th class="px-4 py-4 text-center">วันที่ในสลิป <i class="bi bi-chevron-down inline h-3 w-3 text-discord-green"></i></th>
                     <th class="px-4 py-4 text-center">ประมวลผลเมื่อ</th>
                     <th class="px-4 py-4 text-center">สถานะ</th>
                     <th class="px-4 py-4 text-right">ยอดเงินรวม</th>
@@ -64,16 +64,16 @@
                         <td class="px-4 py-5 align-top text-right pt-5">
                             <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                 <button class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                    <i data-lucide="eye" class="h-4 w-4"></i>
+                                    <i class="bi bi-eye-fill h-4 w-4"></i>
                                 </button>
                                 <button class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                    <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                                    <i class="bi bi-arrow-repeat h-4 w-4"></i>
                                 </button>
                                 <button class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                    <i data-lucide="edit-3" class="h-4 w-4"></i>
+                                    <i class="bi bi-pencil-square h-4 w-4"></i>
                                 </button>
                                 <button @click="deleteSlip(slip.id)" class="flex h-8 w-8 items-center justify-center rounded-full text-discord-red transition hover:bg-rose-50 dark:hover:bg-rose-500/10">
-                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                    <i class="bi bi-trash-fill h-4 w-4"></i>
                                 </button>
                             </div>
                         </td>
@@ -82,7 +82,7 @@
                     <tr>
                         <td colspan="7" class="py-24 text-center">
                             <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5">
-                                <i data-lucide="receipt" class="h-8 w-8 text-[#80848e]"></i>
+                                <i class="bi bi-receipt h-8 w-8 text-[#80848e]"></i>
                             </div>
                             <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">ไม่พบสลิปในโฟลเดอร์นี้</h3>
                             <p class="mt-1 text-xs font-bold text-[#80848e]">ลองค้นหาด้วยคำอื่น หรือกด Scan Receipt เพื่อเพิ่มสลิปใหม่</p>

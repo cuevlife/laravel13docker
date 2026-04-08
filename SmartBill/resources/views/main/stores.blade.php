@@ -12,8 +12,8 @@
             </div>
 
             <button @click="openAddModal()" 
-                    class="w-full sm:w-auto px-5 py-3 md:py-3.5 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[14px] transition-all shadow-md shadow-green-500/20 active:scale-95 flex items-center justify-center gap-2">
-                <i data-lucide="plus" class="w-4 h-4"></i> 
+                    class="w-full sm:w-auto px-5 py-3 md:py-3.5 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-md shadow-green-500/20 active:scale-95 flex items-center justify-center gap-2">
+                <i class="bi bi-plus-lg w-4 h-4"></i> 
                 <span>Create Store</span>
             </button>
         </div>
@@ -35,8 +35,8 @@
                         <tr class="block sm:table-row p-5 sm:p-0 hover:bg-[#e3e5e8]/30 dark:hover:bg-[#313338]/30 transition-colors group relative">
                             <td class="block sm:table-cell px-0 py-2 sm:px-4 sm:py-4">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-[12px] bg-white dark:bg-[#2b2d31] flex items-center justify-center border border-[#e3e5e8] dark:border-[#313338] group-hover:border-discord-green/30 text-discord-green shadow-sm shrink-0 transition-colors">
-                                        <i data-lucide="store" class="w-5 h-5"></i>
+                                    <div class="w-10 h-10 rounded-xl bg-white dark:bg-[#2b2d31] flex items-center justify-center border border-[#e3e5e8] dark:border-[#313338] group-hover:border-discord-green/30 text-discord-green shadow-sm shrink-0 transition-colors">
+                                        <i class="bi bi-shop w-5 h-5"></i>
                                     </div>
                                     <div class="pr-16 sm:pr-0">
                                         <h4 class="text-sm font-black text-[#1e1f22] dark:text-white truncate max-w-[200px] sm:max-w-none">{{ $store->name }}</h4>
@@ -46,8 +46,8 @@
                             </td>
                             <td class="block sm:table-cell px-0 py-2 sm:px-4 sm:py-4">
                                 <div class="sm:hidden text-[9px] font-black uppercase text-[#80848e] tracking-widest mb-1">Project</div>
-                                <div class="inline-flex items-center gap-2 rounded-[12px] border border-[#e3e5e8] bg-white px-3 py-2 text-[10px] font-black text-[#1e1f22] dark:border-[#313338] dark:bg-[#2b2d31] dark:text-white">
-                                    <i data-lucide="briefcase-business" class="w-3.5 h-3.5 text-discord-green"></i>
+                                <div class="inline-flex items-center gap-2 rounded-xl border border-[#e3e5e8] bg-white px-3 py-2 text-[10px] font-black text-[#1e1f22] dark:border-[#313338] dark:bg-[#2b2d31] dark:text-white">
+                                    <i class="bi bi-briefcase-fill w-3.5 h-3.5 text-discord-green"></i>
                                     <span>Project {{ str_pad((string) $store->id, 2, '0', STR_PAD_LEFT) }}</span>
                                 </div>
                             </td>
@@ -61,11 +61,11 @@
                             </td>
                             <td class="absolute top-5 right-5 sm:static sm:table-cell sm:px-4 sm:py-4">
                                 <div class="flex items-center justify-end gap-1.5 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button @click="openEditModal({{ $store->id }}, '{{ addslashes($store->name) }}', '{{ addslashes($store->tax_id) }}', '{{ addslashes($store->address) }}')" class="p-2 bg-white dark:bg-[#313338] rounded-[10px] text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#1e1f22] dark:hover:text-white transition-all shadow-sm relative z-20">
-                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                    <button @click="openEditModal({{ $store->id }}, '{{ addslashes($store->name) }}', '{{ addslashes($store->tax_id) }}', '{{ addslashes($store->address) }}')" class="p-2 bg-white dark:bg-[#313338] rounded-xl text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#1e1f22] dark:hover:text-white transition-all shadow-sm relative z-20">
+                                        <i class="bi bi-pencil-square w-4 h-4"></i>
                                     </button>
-                                    <button @click="deleteStore({{ $store->id }})" class="p-2 bg-white dark:bg-[#313338] rounded-[10px] text-[#5c5e66] dark:text-[#b5bac1] hover:text-discord-red transition-all shadow-sm relative z-20">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    <button @click="deleteStore({{ $store->id }})" class="p-2 bg-white dark:bg-[#313338] rounded-xl text-[#5c5e66] dark:text-[#b5bac1] hover:text-discord-red transition-all shadow-sm relative z-20">
+                                        <i class="bi bi-trash-fill w-4 h-4"></i>
                                     </button>
                                 </div>
                             </td>
@@ -73,7 +73,7 @@
                     @empty
                         <tr class="block sm:table-row">
                             <td class="block sm:table-cell px-6 py-16 text-center text-[#5c5e66] dark:text-[#b5bac1] w-full" sm-colspan="4">
-                                <i data-lucide="layout-template" class="w-12 h-12 mx-auto mb-3 opacity-20"></i>
+                                <i class="bi bi-layout-text-window w-12 h-12 mx-auto mb-3 opacity-20"></i>
                                 <span class="text-[11px] font-black uppercase tracking-[0.2em] block">No Stores Configured</span>
                             </td>
                         </tr>
@@ -88,11 +88,11 @@
                 <div class="absolute inset-0 bg-[#1e1f22]/80 backdrop-blur-sm" @click="closeModal()" 
                      x-show="modalOpen" x-transition.opacity></div>
                 
-                <div class="relative w-full max-w-md bg-white dark:bg-[#313338] rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl p-8 transform transition-all mt-auto sm:mt-0 max-h-[90vh] overflow-y-auto"
+                <div class="relative w-full max-w-md bg-white dark:bg-[#313338] rounded-t-xl sm:rounded-xl shadow-2xl p-8 transform transition-all mt-auto sm:mt-0 max-h-[90vh] overflow-y-auto"
                      x-show="modalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-12 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-12 sm:scale-95">
                     
                     <button @click="closeModal()" class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-[#f2f3f5] dark:bg-[#2b2d31] text-[#5c5e66] hover:text-discord-red transition-colors">
-                        <i data-lucide="x" class="w-4 h-4"></i>
+                        <i class="bi bi-x-lg w-4 h-4"></i>
                     </button>
 
                     <h3 class="text-2xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight mb-6" x-text="isEdit ? 'Edit Store' : 'New Store'"></h3>
@@ -100,24 +100,24 @@
                     <form @submit.prevent="submitForm" class="space-y-5">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Store Name *</label>
-                            <input type="text" x-model="form.name" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[16px] text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="e.g. Home, Client A, Branch 01">
+                            <input type="text" x-model="form.name" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-xl text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="e.g. Home, Client A, Branch 01">
                         </div>
 
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Tax ID</label>
-                            <input type="text" x-model="form.tax_id" class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[16px] text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="Optional">
+                            <input type="text" x-model="form.tax_id" class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-xl text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="Optional">
                         </div>
 
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Address / Details</label>
-                            <textarea x-model="form.address" rows="3" class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[16px] text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all resize-none" placeholder="Optional"></textarea>
+                            <textarea x-model="form.address" rows="3" class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-xl text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all resize-none" placeholder="Optional"></textarea>
                         </div>
 
                         <div class="pt-4 flex gap-3">
-                            <button type="button" @click="closeModal()" class="flex-1 py-4 bg-[#f2f3f5] dark:bg-[#2b2d31] hover:bg-[#e3e5e8] dark:hover:bg-[#1e1f22] text-[#1e1f22] dark:text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[16px] transition-colors">
+                            <button type="button" @click="closeModal()" class="flex-1 py-4 bg-[#f2f3f5] dark:bg-[#2b2d31] hover:bg-[#e3e5e8] dark:hover:bg-[#1e1f22] text-[#1e1f22] dark:text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" :disabled="loading" class="flex-1 py-4 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[16px] transition-all shadow-lg shadow-green-500/20 disabled:opacity-50">
+                            <button type="submit" :disabled="loading" class="flex-1 py-4 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-green-500/20 disabled:opacity-50">
                                 <span x-show="!loading" x-text="isEdit ? 'Update' : 'Save'"></span>
                                 <span x-show="loading">Saving...</span>
                             </button>

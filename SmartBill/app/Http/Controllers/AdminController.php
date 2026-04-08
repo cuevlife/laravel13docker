@@ -1014,6 +1014,12 @@ class AdminController extends Controller
         return view('admin.users', compact('users', 'stats', 'merchants'));
     }
 
+    public function createUser()
+    {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+        return view('admin.user-create');
+    }
+
     public function superAdminDashboard()
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
@@ -1042,6 +1048,13 @@ class AdminController extends Controller
         ];
 
         return view('admin.projects', compact('merchants', 'candidateOwners', 'stats'));
+    }
+
+    public function createProject()
+    {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+        $candidateOwners = User::query()->orderBy('name')->get();
+        return view('admin.project-create', compact('candidateOwners'));
     }
 
     public function storeProjectForAdmin(Request $request)

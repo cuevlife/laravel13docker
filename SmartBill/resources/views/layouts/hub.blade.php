@@ -28,16 +28,16 @@
     <body class="min-h-screen hub-bg">
         <main class="min-h-screen">
             @if (session('status'))
-                <div class="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
-                    <div class="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+                <div class="w-full px-4 pt-6 sm:px-6 lg:px-8">
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
                         {{ session('status') }}
                     </div>
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
-                    <div class="rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
+                <div class="w-full px-4 pt-6 sm:px-6 lg:px-8">
+                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
                         {{ $errors->first() }}
                     </div>
                 </div>

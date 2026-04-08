@@ -1,10 +1,10 @@
 <x-owner-layout>
-    <div class="w-full px-4 py-8 sm:px-6 lg:px-8" x-data="folderRegistry()">
+    <div class="w-full px-2 py-4 sm:px-4 lg:px-6" x-data="folderRegistry()">
         <div class="rounded-xl bg-white p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:bg-[#2b2d31] dark:border-white/5">
             <!-- Header Section -->
             <div class="mb-8 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green text-2xl">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-discord-green/10 text-discord-green text-2xl">
                         <i class="bi bi-folder2-open"></i>
                     </div>
                     <div>
@@ -13,30 +13,30 @@
                     </div>
                 </div>
                 
-                <button @click="showCreateModal = true" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">
+                <a href="{{ \App\Support\OwnerUrl::path(request(), 'projects/create') }}" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">
                     <i class="bi bi-plus-lg text-base"></i>
                     <span>Create Folder</span>
-                </button>
+                </a>
             </div>
 
             <!-- Filters Section -->
-            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-12">
-                <div class="relative sm:col-span-8">
-                    <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e]"></i>
-                    <input type="text" x-model.debounce.300ms="filters.q" placeholder="ค้นหาโฟลเดอร์ (ชื่อ, subdomain)..." class="h-11 w-full rounded-full border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white">
+            <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-12">
+                <div class="relative sm:col-span-6">
+                    <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e] z-10"></i>
+                    <input type="text" x-model.debounce.300ms="filters.q" placeholder="ค้นหาโฟลเดอร์ (ชื่อ, subdomain)..." class="h-10 w-full rounded-xl border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white transition-all">
                 </div>
                 
                 <div class="sm:col-span-3">
-                    <select x-model="filters.status" class="h-11 w-full rounded-full border border-black/5 bg-white px-4 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white">
+                    <select x-model="filters.status" class="h-10 w-full rounded-xl border border-black/5 bg-white px-3 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
                         <option value="">ทุกสถานะ (Status)</option>
                         <option value="active">Active</option>
                         <option value="archived">Archived</option>
                     </select>
                 </div>
 
-                <div class="sm:col-span-1">
-                    <button @click="resetFilters()" class="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-rose-100 bg-rose-50 text-[11px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
-                        <i class="bi bi-funnel-fill text-xs"></i> ล้าง
+                <div class="sm:col-span-3">
+                    <button @click="resetFilters()" class="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-100 bg-rose-50 text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
+                        <i class="bi bi-arrow-counterclockwise text-xs"></i> ล้างตัวกรอง
                     </button>
                 </div>
             </div>
@@ -62,14 +62,14 @@
                     <table class="w-full text-left text-[11px] font-bold text-[#1e1f22] dark:text-[#b5bac1]">
                         <thead class="border-y border-black/[0.04] text-[10px] font-black uppercase tracking-widest text-[#80848e] dark:border-white/[0.04]">
                             <tr>
-                                <th class="px-4 py-4 w-10">
+                                <th class="px-4 py-4 w-[40px]">
                                     <input type="checkbox" @click="toggleSelectAll()" :checked="selectedFolders.length === filteredFolders.length && filteredFolders.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
                                 </th>
                                 <th class="px-4 py-4">Folder Details</th>
-                                <th class="px-4 py-4 text-center">Owner</th>
-                                <th class="px-4 py-4 text-center">Data Volume</th>
-                                <th class="px-4 py-4 text-center">Status</th>
-                                <th class="px-4 py-4 text-right">Operations</th>
+                                <th class="px-4 py-4 text-center w-[180px]">Owner</th>
+                                <th class="px-4 py-4 text-center w-[120px]">Data Volume</th>
+                                <th class="px-4 py-4 text-center w-[120px]">Status</th>
+                                <th class="px-4 py-4 text-right w-[100px]">Operations</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
@@ -116,7 +116,7 @@
                                     <td class="px-4 py-5 align-top text-right pt-6">
                                         <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                             <a :href="'{{ \App\Support\OwnerUrl::base(request()) }}/projects/' + folder.id" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                                <i class="bi bi-gear-wide-connected text-sm"></i>
+                                                <i class="bi bi-pencil-square text-sm"></i>
                                             </a>
                                             <a :href="'/projects/open/' + folder.id" target="_blank" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white" title="Launch Workspace">
                                                 <i class="bi bi-box-arrow-up-right text-xs"></i>
@@ -149,52 +149,6 @@
             </div>
         </div>
 
-        <!-- Create Folder Modal -->
-        <div x-show="showCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-transition.opacity x-cloak>
-            <div class="bg-white dark:bg-[#2b2d31] w-full max-w-xl rounded-xl shadow-2xl overflow-hidden border border-black/5" @click.away="showCreateModal = false">
-                <div class="p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green text-2xl">
-                                <i class="bi bi-plus-lg"></i>
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Create Folder</h2>
-                                <p class="text-xs font-bold text-[#80848e]">Provision a new data processing unit.</p>
-                            </div>
-                        </div>
-                        <button @click="showCreateModal = false" class="text-[#80848e] hover:text-rose-500 transition">
-                            <i class="bi bi-x-lg text-xl"></i>
-                        </button>
-                    </div>
-
-                    <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'projects') }}" class="mt-6 space-y-4">
-                        @csrf
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Folder Name</label>
-                            <input type="text" name="name" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner" placeholder="My Company Ltd.">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">System Subdomain</label>
-                            <input type="text" name="subdomain" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner" placeholder="mycompany">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-[#80848e] ml-2">Primary Owner (Email)</label>
-                            <select name="user_id" required class="w-full rounded-xl border-none bg-[#f8fafb] px-4 py-3 text-sm font-black text-[#1e1f22] dark:bg-[#1e1f22] dark:text-white shadow-inner">
-                                <option value="">Select owner...</option>
-                                @foreach($candidateOwners as $u)
-                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="pt-4 flex justify-end gap-3">
-                            <button type="button" @click="showCreateModal = false" class="px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition rounded-full">Cancel</button>
-                            <button type="submit" class="px-6 py-2.5 rounded-full bg-discord-green text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">Initialize Folder</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 
     @push('scripts')

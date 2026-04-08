@@ -1,30 +1,30 @@
 <x-app-layout>
-    <div class="w-full px-4 py-8 sm:px-6 lg:px-8" x-data="slipRegistry()">
+    <div class="w-full px-2 py-4 sm:px-4 lg:px-6" x-data="slipRegistry()">
         <div class="rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:bg-[#2b2d31] dark:border-white/5">
             <!-- Header Section -->
             <div class="mb-8 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green">
-                        <i data-lucide="inbox" class="h-6 w-6"></i>
+                        <i class="bi bi-inbox-fill h-6 w-6"></i>
                     </div>
                     <h1 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">Workspace Inbox</h1>
                 </div>
                 
                 <button @click="triggerScan()" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">
-                    <i data-lucide="scan-line" class="h-4 w-4"></i>
+                    <i class="bi bi-qr-code-scan h-4 w-4"></i>
                     <span>Scan Receipt</span>
                 </button>
             </div>
 
             <!-- Filters Section -->
-            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-12">
-                <div class="relative sm:col-span-5">
-                    <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e]"></i>
-                    <input type="text" x-model.debounce.500ms="filters.q" @input="fetchSlips()" placeholder="ค้นหาด่วน (ชื่อร้าน, UID, ยอดเงิน)..." class="h-11 w-full rounded-full border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white">
+            <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-12">
+                <div class="relative sm:col-span-6">
+                    <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e] z-10"></i>
+                    <input type="text" x-model.debounce.500ms="filters.q" @input="fetchSlips()" placeholder="ค้นหาด่วน (ชื่อร้าน, UID, ยอดเงิน)..." class="h-10 w-full rounded-xl border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white transition-all">
                 </div>
                 
-                <div class="sm:col-span-3">
-                    <select x-model="filters.workflow_status" @change="fetchSlips()" class="h-11 w-full rounded-full border border-black/5 bg-white px-4 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white">
+                <div class="sm:col-span-2">
+                    <select x-model="filters.workflow_status" @change="fetchSlips()" class="h-10 w-full rounded-xl border border-black/5 bg-white px-3 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
                         <option value="">ทุกสถานะ</option>
                         @foreach($workflowOptions ?? [] as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
@@ -32,16 +32,16 @@
                     </select>
                 </div>
 
-                <div class="sm:col-span-3">
+                <div class="sm:col-span-2">
                     <div class="relative">
-                        <i data-lucide="calendar" class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#80848e]"></i>
-                        <input type="text" id="date-range-picker" placeholder="ช่วงวันที่ พ.ศ. (เริ่ม — จบ)" class="h-11 w-full rounded-full border border-black/5 bg-white pl-11 pr-4 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white">
+                        <i class="bi bi-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#80848e] z-10"></i>
+                        <input type="text" id="date-range-picker" placeholder="เลือกวันที่..." class="h-10 w-full rounded-xl border border-black/5 bg-white pl-10 pr-3 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
                     </div>
                 </div>
 
-                <div class="sm:col-span-1">
-                    <button @click="resetFilters()" class="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-rose-100 bg-rose-50 text-[11px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
-                        <i data-lucide="filter-x" class="h-4 w-4"></i> ล้าง
+                <div class="sm:col-span-2">
+                    <button @click="resetFilters()" class="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-100 bg-rose-50 text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
+                        <i class="bi bi-arrow-counterclockwise text-xs"></i> ล้างค่า
                     </button>
                 </div>
             </div>
@@ -55,10 +55,10 @@
                     
                     <div class="flex items-center gap-1">
                         <button class="flex h-9 w-9 items-center justify-center rounded-full border border-black/5 bg-white text-[#80848e] transition hover:border-[#4f86f7] hover:text-[#4f86f7] shadow-sm dark:bg-[#1e1f22]">
-                            <i data-lucide="shield-check" class="h-4 w-4"></i>
+                            <i class="bi bi-shield-check h-4 w-4"></i>
                         </button>
                         <button @click="bulkDelete()" :disabled="selectedSlips.length === 0" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-500 transition hover:bg-rose-100 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/10 disabled:opacity-50">
-                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                            <i class="bi bi-trash-fill h-4 w-4"></i>
                         </button>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                 <a :href="selectedSlips.length > 0 ? ('{{ route('workspace.slip.export') }}?' + new URLSearchParams({...filters, ids: selectedSlips.join(',')}).toString()) : '#'" 
                    :class="selectedSlips.length > 0 ? 'bg-[#c5c8ff] text-[#5359ff] hover:bg-[#b0b4ff] cursor-pointer' : 'bg-[#e3e5e8] text-[#80848e] cursor-not-allowed dark:bg-[#313338] dark:text-[#5c5e66]'"
                    class="inline-flex h-10 items-center justify-center gap-2 rounded-full px-6 text-[10px] font-black uppercase tracking-widest transition">
-                    <i data-lucide="download" class="h-4 w-4"></i>
+                    <i class="bi bi-download h-4 w-4"></i>
                     <span>Excel Report</span>
                 </a>
             </div>
@@ -74,22 +74,22 @@
             <!-- Table Section -->
             <div class="overflow-hidden relative min-h-[400px]">
                 <div x-show="is_loading" class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center dark:bg-black/20" x-cloak>
-                    <i data-lucide="loader-2" class="h-8 w-8 animate-spin text-discord-green"></i>
+                    <i class="bi bi-arrow-repeat h-8 w-8 animate-spin text-discord-green"></i>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-[11px] font-bold text-[#1e1f22] dark:text-[#b5bac1]">
                         <thead class="border-y border-black/[0.04] text-[10px] font-black uppercase tracking-widest text-[#80848e] dark:border-white/[0.04]">
                             <tr>
-                                <th class="px-4 py-4 w-10">
+                                <th class="px-4 py-4 w-[40px]">
                                     <input type="checkbox" @click="toggleSelectAll()" :checked="selectedSlips.length === slips.length && slips.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
                                 </th>
-                                <th class="px-4 py-4">รายละเอียดสลิป</th>
-                                <th class="px-4 py-4 text-center">วันที่ในสลิป <i data-lucide="chevron-down" class="inline h-3 w-3 text-discord-green"></i></th>
-                                <th class="px-4 py-4 text-center">ประมวลผลเมื่อ</th>
-                                <th class="px-4 py-4 text-center">สถานะ</th>
-                                <th class="px-4 py-4 text-right">ยอดเงินรวม</th>
-                                <th class="px-4 py-4 text-right">จัดการ</th>
+                                <th class="px-4 py-4 min-w-[200px]">รายละเอียดสลิป</th>
+                                <th class="px-4 py-4 text-center w-[120px]">วันที่ในสลิป <i class="bi bi-chevron-down text-discord-green"></i></th>
+                                <th class="px-4 py-4 text-center w-[140px]">ประมวลผลเมื่อ</th>
+                                <th class="px-4 py-4 text-center w-[140px]">สถานะ</th>
+                                <th class="px-4 py-4 text-right w-[120px]">ยอดเงินรวม</th>
+                                <th class="px-4 py-4 text-right w-[100px]">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
@@ -131,13 +131,13 @@
                                     <td class="px-4 py-5 align-top text-right pt-5">
                                         <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                             <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                                <i data-lucide="eye" class="h-4 w-4"></i>
+                                                <i class="bi bi-eye-fill h-4 w-4"></i>
                                             </a>
                                             <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                                <i data-lucide="edit-3" class="h-4 w-4"></i>
+                                                <i class="bi bi-pencil-square h-4 w-4"></i>
                                             </a>
                                             <button @click="deleteSlip(slip.id)" class="flex h-8 w-8 items-center justify-center rounded-full text-discord-red transition hover:bg-rose-50 dark:hover:bg-rose-500/10">
-                                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                                <i class="bi bi-trash-fill h-4 w-4"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -146,8 +146,8 @@
                             <template x-if="slips.length === 0 && !is_loading">
                                 <tr>
                                     <td colspan="7" class="py-24 text-center">
-                                        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5">
-                                            <i data-lucide="receipt" class="h-8 w-8 text-[#80848e]"></i>
+                                        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5">
+                                            <i class="bi bi-receipt h-8 w-8 text-[#80848e]"></i>
                                         </div>
                                         <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">ไม่พบสลิปในโฟลเดอร์นี้</h3>
                                         <p class="mt-1 text-xs font-bold text-[#80848e]">ลองค้นหาด้วยคำอื่น หรือกด Scan Receipt เพื่อเพิ่มสลิปใหม่</p>
@@ -193,7 +193,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-4">
                             <div class="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-discord-green/10 text-discord-green">
-                                <i data-lucide="scan-line" class="h-6 w-6"></i>
+                                <i class="bi bi-qr-code-scan h-6 w-6"></i>
                             </div>
                             <div>
                                 <h2 class="text-xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Auto-Scan Receipt</h2>
@@ -201,15 +201,15 @@
                             </div>
                         </div>
                         <button @click="scanModalOpen = false" :disabled="isScanning" class="text-[#80848e] hover:text-rose-500 transition disabled:opacity-50">
-                            <i data-lucide="x" class="h-6 w-6"></i>
+                            <i class="bi bi-x-lg h-6 w-6"></i>
                         </button>
                     </div>
 
                     <!-- Dropzone -->
-                    <label class="group relative flex flex-col items-center justify-center py-12 border-2 border-dashed border-[#e3e5e8] dark:border-[#313338] rounded-[2rem] bg-[#f8fafb] dark:bg-[#1e1f22] cursor-pointer hover:border-discord-green/50 transition-colors mb-6">
+                    <label class="group relative flex flex-col items-center justify-center py-12 border-2 border-dashed border-[#e3e5e8] dark:border-[#313338] rounded-xl bg-[#f8fafb] dark:bg-[#1e1f22] cursor-pointer hover:border-discord-green/50 transition-colors mb-6">
                         <input type="file" multiple accept="image/*" class="hidden" @change="handleFileSelect">
                         <div class="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-[#2b2d31] shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                            <i data-lucide="image-plus" class="h-8 w-8 text-discord-green"></i>
+                            <i class="bi bi-image h-8 w-8 text-discord-green"></i>
                         </div>
                         <p class="text-sm font-black text-[#1e1f22] dark:text-white">คลิกเพื่อเลือก หรือลากไฟล์มาวางที่นี่</p>
                         <p class="text-[10px] font-bold text-[#80848e] mt-1">รองรับ JPG, PNG (สูงสุด 10MB ต่อไฟล์)</p>
@@ -220,7 +220,7 @@
                         <template x-for="(f, index) in scanFiles" :key="index">
                             <div class="flex items-center gap-4 p-4 rounded-2xl border border-black/5 bg-white dark:bg-[#232428] dark:border-white/5 shadow-sm">
                                 <div class="h-10 w-10 shrink-0 rounded-lg bg-[#f8fafb] dark:bg-[#1e1f22] flex items-center justify-center border border-black/5">
-                                    <i data-lucide="image" class="h-5 w-5 text-[#80848e]"></i>
+                                    <i class="bi bi-image h-5 w-5 text-[#80848e]"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between mb-1">
@@ -242,10 +242,10 @@
                                               }"
                                               x-text="f.status === 'error' ? 'Error: ' + f.error : (f.status === 'duplicate' ? 'มีสลิปนี้อยู่แล้ว' : f.status)"></span>
                                         <button @click="removeFile(index)" x-show="f.status !== 'uploading'" class="text-[#80848e] hover:text-rose-500 transition p-1">
-                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                            <i class="bi bi-trash-fill h-3.5 w-3.5"></i>
                                         </button>
                                         <div x-show="f.status === 'uploading'" class="p-1">
-                                            <i data-lucide="loader-2" class="h-3.5 w-3.5 text-[#4f86f7] animate-spin"></i>
+                                            <i class="bi bi-arrow-repeat h-3.5 w-3.5 text-[#4f86f7] animate-spin"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -254,7 +254,7 @@
                         
                         <template x-if="scanFiles.length === 0">
                             <div class="py-8 text-center text-[#80848e]">
-                                <i data-lucide="inbox" class="h-8 w-8 mx-auto mb-2 opacity-50"></i>
+                                <i class="bi bi-inbox-fill h-8 w-8 mx-auto mb-2 opacity-50"></i>
                                 <p class="text-xs font-bold">ยังไม่มีไฟล์ในคิวแสกน</p>
                             </div>
                         </template>
@@ -346,10 +346,6 @@
                         this.slips = json.data || [];
                         this.pagination = json.pagination || { total: 0, links: [] };
                         window.history.pushState({}, '', url);
-                        
-                        if (window.lucide) {
-                            this.$nextTick(() => window.lucide.createIcons({ icons: window.lucide.icons }));
-                        }
                     } catch (error) {
                         console.error('Fetch error:', error);
                     } finally {
@@ -510,7 +506,6 @@
                         pendingFile.error = error.message;
                     } finally {
                         this.isScanning = false;
-                        if (window.lucide) this.$nextTick(() => window.lucide.createIcons({ icons: window.lucide.icons }));
                         this.processQueue();
                     }
                 },

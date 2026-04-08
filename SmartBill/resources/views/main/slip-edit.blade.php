@@ -1,11 +1,11 @@
 <x-app-layout>
-    <div x-data="slipEditor(window.initialSlipConfig)" class="max-w-5xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8 mt-8 animate-in fade-in duration-500">
+    <div x-data="slipEditor(window.initialSlipConfig)" class="w-full space-y-6 pb-20 px-4 sm:px-6 lg:px-8 mt-8 animate-in fade-in duration-500">
         
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
                 <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips') }}" class="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-all">
-                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    <i class="bi bi-arrow-left w-5 h-5"></i>
                 </a>
                 <div>
                     <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Intelligence Editor</h2>
@@ -22,7 +22,7 @@
                 </div>
 
                 <button @click="showImage = true; modalActive = true" class="p-2.5 bg-white border border-slate-200 rounded-xl shadow-sm text-slate-400 hover:text-rose-500 transition-all">
-                    <i data-lucide="maximize-2" class="w-5 h-5"></i>
+                    <i class="bi bi-arrows-fullscreen w-5 h-5"></i>
                 </button>
             </div>
         </div>
@@ -45,7 +45,7 @@
             <div x-show="showItems" class="space-y-4">
                 <!-- Math Validator Warning -->
                 <div x-show="mathMismatch" x-cloak class="px-5 py-3 mb-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-500"></i>
+                    <i class="bi bi-exclamation-triangle w-5 h-5 text-rose-500"></i>
                     <p class="text-xs font-black uppercase tracking-wide text-rose-600" x-text="mathMismatch"></p>
                 </div>
 
@@ -65,7 +65,7 @@
                                 </div>
                             </div>
                             <button @click="removeItem(index)" class="p-2 text-slate-200 hover:text-rose-500 transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                <i class="bi bi-trash-fill w-4 h-4"></i>
                             </button>
                         </div>
                     </template>
@@ -78,9 +78,9 @@
             <div class="bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-800">
                 <div class="px-8 py-4 bg-slate-800/50 border-b border-slate-800 flex justify-between items-center">
                     <span class="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-2">
-                        <i data-lucide="code" class="w-4 h-4"></i> Source Config
+                        <i class="bi bi-code w-4 h-4"></i> Source Config
                     </span>
-                    <button @click="prettifyJson()" class="p-2 text-white/20 hover:text-white transition-all"><i data-lucide="sparkles" class="w-4 h-4"></i></button>
+                    <button @click="prettifyJson()" class="p-2 text-white/20 hover:text-white transition-all"><i class="bi bi-stars w-4 h-4"></i></button>
                 </div>
                 <textarea x-model="jsonContent" rows="22" class="w-full bg-transparent text-emerald-400 font-mono text-xs p-10 focus:ring-0 border-0 leading-relaxed"></textarea>
             </div>
@@ -90,8 +90,8 @@
         <div class="pt-10">
             <button @click="save()" :disabled="saving"
                     class="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-[0.6em] shadow-xl hover:bg-rose-500 hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-20 flex items-center justify-center gap-4">
-                <i x-show="!saving" data-lucide="shield-check" class="w-5 h-5"></i>
-                <i x-show="saving" data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                <i x-show="!saving" class="bi bi-shield-check w-5 h-5"></i>
+                <i x-show="saving" class="bi bi-arrow-repeat w-5 h-5 animate-spin"></i>
                 <span x-text="saving ? 'Committing...' : 'Save & Sync Registry'"></span>
             </button>
         </div>
@@ -100,9 +100,9 @@
         <template x-teleport="body">
             <div x-show="showImage" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl" x-cloak>
                 <button @click="showImage = false; modalActive = false" class="absolute top-8 right-8 p-4 bg-white/10 hover:bg-rose-500 rounded-2xl text-white transition-all">
-                    <i data-lucide="x" class="w-6 h-6"></i>
+                    <i class="bi bi-x-lg w-6 h-6"></i>
                 </button>
-                <div class="max-w-full max-h-full overflow-hidden rounded-[3rem] shadow-2xl border border-white/10">
+                <div class="max-w-full max-h-full overflow-hidden rounded-xl shadow-2xl border border-white/10">
                     <img src="{{ asset('storage/' . $slip->image_path) }}" class="max-w-full max-h-[85vh] object-contain" alt="slip">
                 </div>
             </div>

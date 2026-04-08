@@ -1,7 +1,7 @@
 <section class="space-y-6">
     <header>
         <h2 class="text-sm font-black text-discord-red uppercase tracking-widest flex items-center gap-2">
-            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            <i class="bi bi-exclamation-triangle w-4 h-4"></i>
             {{ __('Delete Account') }}
         </h2>
         <p class="mt-2 text-xs text-[#5c5e66] dark:text-[#b5bac1] font-bold">
@@ -10,7 +10,7 @@
     </header>
 
     <button type="button" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')" class="px-6 py-3 bg-transparent border-2 border-discord-red text-discord-red hover:bg-discord-red hover:text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[14px] transition-all shadow-sm active:scale-95 text-center flex items-center gap-2">
-        <i data-lucide="trash-2" class="w-4 h-4"></i>
+        <i class="bi bi-trash-fill w-4 h-4"></i>
         {{ __('Delete My Account') }}
     </button>
 
@@ -39,7 +39,7 @@
                         {{ __('Cancel') }}
                     </button>
                     <button type="submit" class="px-6 py-3 bg-discord-red hover:bg-[#da373c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[14px] transition-all shadow-md active:scale-95 text-center flex items-center justify-center gap-2">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i> {{ __('Delete Account') }}
+                        <i class="bi bi-trash-fill w-4 h-4"></i> {{ __('Delete Account') }}
                     </button>
                 </div>
             </form>

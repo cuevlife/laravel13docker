@@ -36,6 +36,7 @@ Route::middleware(['web', 'auth', 'role:super_admin'])->prefix('admin')->group(f
     });
 
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::get('/users/create', [AdminController::class, 'createUser'])->name('admin.users.create');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
     Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('admin.users.show');
     Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('admin.users.role');
@@ -46,6 +47,7 @@ Route::middleware(['web', 'auth', 'role:super_admin'])->prefix('admin')->group(f
     Route::delete('/users/{user}/workspaces/{merchant}', [AdminController::class, 'detachUserWorkspace'])->name('admin.users.workspaces.detach');
     
     Route::get('/projects', [AdminController::class, 'projects'])->name('admin.projects.index');
+    Route::get('/projects/create', [AdminController::class, 'createProject'])->name('admin.projects.create');
     Route::post('/projects', [AdminController::class, 'storeProjectForAdmin'])->name('admin.projects.store');
     Route::get('/projects/{merchant}', [AdminController::class, 'showProject'])->name('admin.projects.show');
     Route::patch('/projects/{merchant}', [AdminController::class, 'updateProjectForAdmin'])->name('admin.projects.update');

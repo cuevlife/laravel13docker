@@ -53,7 +53,7 @@
         </div>
     </header>
 
-    <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 relative z-10" x-data="{ 
+    <div class="w-full px-4 pb-12 sm:px-6 lg:px-8 relative z-10" x-data="{ 
         allFolders: [],
         folders: [],
         search: '', 

@@ -12,8 +12,8 @@
             </div>
 
             <button @click="openAddModal()" 
-                    class="w-full sm:w-auto px-5 py-3 md:py-3.5 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[14px] transition-all shadow-md shadow-green-500/20 active:scale-95 flex items-center justify-center gap-2">
-                <i data-lucide="plus" class="w-4 h-4"></i> 
+                    class="w-full sm:w-auto px-5 py-3 md:py-3.5 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-md shadow-green-500/20 active:scale-95 flex items-center justify-center gap-2">
+                <i class="bi bi-plus-lg w-4 h-4"></i> 
                 <span>Create Profile</span>
             </button>
         </div>
@@ -35,7 +35,7 @@
                             <td class="block sm:table-cell px-0 py-2 sm:px-4 sm:py-4">
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-[12px] bg-white dark:bg-[#2b2d31] flex items-center justify-center border border-[#e3e5e8] dark:border-[#313338] group-hover:border-discord-green/30 text-discord-green shadow-sm shrink-0 transition-colors">
-                                        <i data-lucide="file-json" class="w-5 h-5"></i>
+                                        <i class="bi bi-filetype-json w-5 h-5"></i>
                                     </div>
                                     <div class="pr-16 sm:pr-0">
                                         <h4 class="text-sm font-black text-[#1e1f22] dark:text-white truncate max-w-[200px] sm:max-w-none">{{ $template->name }}</h4>
@@ -45,7 +45,7 @@
                             <td class="flex items-center justify-between sm:table-cell px-0 py-2 sm:px-4 sm:py-4 mt-2 sm:mt-0">
                                 <span class="sm:hidden text-[9px] font-black uppercase tracking-widest text-[#80848e]">Store</span>
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="store" class="w-4 h-4 text-[#5c5e66] dark:text-[#b5bac1] hidden sm:block"></i>
+                                    <i class="bi bi-shop w-4 h-4 text-[#5c5e66] dark:text-[#b5bac1] hidden sm:block"></i>
                                     <p class="text-[11px] font-bold text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest">{{ $template->merchant->name ?? 'Unlinked' }}</p>
                                 </div>
                             </td>
@@ -64,10 +64,10 @@
                                 <div class="flex items-center justify-end gap-1.5 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'templates/' . $template->id . '/edit') }}" class="p-2 bg-white dark:bg-[#313338] rounded-[10px] text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#1e1f22] dark:hover:text-white transition-all shadow-sm relative z-20">
                                         <span class="text-[10px] font-black pr-1 uppercase tracking-widest hidden lg:inline-block">Schema</span>
-                                        <i data-lucide="settings-2" class="w-4 h-4 lg:hidden"></i>
+                                        <i class="bi bi-gear-wide-connected w-4 h-4 lg:hidden"></i>
                                     </a>
                                     <button @click="deleteTemplate({{ $template->id }})" class="p-2 bg-white dark:bg-[#313338] rounded-[10px] text-[#5c5e66] dark:text-[#b5bac1] hover:text-discord-red transition-all shadow-sm relative z-20">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        <i class="bi bi-trash-fill w-4 h-4"></i>
                                     </button>
                                 </div>
                             </td>
@@ -75,7 +75,7 @@
                     @empty
                         <tr class="block sm:table-row">
                             <td class="block sm:table-cell px-6 py-16 text-center text-[#5c5e66] dark:text-[#b5bac1] w-full" sm-colspan="4">
-                                <i data-lucide="layout-template" class="w-12 h-12 mx-auto mb-3 opacity-20"></i>
+                                <i class="bi bi-layout-text-window w-12 h-12 mx-auto mb-3 opacity-20"></i>
                                 <span class="text-[11px] font-black uppercase tracking-[0.2em] block">No Profiles Configured</span>
                             </td>
                         </tr>
@@ -94,7 +94,7 @@
                      x-show="modalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-12 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-12 sm:scale-95">
                     
                     <button @click="closeModal()" class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-[#f2f3f5] dark:bg-[#2b2d31] text-[#5c5e66] hover:text-discord-red transition-colors">
-                        <i data-lucide="x" class="w-4 h-4"></i>
+                        <i class="bi bi-x-lg w-4 h-4"></i>
                     </button>
 
                     <h3 class="text-2xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight mb-6">New Profile</h3>
@@ -103,27 +103,27 @@
                     <form @submit.prevent="submitForm" class="space-y-5">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Profile Name *</label>
-                            <input type="text" x-model="form.name" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[16px] text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="e.g. Makro Tax Invoice">
+                            <input type="text" x-model="form.name" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-xl text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all" placeholder="e.g. Makro Tax Invoice">
                         </div>
 
                         <div class="space-y-1.5 relative">
                             <label class="text-[10px] font-black text-[#5c5e66] dark:text-[#b5bac1] uppercase tracking-widest pl-2">Linked Store *</label>
-                            <select x-model="form.merchant_id" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-[16px] text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all appearance-none outline-none">
+                            <select x-model="form.merchant_id" required class="w-full px-4 py-3 bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-xl text-[#1e1f22] dark:text-white font-bold focus:ring-2 focus:ring-discord-green transition-all appearance-none outline-none">
                                 <option value="" disabled>Select a Store...</option>
                                 @foreach($stores as $store)
                                     <option value="{{ $store->id }}">{{ $store->name }}</option>
                                 @endforeach
                             </select>
                             <div class="absolute right-4 top-[32px] pointer-events-none">
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-[#80848e]"></i>
+                                <i class="bi bi-chevron-down w-4 h-4 text-[#80848e]"></i>
                             </div>
                         </div>
 
                         <div class="pt-4 flex gap-3">
-                            <button type="button" @click="closeModal()" class="flex-1 py-4 bg-[#f2f3f5] dark:bg-[#2b2d31] hover:bg-[#e3e5e8] dark:hover:bg-[#1e1f22] text-[#1e1f22] dark:text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[16px] transition-colors">
+                            <button type="button" @click="closeModal()" class="flex-1 py-4 bg-[#f2f3f5] dark:bg-[#2b2d31] hover:bg-[#e3e5e8] dark:hover:bg-[#1e1f22] text-[#1e1f22] dark:text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" :disabled="loading" class="flex-1 py-4 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[16px] transition-all shadow-lg shadow-green-500/20 disabled:opacity-50">
+                            <button type="submit" :disabled="loading" class="flex-1 py-4 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-green-500/20 disabled:opacity-50">
                                 <span x-show="!loading">Create</span>
                                 <span x-show="loading">Creating...</span>
                             </button>

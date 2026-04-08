@@ -4,7 +4,7 @@
         @if(auth()->user()->isSuperAdmin() || (int)$store->user_id === (int)auth()->id())
             <button @click="$dispatch('open-delete', {id: '{{ $store->id }}', name: '{{ $store->name }}' })" 
                     class="absolute top-6 right-6 flex h-8 w-8 items-center justify-center rounded-full border border-black/[0.05] bg-white text-[#80848e] transition hover:bg-discord-red hover:text-white dark:bg-[#1e1f22]">
-                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                <i  class="bi bi-trash-fill h-4 w-4"></i>
             </button>
         @endif
 
@@ -28,7 +28,7 @@
         <!-- Open Folder Button (Pill style as per image) -->
         <a href="{{ \App\Support\WorkspaceUrl::workspace(request(), $store, 'dashboard') }}" 
            class="flex items-center gap-2 rounded-full bg-[#f2f7ff] px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#4f86f7] transition hover:bg-[#4f86f7] hover:text-white">
-            Open Folder <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
+            Open Folder <i  class="bi bi-arrow-right h-3.5 w-3.5"></i>
         </a>
     </div>
 @empty

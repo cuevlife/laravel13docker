@@ -24,15 +24,6 @@
             }
         @endphp
 
-        <!-- Logo Icon (Centered) -->
-        <div class="mb-2">
-            <div class="w-12 h-12 rounded-[16px] bg-discord-green flex items-center justify-center text-white shadow-lg shadow-green-500/20">
-                <i class="bi bi-qr-code-scan text-2xl"></i>
-            </div>
-        </div>
-
-        <div class="w-8 h-[1px] bg-black/[0.05] dark:bg-white/[0.05] my-2"></div>
-
         @foreach($navs as $nav)
             <div class="relative flex items-center justify-center w-full group">
                 <!-- Active Indicator -->
