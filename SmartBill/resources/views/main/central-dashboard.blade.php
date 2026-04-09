@@ -90,7 +90,7 @@
                         icon: 'error',
                         title: this.trans.error,
                         text: data.message || this.trans.an_error,
-                        confirmButtonColor: '#4f86f7'
+                        confirmButtonColor: 'discord-green'
                     });
                     this.is_loading = false; 
                 }
@@ -99,7 +99,7 @@
                     icon: 'error',
                     title: this.trans.error,
                     text: this.trans.an_error,
-                    confirmButtonColor: '#4f86f7'
+                    confirmButtonColor: 'discord-green'
                 });
                 this.is_loading = false;
             }
@@ -131,7 +131,7 @@
                         icon: 'error',
                         title: this.trans.error,
                         text: data.message || this.trans.an_error,
-                        confirmButtonColor: '#4f86f7'
+                        confirmButtonColor: 'discord-green'
                     });
                     this.is_loading = false; 
                 }
@@ -140,7 +140,7 @@
                     icon: 'error',
                     title: this.trans.error,
                     text: this.trans.an_error,
-                    confirmButtonColor: '#4f86f7'
+                    confirmButtonColor: 'discord-green'
                 });
                 this.is_loading = false;
             }
@@ -150,10 +150,10 @@
         <!-- Search Section -->
         <div class="mb-12 mt-6 flex flex-col items-center justify-center">
             <div class="relative w-full max-w-xl" x-data="{ focused: false }">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-[#80848e] transition-colors" :class="focused ? 'text-[#4f86f7]' : ''"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                <input type="text" x-model="search" @input="filterFolders()" @focus="focused = true" @blur="focused = false" placeholder="{{ __('Search Folders...') }}" class="h-14 w-full rounded-full border border-black/[0.04] bg-white pl-14 pr-6 text-sm font-bold text-[#1e1f22] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] outline-none transition focus:border-[#4f86f7]/30 dark:border-white/5 dark:bg-[#1e1f22] dark:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-[#80848e] transition-colors" :class="focused ? 'text-[discord-green]' : ''"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" x-model="search" @input="filterFolders()" @focus="focused = true" @blur="focused = false" placeholder="{{ __('Search Folders...') }}" class="h-14 w-full rounded-full border border-black/[0.04] bg-white pl-14 pr-6 text-sm font-bold text-[#1e1f22] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] outline-none transition focus:border-[discord-green]/30 dark:border-white/5 dark:bg-[#1e1f22] dark:text-white">
                 <div x-show="is_loading" class="absolute right-6 top-1/2 -translate-y-1/2" style="display: none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f86f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="discord-green" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 </div>
             </div>
         </div>
@@ -161,15 +161,15 @@
         <!-- Folder Grid -->
         <div class="flex flex-wrap justify-center gap-6">
              <!-- Add Folder Card -->
-             <div class="group relative flex flex-col items-center justify-between h-[280px] w-[220px] rounded-[2.5rem] bg-white p-6 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-dashed border-[#e3e5e8] dark:bg-[#2b2d31] dark:border-[#313338] transition-all hover:border-[#4f86f7]/50 cursor-pointer" @click="createModalOpen = true">
+             <div class="group relative flex flex-col items-center justify-between h-[280px] w-[220px] rounded-[2.5rem] bg-white p-6 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-dashed border-[#e3e5e8] dark:bg-[#2b2d31] dark:border-[#313338] transition-all hover:border-[discord-green]/50 cursor-pointer" @click="createModalOpen = true">
                 <div class="flex-1 flex flex-col items-center justify-center w-full">
-                    <div class="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#f2f7ff] text-[#4f86f7] transition-transform group-hover:scale-105">
+                    <div class="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#f2f7ff] text-[discord-green] transition-transform group-hover:scale-105">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                     </div>
                     <h3 class="mt-4 text-[18px] font-black text-[#1e1f22] dark:text-white">{{ __('Add Folder') }}</h3>
                 </div>
                 
-                <button class="flex items-center gap-2 rounded-full bg-[#f2f7ff] px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#4f86f7] transition hover:bg-[#4f86f7] hover:text-white">
+                <button class="flex items-center gap-2 rounded-full bg-[#f2f7ff] px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[discord-green] transition hover:bg-[discord-green] hover:text-white">
                     {{ __('New Folder') }} <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                 </button>
             </div>
@@ -201,7 +201,7 @@
                     
                     <!-- Open Folder Button -->
                     <a :href="folder.open_url" 
-                       class="flex items-center gap-2 rounded-full bg-[#f2f7ff] px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#4f86f7] transition hover:bg-[#4f86f7] hover:text-white">
+                       class="flex items-center gap-2 rounded-full bg-[#f2f7ff] px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[discord-green] transition hover:bg-[discord-green] hover:text-white">
                         {{ __('Open Folder') }} 
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </a>
@@ -219,7 +219,7 @@
                 
                 <div class="space-y-6">
                     <div class="flex flex-col items-center">
-                        <label class="group relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-[2.5rem] border-2 border-dashed border-[#e3e5e8] bg-[#f8fafb] transition hover:border-[#4f86f7] dark:border-[#313338] dark:bg-[#1e1f22]">
+                        <label class="group relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-[2.5rem] border-2 border-dashed border-[#e3e5e8] bg-[#f8fafb] transition hover:border-[discord-green] dark:border-[#313338] dark:bg-[#1e1f22]">
                             <template x-if="newProjectLogoPreview">
                                 <img :src="newProjectLogoPreview" class="h-full w-full object-cover">
                             </template>
@@ -235,12 +235,12 @@
 
                     <div>
                         <label class="mb-1.5 ml-1 block text-[10px] font-black uppercase tracking-widest text-[#5c5e66] dark:text-[#949ba4]">{{ __('Folder Name') }}</label>
-                        <input type="text" x-model="newProjectName" placeholder="{{ __('Enter folder name...') }}" class="w-full rounded-[1.2rem] border border-[#e3e5e8] bg-[#f8fafb] px-4 py-3 text-sm font-bold outline-none transition focus:border-[#4f86f7]/50 dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
+                        <input type="text" x-model="newProjectName" placeholder="{{ __('Enter folder name...') }}" class="w-full rounded-[1.2rem] border border-[#e3e5e8] bg-[#f8fafb] px-4 py-3 text-sm font-bold outline-none transition focus:border-[discord-green]/50 dark:border-[#313338] dark:bg-[#1e1f22] dark:text-white">
                     </div>
 
                     <div class="flex gap-3 pt-2">
                         <button @click="createModalOpen = false" :disabled="is_loading" class="h-12 flex-1 rounded-full text-[11px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition">{{ __('Cancel') }}</button>
-                        <button @click="submitCreate()" :disabled="is_loading || !newProjectName" class="h-12 flex-1 rounded-full bg-[#4f86f7] text-[11px] font-black uppercase tracking-widest text-white transition hover:bg-[#3d6de0] disabled:opacity-50 shadow-lg shadow-blue-500/20">
+                        <button @click="submitCreate()" :disabled="is_loading || !newProjectName" class="h-12 flex-1 rounded-full bg-[discord-green] text-[11px] font-black uppercase tracking-widest text-white transition hover:bg-[#3d6de0] disabled:opacity-50 shadow-lg shadow-blue-500/20">
                             {{ __('Create') }}
                         </button>
                     </div>

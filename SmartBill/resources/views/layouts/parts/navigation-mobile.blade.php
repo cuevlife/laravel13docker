@@ -25,8 +25,8 @@
     @endphp
 
     @foreach($navs as $nav)
-        <a href="{{ $nav['href'] }}" class="flex flex-col items-center justify-center gap-1 w-16 h-full {{ $nav['active'] ? 'text-discord-green' : 'text-[#80848e] hover:text-[#1e1f22] dark:hover:text-white' }} transition-colors">
-            <i class="bi {{ $nav['icon'] }} text-xl {{ $nav['active'] ? 'drop-shadow-[0_0_8px_rgba(35,165,89,0.4)]' : '' }}"></i>
+        <a href="{{ $nav['href'] }}" class="flex flex-col items-center justify-center gap-1 w-16 h-full {{ $nav['active'] ? ($isAdminMode ? 'text-rose-500' : 'text-discord-green') : 'text-[#80848e] hover:text-[#1e1f22] dark:hover:text-white' }} transition-colors">
+            <i class="bi {{ $nav['icon'] }} text-xl {{ $nav['active'] ? ($isAdminMode ? 'drop-shadow-[0_0_8px_rgba(244,63,94,0.4)]' : 'drop-shadow-[0_0_8px_rgba(35,165,89,0.4)]') : '' }}"></i>
             <span class="text-[9px] font-black uppercase tracking-tight">{{ $nav['label'] }}</span>
         </a>
     @endforeach

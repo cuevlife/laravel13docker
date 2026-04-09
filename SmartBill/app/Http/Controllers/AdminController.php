@@ -310,7 +310,19 @@ class AdminController extends Controller
     public function editSlip(Slip $slip)
     {
         $this->authorizeSlip($slip);
-        $exportColumns = $slip->template->ai_fields ?? [];
+        
+        if ($slip->slip_template_id) {
+            $exportColumns = $slip->template->ai_fields ?? [];
+        } else {
+            $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
+            $settings = $superAdmin?->settings ?: [];
+            $exportColumns = $settings['global_ai_fields'] ?? [
+                ['key' => 'shop_name', 'label' => 'Shop Name', 'type' => 'text'],
+                ['key' => 'date', 'label' => 'Transaction Date', 'type' => 'text'],
+                ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'text'],
+            ];
+        }
+
         return view('main.slip-edit', compact('slip', 'exportColumns'));
     }
 
@@ -355,10 +367,11 @@ class AdminController extends Controller
                 ['key' => 'date', 'label' => 'Transaction Date', 'type' => 'text'],
                 ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'text'],
             ];
+            $geminiModel = $settings['gemini_model'] ?? config('services.gemini.model', 'gemini-1.5-flash');
 
             $batch = $this->resolveSlipBatch($request, $tenant, $user);
 
-            $data = $this->geminiService->extractDataFromImage($fullPath, [
+            $data = $this->geminiService->setModel($geminiModel)->extractDataFromImage($fullPath, [
                 'ai_fields' => $globalAiFields,
                 'main_instruction' => $globalPrompt,
             ]);
@@ -483,63 +496,98 @@ class AdminController extends Controller
             return redirect()->to(WorkspaceUrl::current(request(), 'slips'))->with('error', 'No slips matched the current filters for export.');
         }
 
-        $templateIds = $filteredSlips->pluck('slip_template_id')->unique();
-        $templates = SlipTemplate::where('merchant_id', $tenant->id)
-            ->whereIn('id', $templateIds->filter())
-            ->get();
-
+        // --- 1. Load Global Configuration ---
         $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
-        $globalSettings = $superAdmin?->settings ?: [];
-        $globalAiFields = $globalSettings['global_ai_fields'] ?? [
-            ['key' => 'shop_name', 'label' => 'Shop Name', 'type' => 'text'],
-            ['key' => 'date', 'label' => 'Transaction Date', 'type' => 'text'],
-            ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'text'],
-        ];
+        $settings = $superAdmin?->settings ?: [];
 
-        $sheets = [];
+        $exportConfig = $settings['export_columns'] ?? [];
+        $vendorMaps = collect($settings['vendor_mapping'] ?? [])->pluck('code', 'text')->toArray();
+        $itemMaps = collect($settings['item_mapping'] ?? [])->pluck('code', 'text')->toArray();
+        $excelFilename = $settings['excel_filename'] ?? 'SmartBill_Export.xlsx';
 
-        // Handle Legacy Template-based Slips
-        foreach ($templates as $template) {
-            $slips = $filteredSlips->where('slip_template_id', $template->id)->sortByDesc('processed_at')->values();
-            if ($slips->isEmpty()) continue;
-            
-            $exportFields = $template->export_layout ?: $template->ai_fields ?: [];
-            if (empty($exportFields)) continue;
+        // Filter and sort active columns
+        $activeCols = collect($exportConfig)
+            ->filter(fn($c) => !empty($c['enabled']))
+            ->sortBy('order')
+            ->values();
 
-            $sheets[] = $this->buildExportSheet($template->name, $slips, $exportFields);
+        if ($activeCols->isEmpty()) {
+            return redirect()->to(WorkspaceUrl::current(request(), 'slips'))->with('error', 'Excel Export Designer has no enabled columns.');
         }
 
-        // Handle Global Prompt Slips (null template_id)
-        $globalSlips = $filteredSlips->whereNull('slip_template_id')->sortByDesc('processed_at')->values();
-        if ($globalSlips->isNotEmpty()) {
-            $sheets[] = $this->buildExportSheet('Global Export', $globalSlips, $globalAiFields);
+        $headings = $activeCols->pluck('label')->toArray();
+        $rows = [];
+
+        // --- 2. Process Data Rows ---
+        foreach ($filteredSlips as $slip) {
+            $data = $slip->extracted_data ?: [];
+            $items = $data['items'] ?? [['name' => '-', 'price' => 0]];
+
+            // Itemized Expansion (One row per item if 'item' related columns exist)
+            foreach ($items as $item) {
+                $row = [];
+                foreach ($activeCols as $col) {
+                    $key = $col['key'] ?? '';
+                    $val = '';
+
+                    switch ($key) {
+                        case 'processed_at':
+                            $val = optional($slip->processed_at)->format('Y-m-d H:i:s');
+                            break;
+                        case 'uid':
+                            $val = $slip->uid;
+                            break;
+                        case 'shop_name':
+                            $val = $data['shop_name'] ?? $data['store_name'] ?? '';
+                            break;
+                        case 'vendor_code':
+                            $shopName = trim($data['shop_name'] ?? $data['store_name'] ?? '');
+                            $val = $vendorMaps[$shopName] ?? '';
+                            break;
+                        case 'item_name':
+                            $val = $item['name'] ?? '-';
+                            break;
+                        case 'item_code':
+                            $itemName = trim($item['name'] ?? '');
+                            $val = $itemMaps[$itemName] ?? '';
+                            break;
+                        case 'item_price':
+                            $val = $item['price'] ?? 0;
+                            break;
+                        default:
+                            // Dynamic AI Fields
+                            $val = $data[$key] ?? '';
+                            if (is_array($val)) $val = json_encode($val, JSON_UNESCAPED_UNICODE);
+                            break;
+                    }
+                    $row[] = $val;
+                }
+                $rows[] = $row;
+            }
         }
 
-        if (empty($sheets)) {
-            return redirect()->to(WorkspaceUrl::current(request(), 'slips'))->with('error', 'Could not build export sheets.');
-        }
+        // --- 3. Audit & Status Update ---
+        $filteredSlips->each(fn($s) => $s->update($this->workflowStatusPayload(Slip::WORKFLOW_EXPORTED)));
 
-        $filteredSlips->each(function (Slip $slip) {
-            $slip->update($this->workflowStatusPayload(Slip::WORKFLOW_EXPORTED));
-        });
-
-        $fileName = 'smartbill-' . Str::slug($tenant->name ?: 'workspace') . '-' . now()->format('Ymd_His') . '.xlsx';
-
-        // Create Audit Log
         \App\Models\SlipExport::create([
             'user_id' => auth()->id(),
-            'file_name' => $fileName,
+            'file_name' => $excelFilename,
             'file_format' => 'xlsx',
-            'export_mode' => 'filtered',
+            'export_mode' => 'granular',
             'slips_count' => $filteredSlips->count(),
-            'template_ids' => $filteredSlips->pluck('slip_template_id')->unique()->values()->all(),
             'filters' => $request->all(),
             'exported_at' => now(),
         ]);
 
         return Excel::download(
-            new SlipWorkbookExport($sheets),
-            $fileName
+            new SlipWorkbookExport([
+                [
+                    'title' => 'Registry Export',
+                    'headings' => $headings,
+                    'rows' => $rows
+                ]
+            ]),
+            $excelFilename
         );
     }
 
@@ -779,9 +827,19 @@ class AdminController extends Controller
         $fullPath = Storage::disk('public')->path($path);
 
         try {
-            $raw = $this->geminiService->suggestSchemaFromImage($fullPath);
+            $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
+            $settings = $superAdmin?->settings ?: [];
+            $geminiModel = $settings['gemini_model'] ?? config('services.gemini.model', 'gemini-1.5-flash');
+
+            $raw = $this->geminiService->setModel($geminiModel)->suggestSchemaFromImage($fullPath);
             $fields = $this->normalizedAiFieldDefinitions($raw);
             return response()->json(['status' => 'success', 'ai_fields' => $fields]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Suggest Schema Error: " . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'AI Analysis failed: ' . $e->getMessage()
+            ], 500);
         } finally {
             Storage::disk('public')->delete($path);
         }
@@ -1330,19 +1388,50 @@ class AdminController extends Controller
         $user = auth()->user();
         $settings = $user->settings ?: [];
 
-        // Defaults if not set
+        // --- AI Defaults ---
         if (empty($settings['global_ai_fields'])) {
-            $settings['global_ai_fields'] = json_encode([
+            $settings['global_ai_fields'] = [
                 ['key' => 'shop_name', 'label' => 'Shop Name', 'type' => 'text'],
                 ['key' => 'date', 'label' => 'Transaction Date', 'type' => 'text'],
-                ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'text'],
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        } else if (is_array($settings['global_ai_fields'])) {
-            $settings['global_ai_fields'] = json_encode($settings['global_ai_fields'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'number'],
+                ['key' => 'items', 'label' => 'Items List', 'type' => 'array'],
+            ];
         }
 
         if (empty($settings['global_prompt'])) {
-            $settings['global_prompt'] = "Extract shop name, date, and total amount from this receipt accurately.";
+            $settings['global_prompt'] = "Extract shop name, date, total amount, and itemized list from this receipt accurately.";
+        }
+
+        if (empty($settings['gemini_model'])) {
+            $settings['gemini_model'] = config('services.gemini.model', 'gemini-1.5-flash');
+        }
+
+        // --- Concept Mappings Defaults ---
+        if (empty($settings['vendor_mapping'])) {
+            $settings['vendor_mapping'] = [
+                ['text' => 'Sample Shop', 'code' => 'V-001']
+            ];
+        }
+
+        if (empty($settings['item_mapping'])) {
+            $settings['item_mapping'] = [
+                ['text' => 'Sample Item', 'code' => 'SKU-001']
+            ];
+        }
+
+        // --- Export Designer Defaults ---
+        if (empty($settings['export_columns'])) {
+            $settings['export_columns'] = [
+                ['key' => 'processed_at', 'label' => 'Scan Date', 'enabled' => true, 'order' => 1],
+                ['key' => 'shop_name', 'label' => 'Vendor Name', 'enabled' => true, 'order' => 2],
+                ['key' => 'vendor_code', 'label' => 'Vendor Code', 'enabled' => true, 'order' => 3],
+                ['key' => 'date', 'label' => 'Receipt Date', 'enabled' => true, 'order' => 4],
+                ['key' => 'total_amount', 'label' => 'Total Amount', 'enabled' => true, 'order' => 5],
+            ];
+        }
+
+        if (empty($settings['excel_filename'])) {
+            $settings['excel_filename'] = 'SmartBill_Export.xlsx';
         }
 
         return view('main.admin-settings', compact('settings'));
@@ -1353,10 +1442,15 @@ class AdminController extends Controller
         abort_unless(auth()->user()->isSuperAdmin(), 403);
         $data = $request->validate([
             'global_prompt' => 'required|string',
-            'global_ai_fields' => 'required|string', // Expecting JSON string
+            'global_ai_fields' => 'required', // Can be string (JSON) or array
+            'gemini_model' => 'required|string|max:50',
+            'vendor_mapping' => 'nullable|array',
+            'item_mapping' => 'nullable|array',
+            'export_columns' => 'nullable|array',
+            'excel_filename' => 'nullable|string|max:255',
         ]);
 
-        $fields = json_decode($data['global_ai_fields'], true);
+        $fields = is_string($data['global_ai_fields']) ? json_decode($data['global_ai_fields'], true) : $data['global_ai_fields'];
         if (json_last_error() !== JSON_ERROR_NONE) {
             return back()->withErrors(['global_ai_fields' => 'Invalid JSON format for AI Fields.']);
         }
@@ -1365,8 +1459,17 @@ class AdminController extends Controller
         $settings = $user->settings ?: [];
         $settings['global_prompt'] = $data['global_prompt'];
         $settings['global_ai_fields'] = $fields;
+        $settings['gemini_model'] = $data['gemini_model'];
+        $settings['vendor_mapping'] = $data['vendor_mapping'] ?? [];
+        $settings['item_mapping'] = $data['item_mapping'] ?? [];
+        $settings['export_columns'] = $data['export_columns'] ?? [];
+        $settings['excel_filename'] = $data['excel_filename'] ?? 'SmartBill_Export.xlsx';
 
         $user->update(['settings' => $settings]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['status' => 'success']);
+        }
 
         return back()->with('status', 'System settings updated successfully.');
     }

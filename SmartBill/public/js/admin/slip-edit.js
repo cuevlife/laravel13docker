@@ -12,7 +12,9 @@ const Toast = Swal.mixin({
 
 window.slipEditor = function(config) {
     const originalData = config.originalData || {};
-    const columns = (config.columns || []).map(c => ({ key: c.key, label: c.label }));
+    const columns = (config.columns || [])
+        .filter(c => c.key !== 'items')
+        .map(c => ({ key: c.key, label: c.label }));
     
     return {
         viewMode: 'ui', 

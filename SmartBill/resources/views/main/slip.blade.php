@@ -51,7 +51,7 @@
             <!-- Bulk Actions Row -->
             <div class="mb-4 flex flex-wrap items-center justify-between gap-4 border-t border-black/[0.04] pt-4 dark:border-white/[0.04]">
                 <div class="flex items-center gap-3">
-                    <div class="inline-flex h-9 items-center rounded-full bg-[#f2f7ff] px-4 text-[10px] font-black text-[#4f86f7]">
+                    <div class="inline-flex h-9 items-center rounded-full bg-discord-green/10 px-4 text-[10px] font-black text-discord-green">
                         <span x-text="selectedSlips.length">0</span> รายการที่เลือก
                     </div>
                     
@@ -64,9 +64,9 @@
 
                 <button @click="if(selectedSlips.length > 0) window.location.href = '{{ route('workspace.slip.export') }}?' + new URLSearchParams({...filters, ids: selectedSlips.join(',')}).toString()"
                    :disabled="selectedSlips.length === 0"
-                   class="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 px-6 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                   class="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-discord-green/10 text-discord-green hover:bg-discord-green/20 px-6 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-discord-green/20 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i class="bi bi-file-earmark-spreadsheet-fill text-sm"></i>
-                    <span>Export</span>
+                    <span>Export Workbook</span>
                 </button>
             </div>
 
@@ -402,8 +402,21 @@
                         const data = await res.json();
                         if(data.status !== 'success') throw new Error(data.message || 'Delete failed');
                         if(this.slips.length < 5 && this.pagination.total > 0) this.fetchSlips();
+                        
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'ลบสลิปเรียบร้อยแล้ว',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
                     } catch (error) {
-                        alert('เกิดข้อผิดพลาด: ' + error.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: error.message
+                        });
                         this.slips = originalSlips;
                         this.pagination.total = originalTotal;
                     }

@@ -5,22 +5,22 @@
         $isAdminMode = request()->is('admin*') || request()->routeIs('admin.*');
 
         if ($isAdminMode) {
-            $headerTitle = 'Control Plane';
-            $headerSubtitle = 'System Management';
+            $headerTitle = __('Control Plane');
+            $headerSubtitle = __('System Management');
         } elseif ($isTenant) {
-            $headerTitle = 'Slip Registry';
+            $headerTitle = __('Slip Registry');
             $headerSubtitle = $activeTenant->name ?? null;
         } else {
-            $headerTitle = 'Central Hub';
-            $headerSubtitle = 'Select Workspace';
+            $headerTitle = __('Central Hub');
+            $headerSubtitle = __('Select Workspace');
         }
 
         if (request()->routeIs('dashboard')) {
-            $headerTitle = 'Folder Hub';
-            $headerSubtitle = 'Overview';
+            $headerTitle = __('Folder Hub');
+            $headerSubtitle = __('Overview');
         }
         if (request()->routeIs('billing')) {
-            $headerTitle = 'Token Wallet';
+            $headerTitle = __('Token Wallet');
             $headerSubtitle = auth()->user()->name;
         }
     @endphp
@@ -28,7 +28,7 @@
         <button @click="sidebarOpen = true" class="md:hidden flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors mr-2 outline-none">
             <i class="bi bi-list text-2xl"></i>
         </button>
-        <div class="w-1.5 h-5 md:h-6 bg-discord-green rounded-full shadow-[0_0_10px_rgba(35,165,89,0.3)] shrink-0 hidden md:block"></div>
+        <div class="w-1.5 h-5 md:h-6 {{ $isAdminMode ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]' : 'bg-discord-green shadow-[0_0_10px_rgba(35,165,89,0.3)]' }} rounded-full shrink-0 hidden md:block"></div>
         <div class="min-w-0">
             <span class="text-xs md:text-sm font-black text-[#1e1f22] dark:text-[#f2f3f5] uppercase tracking-widest leading-none block truncate">{{ $headerTitle }}</span>
             @if($headerSubtitle)
@@ -62,8 +62,8 @@
                     <div class="px-5 py-2">
                         <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Control Plane</div>
                     </div>
-                    <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors">
-                        <i class="bi bi-shield-lock-fill text-sm"></i> System Admin
+                    <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
+                        <i class="bi bi-shield-lock-fill text-sm"></i> {{ __('System Admin') }}
                     </a>
                     <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
                 @endif
@@ -71,10 +71,10 @@
                 {{-- Only show Folder Hub if NOT in Admin mode and not already on Dashboard --}}
                 @if(!request()->is('admin*') && $workspaceSwitcherStores->isNotEmpty() && !request()->routeIs('dashboard'))
                     <div class="px-5 py-2">
-                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Folders</div>
+                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">{{ __('Folders') }}</div>
                     </div>
                     <a href="{{ $workspaceBaseUrl . '/dashboard' }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors">
-                        <i class="bi bi-window-stack text-sm"></i> Folder Hub
+                        <i class="bi bi-window-stack text-sm"></i> {{ __('Folder Hub') }}
                     </a>
                     <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
                 @endif
@@ -83,7 +83,7 @@
                     <div class="flex items-center gap-3">
                         <i class="bi bi-moon-stars-fill text-sm hidden dark:block"></i>
                         <i class="bi bi-sun-fill text-sm block dark:hidden"></i>
-                        Dark Mode
+                        {{ __('Dark Mode') }}
                     </div>
                     <div class="w-8 h-4 rounded-full transition-colors relative" :class="darkMode ? 'bg-discord-green' : 'bg-[#80848e]'">
                         <div class="w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform" :class="darkMode ? 'right-0.5' : 'left-0.5'"></div>
@@ -91,13 +91,13 @@
                 </button>
 
                 <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors">
-                    <i class="bi bi-person-fill text-sm"></i> Profile Settings
+                    <i class="bi bi-person-fill text-sm"></i> {{ __('Profile Settings') }}
                 </a>
 
                 <form method="POST" action="{{ route('logout') }}" class="border-t border-[#e3e5e8] dark:border-[#1e1f22] mt-1 pt-1">
                     @csrf
                     <button type="submit" class="w-full flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-discord-red hover:bg-discord-red/10 transition-colors text-left">
-                        <i class="bi bi-box-arrow-right text-sm"></i> Sign Out
+                        <i class="bi bi-box-arrow-right text-sm"></i> {{ __('Sign Out') }}
                     </button>
                 </form>
             </div>

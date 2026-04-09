@@ -17,6 +17,13 @@ class GeminiService
         $this->model = config('services.gemini.model', 'gemini-1.5-flash');
     }
 
+    public function setModel(string $model): self
+    {
+        // Remove 'models/' prefix if the user included it manually
+        $this->model = preg_replace('/^models\//', '', $model);
+        return $this;
+    }
+
     public function identifyStoreFromImage(string $imagePath, array $templateNames): ?string
     {
         if (!$this->apiKey || empty($templateNames)) return null;
@@ -31,7 +38,7 @@ class GeminiService
 
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                ->post($this->baseUrl . "gemini-1.5-flash:generateContent?key=" . $this->apiKey, [
+                ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
                     "contents" => [
                         [
                             "parts" => [

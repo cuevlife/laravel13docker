@@ -30,7 +30,7 @@
                 <i class="bi bi-arrow-left text-lg"></i>
             </a>
         @else
-            <div class="w-7 h-7 rounded-full bg-discord-green flex items-center justify-center text-white font-black text-[10px] shadow-sm shadow-discord-green/20">
+            <div class="w-7 h-7 rounded-full {{ request()->is('admin*') ? 'bg-rose-500' : 'bg-discord-green' }} flex items-center justify-center text-white font-black text-[10px] shadow-sm shadow-discord-green/20">
                 SB
             </div>
         @endif

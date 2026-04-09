@@ -59,7 +59,13 @@
             <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 bg-black/50 z-40 md:hidden" @click="sidebarOpen = false" x-cloak></div>
 
             <!-- Sidebar (Drawer on Mobile, Fixed on PC) -->
-            <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" class="fixed md:relative inset-y-0 left-0 flex flex-col w-20 shrink-0 bg-[#fafafa] dark:bg-[#1e1f22] border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 z-50 transition-transform duration-300 ease-in-out">
+            @php
+                $isAdminMode = request()->is('admin*') || request()->routeIs('admin.*');
+                $isTenant = isset($activeTenant);
+                $sidebarBgClass = $isAdminMode ? 'bg-rose-50/30' : ($isTenant || request()->routeIs('dashboard') ? 'bg-emerald-50/20' : 'bg-[#fafafa]');
+            @endphp
+            <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" 
+                   class="fixed md:relative inset-y-0 left-0 flex flex-col w-20 shrink-0 {{ $sidebarBgClass }} dark:bg-[#1e1f22] border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 z-50 transition-transform duration-300 ease-in-out">
                 @include('layouts.parts.sidebar-desktop')
             </aside>
 
