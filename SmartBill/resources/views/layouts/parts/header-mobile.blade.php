@@ -5,10 +5,8 @@
         : route('dashboard');
     $title = 'SmartBill';
     if(request()->routeIs('admin.slip.index') || request()->routeIs('workspace.slip.index')) $title = 'Slip';
-    if(request()->routeIs('admin.slip.archived') || request()->routeIs('workspace.slip.archived')) $title = 'Archived';
-    if(request()->routeIs('admin.exports.*') || request()->routeIs('workspace.exports.*')) $title = 'Exports';
+    if(request()->routeIs('admin.settings')) $title = 'AI Settings';
     if(request()->routeIs('admin.stores.index')) $title = 'Brands';
-    if(request()->routeIs('admin.templates.index') || request()->routeIs('workspace.templates.index')) $title = 'Templates';
     if(request()->routeIs('billing')) $title = 'Tokens';
     if(request()->routeIs('admin.dashboard') || request()->routeIs('owner.dashboard')) $title = 'SaaS';
     if(request()->routeIs('admin.projects.*') || request()->routeIs('owner.projects.*')) $title = 'Projects';
@@ -45,7 +43,7 @@
         </div>
 
         <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light')" class="text-[#5c5e66] dark:text-[#b5bac1] hover:text-[#1e1f22] dark:hover:text-white transition-colors focus:outline-none ml-1">
-            <i class="bi bi-moon-stars-fill text-sm" x-show="!darkMode"></i>
+            <i class="bi bi-moon-stars-fill text-sm" x-show="!darkMode" x-cloak></i>
             <i class="bi bi-sun-fill text-sm" x-show="darkMode" x-cloak></i>
         </button>
         @if(!$isProfile)

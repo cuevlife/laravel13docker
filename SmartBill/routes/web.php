@@ -59,6 +59,9 @@ Route::middleware(['web', 'auth', 'role:super_admin'])->prefix('admin')->group(f
     Route::get('/topups', [AdminController::class, 'topupRequests'])->name('admin.topups');
     Route::post('/topups/{topupRequest}/approve', [AdminController::class, 'approveTopupRequest'])->name('admin.topups.approve');
     Route::post('/topups/{topupRequest}/reject', [AdminController::class, 'rejectTopupRequest'])->name('admin.topups.reject');
+
+    Route::get('/settings', [AdminController::class, 'systemSettings'])->name('admin.settings');
+    Route::patch('/settings', [AdminController::class, 'updateSystemSettings'])->name('admin.settings.update');
 });
 
 // ============================================
@@ -78,7 +81,6 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::middleware([\App\Http\Middleware\IdentifyTenant::class])->prefix('workspace')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('workspace.dashboard');
         Route::get('/slips', [AdminController::class, 'slipReader'])->name('workspace.slip.index');
-        Route::get('/exports', [AdminController::class, 'exportCenter'])->name('workspace.exports.index');
         Route::post('/slips/process', [AdminController::class, 'processSlip'])->middleware('tokens:1')->name('workspace.slip.process');
         Route::get('/slips/edit/{slip}', [AdminController::class, 'editSlip'])->name('workspace.slip.edit');
         Route::delete('/slips/delete/{slip}', [AdminController::class, 'deleteSlip'])->name('workspace.slip.delete');
@@ -86,9 +88,6 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('/slips/export', [AdminController::class, 'exportExcel'])->name('workspace.slip.export');
         
         // Settings
-        Route::get('/templates', [AdminController::class, 'merchants'])->name('workspace.templates.index');
-        Route::get('/templates/{merchant}/edit', [AdminController::class, 'editMerchant'])->name('workspace.templates.edit');
-        Route::patch('/templates/{merchant}', [AdminController::class, 'updateMerchantMapping'])->name('workspace.templates.update');
         
         // Store Info
         Route::get('/stores/{merchant}', [AdminController::class, 'showStore'])->name('workspace.stores.show');

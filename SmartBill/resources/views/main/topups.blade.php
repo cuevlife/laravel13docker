@@ -1,4 +1,6 @@
-<x-owner-layout>
+﻿@extends('layouts.app')
+
+@section('content')
     <div class="w-full px-4 py-8 sm:px-6 lg:px-8 animate-in fade-in duration-700 pb-20">
         <div class="bg-white dark:bg-[#2b2d31] rounded-xl p-6 md:p-8 border border-black/[0.04] dark:border-white/5 border-l-4 border-l-amber-500 shadow-sm">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -88,4 +90,4 @@
             @endforelse
         </div>
     </div>
-</x-owner-layout>
+@endsection

@@ -1,4 +1,6 @@
-<x-app-layout>
+﻿@extends('layouts.app')
+
+@section('content')
     @php
         $profileExitUrl = isset($activeTenant)
             ? \App\Support\WorkspaceUrl::current(request(), 'dashboard')
@@ -74,4 +76,4 @@
         </div>
 
     </div>
-</x-app-layout>
+@endsection

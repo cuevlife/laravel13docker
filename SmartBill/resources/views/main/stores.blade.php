@@ -1,4 +1,6 @@
-<x-app-layout>
+﻿@extends('layouts.app')
+
+@section('content')
     <div x-data="storeManager()" class="space-y-8 animate-in fade-in duration-700 pb-20">
         
         <!-- Header -->
@@ -227,4 +229,4 @@
         }
     </script>
     @endpush
-</x-app-layout>
+@endsection

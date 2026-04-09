@@ -1,4 +1,6 @@
-<x-owner-layout>
+﻿@extends('layouts.app')
+
+@section('content')
     <div class="w-full px-2 py-4 sm:px-4 lg:px-6" x-data="folderRegistry()">
         <div class="rounded-xl bg-white p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:bg-[#2b2d31] dark:border-white/5">
             <!-- Header Section -->
@@ -224,4 +226,4 @@
         });
     </script>
     @endpush
-</x-owner-layout>
+@endsection

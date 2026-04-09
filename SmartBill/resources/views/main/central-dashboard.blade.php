@@ -1,58 +1,6 @@
-<x-hub-layout>
-    <!-- SweetAlert2 for Premium Popups -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        .swal2-popup { border-radius: 2.5rem !important; padding: 2rem !important; font-family: inherit !important; }
-        .swal2-title { font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; font-size: 1.25rem !important; }
-        .swal2-confirm { border-radius: 9999px !important; padding: 0.75rem 2rem !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; font-size: 0.75rem !important; }
-        .swal2-cancel { border-radius: 9999px !important; padding: 0.75rem 2rem !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: 0.1em !important; font-size: 0.75rem !important; }
-    </style>
+﻿@extends('layouts.app')
 
-    <!-- Top Header matched to dashboard.png -->
-    <header class="w-full px-8 py-6 flex items-center justify-between z-50 relative">
-        <div class="flex items-center gap-3">
-            <div class="w-1.5 h-6 bg-discord-green rounded-full shadow-[0_0_10px_rgba(35,165,89,0.3)]"></div>
-            <div>
-                <h1 class="text-[13px] font-black text-[#1e1f22] dark:text-[#f2f3f5] uppercase tracking-[0.15em] leading-none">{{ __('FOLDER HUB') }}</h1>
-                <p class="text-[9px] font-black text-[#80848e] uppercase tracking-widest mt-1">{{ __('CHOOSE PROJECT BEFORE ENTERING WORKSPACE') }}</p>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <!-- Tokens -->
-            <div class='flex items-center gap-2 rounded-full border border-black/5 bg-white px-4 py-2 shadow-sm transition hover:bg-black/5 cursor-pointer dark:border-white/5 dark:bg-[#1e1f22]' 
-                 x-data='{ balance: {{ auth()->user()->tokens ?? 0 }} }' 
-                 @update-balance.window='fetch("{{ route("workspace.tokens.balance") }}").then(res => res.json()).then(data => balance = data.balance)'>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-coins"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
-                <span class='text-[10px] font-black text-[#1e1f22] dark:text-white' x-text='balance.toLocaleString()'></span>
-            </div>
-
-            <!-- Language -->
-            <a href="{{ route('lang.switch', app()->getLocale() == 'th' ? 'en' : 'th') }}" class="flex items-center gap-2 rounded-full border border-black/5 bg-white px-4 py-2 shadow-sm transition-colors hover:bg-black/5 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-white/5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#80848e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-                <span class="text-[10px] font-black uppercase text-[#1e1f22] dark:text-white">{{ app()->getLocale() == 'th' ? 'TH' : 'EN' }}</span>
-            </a>
-
-            <!-- Theme -->
-            <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light')" class="flex h-9 w-9 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm transition-colors hover:bg-black/5 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-white/5 text-[#1e1f22] dark:text-white">
-                <template x-if="!darkMode">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                </template>
-                <template x-if="darkMode">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                </template>
-            </button>
-
-            <!-- Logout -->
-            <form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
-                @csrf
-                <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm transition-colors hover:bg-rose-50 dark:border-white/5 dark:bg-[#1e1f22] dark:hover:bg-rose-500/10 text-[#1e1f22] dark:text-white hover:text-rose-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-                </button>
-            </form>
-        </div>
-    </header>
-
+@section('content')
     <div class="w-full px-4 pb-12 sm:px-6 lg:px-8 relative z-10" x-data="{ 
         allFolders: [],
         folders: [],
@@ -324,4 +272,4 @@
             </div>
         </div>
     </div>
-</x-hub-layout>
+@endsection

@@ -9,12 +9,12 @@
                 ['href' => \App\Support\OwnerUrl::path(request(), 'users'), 'icon' => 'bi-people-fill', 'label' => 'Users', 'active' => request()->routeIs('admin.users*')],
                 ['href' => \App\Support\OwnerUrl::path(request(), 'projects'), 'icon' => 'bi-folder2-open', 'label' => 'Folders', 'active' => request()->routeIs('admin.projects*')],
                 ['href' => \App\Support\OwnerUrl::path(request(), 'topups'), 'icon' => 'bi-cash-coin', 'label' => 'Topups', 'active' => request()->routeIs('admin.topups*')],
+                ['href' => route('admin.settings'), 'icon' => 'bi-cpu-fill', 'label' => 'AI Settings', 'active' => request()->routeIs('admin.settings')],
             ];
         } elseif ($isTenant) {
             $slipIndexActive = request()->routeIs('tenant.dashboard') || request()->routeIs('workspace.dashboard') || request()->routeIs('workspace.slip.index') || request()->routeIs('workspace.slip.edit');
             $navs = [
                 ['href' => \App\Support\WorkspaceUrl::current(request(), 'slips'), 'icon' => 'bi-qr-code-scan', 'label' => 'Inbox', 'active' => $slipIndexActive],
-                ['href' => \App\Support\WorkspaceUrl::current(request(), 'exports'), 'icon' => 'bi-file-earmark-arrow-down', 'label' => 'Export', 'active' => request()->routeIs('workspace.exports.*')],
             ];
         } else {
             $navs = [

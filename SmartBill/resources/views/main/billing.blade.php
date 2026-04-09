@@ -1,4 +1,6 @@
-<x-app-layout>
+﻿@extends('layouts.app')
+
+@section('content')
     <div class="space-y-8 animate-in fade-in duration-700 pb-20">
         <div class="premium-card p-6 md:p-8 border-l-4 border-l-rose-500">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -139,5 +141,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection
 

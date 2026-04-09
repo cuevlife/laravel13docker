@@ -1,4 +1,6 @@
-<x-app-layout>
+@extends('layouts.app')
+
+@section('content')
     <div class="space-y-8 animate-in fade-in duration-700 pb-20">
         <!-- KPI Metrics -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -91,5 +93,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
-ut>
+@endsection
+

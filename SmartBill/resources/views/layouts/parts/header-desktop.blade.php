@@ -23,11 +23,12 @@
             $headerTitle = 'Token Wallet';
             $headerSubtitle = auth()->user()->name;
         }
-
-        $wsTemplatesRoute = $isTenant ? \App\Support\WorkspaceUrl::current(request(), 'templates') : null;
     @endphp
     <div class="flex items-center gap-3 min-w-0">
-        <div class="w-1.5 h-5 md:h-6 bg-discord-green rounded-full shadow-[0_0_10px_rgba(35,165,89,0.3)] shrink-0"></div>
+        <button @click="sidebarOpen = true" class="md:hidden flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors mr-2 outline-none">
+            <i class="bi bi-list text-2xl"></i>
+        </button>
+        <div class="w-1.5 h-5 md:h-6 bg-discord-green rounded-full shadow-[0_0_10px_rgba(35,165,89,0.3)] shrink-0 hidden md:block"></div>
         <div class="min-w-0">
             <span class="text-xs md:text-sm font-black text-[#1e1f22] dark:text-[#f2f3f5] uppercase tracking-widest leading-none block truncate">{{ $headerTitle }}</span>
             @if($headerSubtitle)
@@ -57,34 +58,25 @@
                     <p class="text-[9px] text-[#5c5e66] dark:text-[#b5bac1] truncate">{{ auth()->user()->email }}</p>
                 </div>
 
-                @if($isAdminMode)
+                @if(auth()->user()->isSuperAdmin() && !request()->is('admin*'))
                     <div class="px-5 py-2">
-                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Exit Admin</div>
+                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Control Plane</div>
                     </div>
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-discord-green hover:bg-discord-green/10 transition-colors">
-                        <i class="bi bi-grid-fill text-sm"></i> Return to Hub
+                    <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors">
+                        <i class="bi bi-shield-lock-fill text-sm"></i> System Admin
                     </a>
                     <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
-                @else
-                    @if(auth()->user()->isSuperAdmin())
-                        <div class="px-5 py-2">
-                            <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Control Plane</div>
-                        </div>
-                        <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors">
-                            <i class="bi bi-shield-lock-fill text-sm"></i> System Admin
-                        </a>
-                        <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
-                    @endif
+                @endif
 
-                    @if($workspaceSwitcherStores->isNotEmpty())
-                        <div class="px-5 py-2">
-                            <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Folders</div>
-                        </div>
-                        <a href="{{ $workspaceBaseUrl . '/dashboard' }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors">
-                            <i class="bi bi-window-stack text-sm"></i> Folder Hub
-                        </a>
-                        <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
-                    @endif
+                {{-- Only show Folder Hub if NOT in Admin mode and not already on Dashboard --}}
+                @if(!request()->is('admin*') && $workspaceSwitcherStores->isNotEmpty() && !request()->routeIs('dashboard'))
+                    <div class="px-5 py-2">
+                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Folders</div>
+                    </div>
+                    <a href="{{ $workspaceBaseUrl . '/dashboard' }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors">
+                        <i class="bi bi-window-stack text-sm"></i> Folder Hub
+                    </a>
+                    <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
                 @endif
 
                 <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light')" class="w-full flex items-center justify-between px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors text-left">

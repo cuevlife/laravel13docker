@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Slips - {{ config('app.name', 'SmartBill') }}</title>
+        <title>{{ config('app.name', 'SmartBill') }}</title>
 
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2323a559' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z'/><path d='M16 8h-6'/><path d='M16 12H8'/><path d='M13 16H8'/></svg>">
 
@@ -33,6 +33,7 @@
         <style>
             @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; src: local('Inter'), local('Segoe UI'), local('Helvetica Neue'), Arial, sans-serif; }
             body { font-family: 'Inter', 'Noto Sans Thai', sans-serif; }
+            [x-cloak] { display: none !important; }
         </style>
 
         <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
@@ -51,10 +52,14 @@
             }
         </script>
     </head>
-    <body x-data="{ modalActive: false, profileOpen: false }" :class="{'overflow-hidden': modalActive}" class="bg-[#fafafa] dark:bg-[#1e1f22] font-sans tracking-tight">
-        <div class="flex h-screen overflow-hidden">
-            <!-- Sidebar: PC Only -->
-            <aside class="hidden md:block w-20 h-full shrink-0 bg-[#fafafa] dark:bg-[#1e1f22] border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 z-30">
+    <body x-data="{ modalActive: false, profileOpen: false, sidebarOpen: false }" :class="{'overflow-hidden': modalActive || sidebarOpen}" class="bg-[#fafafa] dark:bg-[#1e1f22] font-sans tracking-tight">
+        <div class="flex h-screen overflow-hidden relative">
+            
+            <!-- Mobile Sidebar Backdrop -->
+            <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 bg-black/50 z-40 md:hidden" @click="sidebarOpen = false" x-cloak></div>
+
+            <!-- Sidebar (Drawer on Mobile, Fixed on PC) -->
+            <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" class="fixed md:relative inset-y-0 left-0 flex flex-col w-20 shrink-0 bg-[#fafafa] dark:bg-[#1e1f22] border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 z-50 transition-transform duration-300 ease-in-out">
                 @include('layouts.parts.sidebar-desktop')
             </aside>
 
@@ -63,7 +68,7 @@
                 @include('layouts.parts.header-desktop')
 
                 <!-- Main Content -->
-                <main class="flex-1 overflow-y-auto p-2 md:p-4 pb-24 md:pb-4" :class="{'modal-open-blur': modalActive}">
+                <main class="flex-1 overflow-y-auto p-2 md:p-4 lg:p-8" :class="{'modal-open-blur': modalActive}">
                     <div class="w-full">
                         @if (session('status'))
                             <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
@@ -77,12 +82,9 @@
                             </div>
                         @endif
 
-                        {{ $slot }}
+                        @yield('content')
                     </div>
                 </main>
-                
-                <!-- Bottom Bar: Mobile Only -->
-                @include('layouts.parts.navigation-mobile')
             </div>
         </div>
 

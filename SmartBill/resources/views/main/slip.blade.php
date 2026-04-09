@@ -1,4 +1,6 @@
-<x-app-layout>
+@extends('layouts.app')
+
+@section('content')
     <div class="w-full px-2 py-4 sm:px-4 lg:px-6" x-data="slipRegistry()">
         <div class="rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-black/[0.04] dark:bg-[#2b2d31] dark:border-white/5">
             <!-- Header Section -->
@@ -54,21 +56,18 @@
                     </div>
                     
                     <div class="flex items-center gap-1">
-                        <button class="flex h-9 w-9 items-center justify-center rounded-full border border-black/5 bg-white text-[#80848e] transition hover:border-[#4f86f7] hover:text-[#4f86f7] shadow-sm dark:bg-[#1e1f22]">
-                            <i class="bi bi-shield-check h-4 w-4"></i>
-                        </button>
-                        <button @click="bulkDelete()" :disabled="selectedSlips.length === 0" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-500 transition hover:bg-rose-100 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/10 disabled:opacity-50">
+                        <button @click="bulkDelete()" :disabled="selectedSlips.length === 0" class="flex h-9 w-9 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-500 transition hover:bg-rose-100 shadow-sm dark:border-rose-500/20 dark:bg-rose-500/10 disabled:opacity-50" title="Delete Selected">
                             <i class="bi bi-trash-fill h-4 w-4"></i>
                         </button>
                     </div>
                 </div>
 
-                <a :href="selectedSlips.length > 0 ? ('{{ route('workspace.slip.export') }}?' + new URLSearchParams({...filters, ids: selectedSlips.join(',')}).toString()) : '#'" 
-                   :class="selectedSlips.length > 0 ? 'bg-[#c5c8ff] text-[#5359ff] hover:bg-[#b0b4ff] cursor-pointer' : 'bg-[#e3e5e8] text-[#80848e] cursor-not-allowed dark:bg-[#313338] dark:text-[#5c5e66]'"
-                   class="inline-flex h-10 items-center justify-center gap-2 rounded-full px-6 text-[10px] font-black uppercase tracking-widest transition">
-                    <i class="bi bi-download h-4 w-4"></i>
-                    <span>Excel Report</span>
-                </a>
+                <button @click="if(selectedSlips.length > 0) window.location.href = '{{ route('workspace.slip.export') }}?' + new URLSearchParams({...filters, ids: selectedSlips.join(',')}).toString()"
+                   :disabled="selectedSlips.length === 0"
+                   class="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 px-6 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="bi bi-file-earmark-spreadsheet-fill text-sm"></i>
+                    <span>Export</span>
+                </button>
             </div>
 
             <!-- Table Section -->
@@ -107,8 +106,6 @@
                                                 <span class="text-[13px] font-black leading-tight text-[#1e1f22] dark:text-white transition-colors group-hover:text-[#4f86f7]" x-text="slip.display_shop"></span>
                                                 <div class="mt-1 flex flex-wrap items-center gap-2">
                                                     <span class="text-[10px] font-black tracking-widest text-[#80848e]" x-text="slip.uid"></span>
-                                                    <span class="h-1 w-1 rounded-full bg-[#e3e5e8]"></span>
-                                                    <span class="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:bg-emerald-500/10" x-text="slip.template ? slip.template.name : 'Auto Detection'"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -480,7 +477,6 @@
                     pendingFile.status = 'uploading';
                     const formData = new FormData();
                     formData.append('image', pendingFile.file);
-                    formData.append('template_id', 'auto');
 
                     try {
                         const res = await fetch('/workspace/slips/process', {
@@ -518,4 +514,4 @@
         });
     </script>
     @endpush
-</x-app-layout>
+@endsection

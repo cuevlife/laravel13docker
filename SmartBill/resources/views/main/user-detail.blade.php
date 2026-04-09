@@ -1,4 +1,6 @@
-<x-owner-layout>
+﻿@extends('layouts.app')
+
+@section('content')
     <div class="w-full py-6 px-4 sm:px-6 lg:px-10 animate-in fade-in duration-500">
         
         <!-- Header -->
@@ -182,4 +184,4 @@
             </form>
         </div>
     </div>
-</x-owner-layout>
+@endsection

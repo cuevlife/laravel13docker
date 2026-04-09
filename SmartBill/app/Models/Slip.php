@@ -80,17 +80,12 @@ class Slip extends Model
     {
         return $this->hasOneThrough(
             Merchant::class,
-            SlipTemplate::class,
-            'id',
-            'id',
-            'slip_template_id',
-            'merchant_id'
+            SlipBatch::class,
+            'id', // SlipBatch.id
+            'id', // Merchant.id
+            'slip_batch_id', // Slip.slip_batch_id
+            'merchant_id' // SlipBatch.merchant_id
         );
-    }
-
-    public function isArchived(): bool
-    {
-        return $this->archived_at !== null;
     }
 
     // Workflow Constants
@@ -98,7 +93,6 @@ class Slip extends Model
     const WORKFLOW_REVIEWED = 'reviewed';
     const WORKFLOW_APPROVED = 'approved';
     const WORKFLOW_EXPORTED = 'exported';
-    const WORKFLOW_ARCHIVED = 'archived';
 
     public static function workflowOptions()
     {
@@ -107,7 +101,6 @@ class Slip extends Model
             self::WORKFLOW_REVIEWED => 'แสกนแล้ว (AI)',
             self::WORKFLOW_APPROVED => 'ยืนยันความถูกต้องแล้ว',
             self::WORKFLOW_EXPORTED => 'ส่งออก Excel แล้ว',
-            self::WORKFLOW_ARCHIVED => 'ย้ายเข้ากรุแล้ว',
         ];
     }
 }

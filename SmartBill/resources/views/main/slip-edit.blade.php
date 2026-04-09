@@ -1,4 +1,6 @@
-<x-app-layout>
+﻿@extends('layouts.app')
+
+@section('content')
     <div x-data="slipEditor(window.initialSlipConfig)" class="w-full space-y-6 pb-20 px-4 sm:px-6 lg:px-8 mt-8 animate-in fade-in duration-500">
         
         <!-- Header -->
@@ -121,4 +123,4 @@
     </script>
     <script src="{{ asset('js/admin/slip-edit.js') }}"></script>
     @endpush
-</x-app-layout>
+@endsection
