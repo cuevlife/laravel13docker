@@ -3,7 +3,7 @@
     $profileExitUrl = isset($activeTenant)
         ? \App\Support\WorkspaceUrl::current(request(), 'dashboard')
         : route('dashboard');
-    $title = 'SmartBill';
+    $title = config('app.name', 'smartbill');
     if(request()->routeIs('admin.slip.index') || request()->routeIs('workspace.slip.index')) $title = 'Slip';
     if(request()->routeIs('admin.settings')) $title = 'AI Settings';
     if(request()->routeIs('admin.stores.index')) $title = 'Brands';

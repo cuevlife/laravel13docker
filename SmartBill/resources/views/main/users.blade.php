@@ -1,7 +1,7 @@
 ﻿@extends('layouts.app')
 
 @section('content')
-    <div class="w-full px-2 py-4 sm:px-4 lg:px-6" x-data="userRegistry()">
+    <div class="w-full px-4 py-8 sm:px-6 lg:px-8 animate-in fade-in duration-500" x-data="userRegistry()">
         <div class="rounded-xl bg-white p-6 sm:p-8 shadow-sm border border-black/[0.04] dark:bg-[#2b2d31] dark:border-white/5">
             <!-- Header Section -->
             <div class="mb-8 flex items-center justify-between">
@@ -137,13 +137,13 @@
                                     </td>
                                     <td class="px-4 py-5 align-top text-right pt-6">
                                         <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                            <a :href="'{{ \App\Support\OwnerUrl::base(request()) }}/users/' + user.id" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
+                                            <a :href="'{{ \App\Support\OwnerUrl::base(request()) }}/users/' + user.id" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
                                                 <i class="bi bi-pencil-square text-sm"></i>
                                             </a>
                                             <form method="POST" :action="'{{ \App\Support\OwnerUrl::base(request()) }}/users/' + user.id + '/status'" class="m-0">
                                                 @csrf @method('PATCH')
                                                 <input type="hidden" name="status" :value="user.status === 'active' ? 'suspended' : 'active'">
-                                                <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-full text-[#80848e] transition hover:bg-black/5 dark:hover:bg-white/5" :class="user.status === 'active' ? 'hover:text-amber-500' : 'hover:text-emerald-500'" :title="user.status === 'active' ? 'Suspend User' : 'Reactivate User'">
+                                                <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 dark:hover:bg-white/5" :class="user.status === 'active' ? 'hover:text-amber-500' : 'hover:text-emerald-500'" :title="user.status === 'active' ? 'Suspend User' : 'Reactivate User'">
                                                     <i :class="user.status === 'active' ? 'bi bi-person-x-fill' : 'bi bi-person-check-fill'" class="text-sm"></i>
                                                 </button>
                                             </form>

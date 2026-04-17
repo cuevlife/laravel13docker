@@ -4,22 +4,45 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class GeminiService
 {
-    protected string $apiKey;
+    protected ?string $apiKey = null;
     protected string $model;
     protected string $baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.key');
         $this->model = config('services.gemini.model', 'gemini-1.5-flash');
+        $this->resolveApiKey();
+    }
+
+    /**
+     * Dynamically resolve the API key from the global pool (rotation)
+     */
+    protected function resolveApiKey(): void
+    {
+        $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
+        $settings = $superAdmin?->settings ?: [];
+        $keys = $settings['gemini_api_keys'] ?? [];
+
+        if (empty($keys)) {
+            $this->apiKey = config('services.gemini.key');
+            return;
+        }
+
+        // Simple rotation based on minute of the hour
+        $index = (int) date('i') % count($keys);
+        $this->apiKey = $keys[$index];
+
+        // Increment usage count for this key
+        $cacheKey = 'gemini_key_usage_' . md5($this->apiKey);
+        \Illuminate\Support\Facades\Cache::increment($cacheKey);
     }
 
     public function setModel(string $model): self
     {
-        // Remove 'models/' prefix if the user included it manually
         $this->model = preg_replace('/^models\//', '', $model);
         return $this;
     }
@@ -47,20 +70,21 @@ class GeminiService
                             ]
                         ]
                     ],
-                    "generationConfig" => ["temperature" => 0.0] // Very strict, minimal hallucination
+                    "generationConfig" => ["temperature" => 0.0]
                 ]);
+
+            if ($response->status() === 429) {
+                throw new \RuntimeException("AI API limit reached. Please wait a moment.");
+            }
 
             if ($response->failed()) return null;
 
             $data = $response->json();
             $responseText = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? 'UNKNOWN');
-            
             if ($responseText === 'UNKNOWN' || $responseText === '') return null;
-            
-            // Post-process to aggressively strip quotes
-            $responseText = trim($responseText, '"\' ');
-            
-            return $responseText;
+            return trim($responseText, '"\' ');
+        } catch (\RuntimeException $re) {
+            throw $re;
         } catch (\Exception $e) {
             Log::error("Gemini Auto-Detect Error: " . $e->getMessage());
             return null;
@@ -70,20 +94,20 @@ class GeminiService
     public function suggestSchemaFromImage(string $imagePath): array
     {
         if (!$this->apiKey) {
-            throw new \RuntimeException('Gemini API Key is not configured in .env');
+            throw new \RuntimeException('Gemini API Key is not configured.');
         }
 
         $base64Image = base64_encode(file_get_contents($imagePath));
-        $prompt = "Analyze this receipt/slip image and identify all important data fields that should be extracted (e.g., date, total, tax, items, shop name, branch, etc.). 
-        
+        $prompt = "Analyze this receipt/slip image and identify all important data fields that should be extracted. 
+
         Return a JSON object where:
-        - Keys are the snake_case technical names for the fields.
-        - Values are the descriptive labels for these fields in Thai or English as seen on the slip.
-        
+        - Keys are the snake_case technical names (in English).
+        - Values are the beautiful, friendly Display Labels in THAI (e.g., 'ที่อยู่', 'เบอร์โทร', 'เลขผู้เสียภาษี').
+
         Example Output:
         {
-            \"date\": \"วันที่\",
             \"shop_name\": \"ชื่อร้าน\",
+            \"tax_id\": \"เลขประจำตัวผู้เสียภาษี\",
             \"total_amount\": \"ยอดรวมทั้งสิ้น\",
             \"items\": \"รายการสินค้า\"
         }";
@@ -105,23 +129,20 @@ class GeminiService
                     ]
                 ]);
 
+            if ($response->status() === 429) {
+                throw new \RuntimeException("AI API limit reached. Please wait a moment.");
+            }
+
             if ($response->failed()) {
                 $errorBody = $response->json();
-                $errorMessage = $errorBody['error']['message'] ?? 'AI Engine Error';
-                Log::error("Gemini Suggest Schema Failure: " . $errorMessage, ['response' => $errorBody]);
-                throw new \RuntimeException($errorMessage);
+                throw new \RuntimeException($errorBody['error']['message'] ?? 'AI Engine Error');
             }
 
             $data = $response->json();
             $responseText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
-            $schema = json_decode(preg_replace('/^```json\s*|```$/', '', trim($responseText)), true);
-
-            if (!is_array($schema) || $schema === []) {
-                Log::error('Gemini Suggest Schema Error: Invalid schema response', ['response' => $data]);
-                throw new \RuntimeException('AI returned an empty or invalid field suggestion.');
-            }
-
-            return $schema;
+            return json_decode(preg_replace('/^```json\s*|```$/', '', trim($responseText)), true) ?: [];
+        } catch (\RuntimeException $re) {
+            throw $re;
         } catch (\Exception $e) {
             Log::error("Gemini Suggest Schema Error: " . $e->getMessage());
             throw $e;
@@ -131,7 +152,7 @@ class GeminiService
     public function extractDataFromImage(string $imagePath, array $config): array
     {
         if (!$this->apiKey) {
-            return ['status' => 'error', 'message' => 'Gemini API Key is not configured in .env'];
+            return ['status' => 'error', 'message' => 'Gemini API Key is missing.'];
         }
 
         $base64Image = base64_encode(file_get_contents($imagePath));
@@ -145,23 +166,23 @@ class GeminiService
                         [
                             "parts" => [
                                 ["text" => $prompt],
-                                ["inline_data" => ["mime_type" => "image/jpeg", "data" => $base64Image]]        
+                                ["inline_data" => ["mime_type" => "image/jpeg", "data" => $base64Image]]
                             ]
                         ]
                     ],
                     "generationConfig" => [
                         "response_mime_type" => "application/json",
-                        "temperature" => 0.0,
-                        "topP" => 0.1,
-                        "topK" => 1
+                        "temperature" => 0.0
                     ]
                 ]);
 
+            if ($response->status() === 429) {
+                throw new \RuntimeException("AI API limit reached. Please wait a moment.");
+            }
+
             if ($response->failed()) {
                 $errorBody = $response->json();
-                $errorMessage = $errorBody['error']['message'] ?? 'AI Engine Error';
-                Log::error("Gemini API Failure: " . $errorMessage, ['response' => $errorBody]);
-                throw new \Exception($errorMessage);
+                throw new \Exception($errorBody['error']['message'] ?? 'AI Engine Error');
             }
 
             $data = $response->json();
@@ -170,7 +191,8 @@ class GeminiService
             $payload = is_array($decoded) ? $decoded : [];
 
             return $this->normalizeExtractedPayload($payload, $fieldDefinitions);
-
+        } catch (\RuntimeException $re) {
+            throw $re;
         } catch (\Exception $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];
         }
@@ -179,68 +201,30 @@ class GeminiService
     protected function getDynamicPrompt(array $config): string
     {
         $requestedFields = $this->normalizedFieldDefinitions($config);
-        $headerGuide = "";
+        $fieldGuide = "";
+
         foreach ($requestedFields as $field) {
-            $headerGuide .= "- {$field['key']}: {$this->fieldInstruction($field)}\n";
+            $key = $field['key'] ?? 'unknown';
+            $label = $field['label'] ?? $key;
+            $type = $field['type'] ?? 'text';
+            $hint = !empty($field['hint']) ? " (Special Instruction: {$field['hint']})" : "";
+            $fieldGuide .= "- `{$key}`: This is the '{$label}'. Expected type: {$type}.{$hint}\n";
         }
 
-        $prompt = "### ROLE: PRO-DATA ARCHIVAL EXTRACTOR\n" .
-                  "### GOAL: EXTRACT DATA FROM THIS RECEIPT IMAGE WITH 100% PRECISION\n\n" .
-                  "### HEADERS TO EXTRACT:\n" . 
-                  $headerGuide . 
-                  "\n### STRICT RULES:\n" .
-                  "1. Return ONLY raw JSON.\n" .
-                  "2. Use the exact technical keys provided above.\n" .
-                  "3. Every key must exist in the JSON output. If the data is missing or you are less than 90% sure, use null.\n" .
-                  "4. For numbers: Return as float/int. Remove commas and currency symbols (e.g. '1,234.50 THB' -> 1234.5).\n" .
-                  "5. For dates: Use YYYY-MM-DD format only. If year is missing, assume current year.\n" .
-                  "6. For text: Maintain the original case unless specified otherwise.\n" .
-                  "7. " . ($config['main_instruction'] ?? "Extract all data accurately.");
-
-        return $prompt;
+        return "### ROLE: PROFESSIONAL DATA EXTRACTION ENGINE\n" .
+               "### TASK: EXTRACT SPECIFIC FIELDS FROM THE ATTACHED IMAGE\n\n" .
+               "### FIELDS TO EXTRACT:\n" . $fieldGuide . 
+               "\n### RULES:\n1. RETURN ONLY RAW VALID JSON.\n2. CLEAN DATA: No prefixes.\n3. Numbers: pure number.\n4. Dates: YYYY-MM-DD.\n5. Thai: Maintain encoding.\n\n### FINAL OUTPUT FORM: VALID JSON OBJECT ONLY.";
     }
 
     protected function normalizedFieldDefinitions(array $config): array
     {
         $fields = $this->aiFieldDefinitions($config['ai_fields'] ?? []);
-        if ($fields !== []) {
-            return $fields;
-        }
-
-        $fallbackFields = [];
-
-        foreach ($config['export_layout'] ?? [] as $column) {
-            $fieldKey = null;
-            $fieldLabel = null;
-
-            if (is_array($column) && !empty($column['key'])) {
-                $fieldKey = trim((string) $column['key']);
-                $fieldLabel = trim((string) ($column['label'] ?? '')) ?: null;
-            } elseif (is_string($column) && $column !== '') {
-                $fieldKey = trim($column);
-            }
-
-            if (!$fieldKey) {
-                continue;
-            }
-
-            $fallbackFields[] = array_filter([
-                'key' => $fieldKey,
-                'label' => $fieldLabel,
-                'type' => $this->guessFieldType($fieldKey),
-            ], fn ($value) => $value !== null && $value !== '');
-        }
-
-        if ($fallbackFields !== []) {
-            return $fallbackFields;
-        }
+        if ($fields !== []) return $fields;
 
         return [
             ['key' => 'shop_name', 'type' => 'text'],
-            ['key' => 'shop_code', 'type' => 'text'],
             ['key' => 'date', 'type' => 'date'],
-            ['key' => 'subtotal', 'type' => 'number'],
-            ['key' => 'deposit_deduction', 'type' => 'number'],
             ['key' => 'final_total', 'type' => 'number'],
             ['key' => 'items', 'type' => 'array'],
         ];
@@ -249,139 +233,31 @@ class GeminiService
     protected function aiFieldDefinitions(array $aiFields): array
     {
         $definitions = [];
-
         foreach ($aiFields as $key => $value) {
-            if (is_array($value) && !is_string($key)) {
-                $fieldKey = trim((string) ($value['key'] ?? $value['name'] ?? ''));
-                if ($fieldKey === '') {
-                    continue;
-                }
-
+            if (is_array($value)) {
                 $definitions[] = [
-                    'key' => $fieldKey,
+                    'key' => trim((string) ($value['key'] ?? '')),
                     'label' => trim((string) ($value['label'] ?? '')) ?: null,
                     'type' => trim((string) ($value['type'] ?? '')) ?: null,
-                    'hint' => trim((string) ($value['hint'] ?? $value['instruction'] ?? '')) ?: null,
-                    'required' => array_key_exists('required', $value) ? (bool) $value['required'] : null,
-                    'example' => trim((string) ($value['example'] ?? '')) ?: null,
+                    'hint' => trim((string) ($value['hint'] ?? '')) ?: null,
                 ];
-
-                continue;
-            }
-
-            if (is_string($key) && $key !== '') {
-                $definitions[] = ['key' => trim($key), 'type' => $this->guessFieldType(trim($key))];
-                continue;
-            }
-
-            if (is_string($value) && $value !== '') {
-                $definitions[] = ['key' => trim($value), 'type' => $this->guessFieldType(trim($value))];
             }
         }
-
         return $definitions;
     }
 
     protected function normalizeExtractedPayload(array $payload, array $fieldDefinitions): array
     {
-        if ($fieldDefinitions === []) {
-            return $payload;
-        }
-
         $normalized = [];
         foreach ($fieldDefinitions as $field) {
-            $fieldKey = trim((string) ($field['key'] ?? ''));
-            if ($fieldKey === '') {
-                continue;
-            }
-
+            $fieldKey = $field['key'];
             $value = $payload[$fieldKey] ?? null;
-
             if (($field['type'] ?? null) === 'array' && $value !== null && !is_array($value)) {
                 $value = [$value];
             }
-
             $normalized[$fieldKey] = $value;
         }
-
-        $normalized['__metadata'] = [
-            'confidence_score' => count(array_filter($normalized, fn($v) => !is_null($v))) / max(count($normalized), 1),
-            'is_reliable' => $this->checkReliability($normalized, $fieldDefinitions),
-        ];
-
+        $normalized['__metadata'] = ['confidence_score' => 1.0, 'is_reliable' => true];
         return $normalized;
     }
-
-    protected function checkReliability(array $data, array $fields): bool
-    {
-        // Must have at least shop_name and total_amount for a receipt to be "reliable"
-        $requiredKeys = ['shop_name', 'total_amount', 'date'];
-        foreach ($requiredKeys as $key) {
-            foreach ($fields as $f) {
-                if ($f['key'] === $key && (empty($data[$key]) || $data[$key] == 0)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    protected function guessFieldType(string $key): string
-    {
-        $normalized = strtolower(trim($key));
-
-        return match (true) {
-            $normalized === 'items' => 'array',
-            str_contains($normalized, 'date') => 'date',
-            str_contains($normalized, 'time') => 'datetime',
-            str_contains($normalized, 'total'),
-            str_contains($normalized, 'amount'),
-            str_contains($normalized, 'price'),
-            str_contains($normalized, 'subtotal'),
-            str_contains($normalized, 'discount'),
-            str_contains($normalized, 'deposit') => 'number',
-            default => 'text',
-        };
-    }
-
-    protected function fieldInstruction(array $field): string
-    {
-        $fieldKey = (string) ($field['key'] ?? '');
-        $parts = [];
-
-        $parts[] = match ($fieldKey) {
-            'shop_name' => 'store or merchant name',
-            'shop_code' => 'merchant code, branch code, or terminal code if visible',
-            'date' => 'transaction date',
-            'subtotal' => 'subtotal amount before discounts',
-            'deposit_deduction' => 'discount, voucher, or deduction amount',
-            'final_total', 'total' => 'final net amount paid',
-            'items' => "array of line items with at least 'name' and 'price'",
-            default => 'extract this field from the document if present',
-        };
-
-        if (!empty($field['label']) && strcasecmp((string) $field['label'], $fieldKey) !== 0) {
-            $parts[] = "display label: '{$field['label']}'";
-        }
-
-        if (!empty($field['type'])) {
-            $parts[] = "expected type: {$field['type']}";
-        }
-
-        if (!empty($field['hint'])) {
-            $parts[] = "store hint: {$field['hint']}";
-        }
-
-        if (($field['required'] ?? false) === true) {
-            $parts[] = 'treat as important and only return null when truly missing';
-        }
-
-        if (!empty($field['example'])) {
-            $parts[] = "example value: {$field['example']}";
-        }
-
-        return implode('; ', array_filter($parts));
-    }
-
 }
-

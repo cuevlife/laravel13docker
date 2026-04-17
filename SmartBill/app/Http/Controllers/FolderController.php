@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class ProjectController extends Controller
+class FolderController extends Controller
 {
     public function index(Request $request)
     {
@@ -24,10 +24,12 @@ class ProjectController extends Controller
             return redirect()->to(\App\Support\OwnerUrl::path($request, 'users'));
         }
 
+        // Show only folders where the user has explicit access (Owned or Member)
         $query = $user->accessibleMerchants()
             ->with([
                 'users' => fn ($query) => $query->where('users.id', $user->id),
-            ]);
+            ])
+            ->withCount('slips');
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -45,7 +47,13 @@ class ProjectController extends Controller
                     'role' => $s->users->first()->pivot->role ?? 'Member',
                     'is_owner' => (int)$s->user_id === (int)$user->id || $user->isSuperAdmin(),
                     'open_url' => \App\Support\WorkspaceUrl::workspace($request, $s, 'dashboard'),
-                ])
+                    'slips_count' => (int) $s->slips_count,
+                    'max_slips' => (int) ($s->max_slips ?? 10000),
+                ]),
+                'meta' => [
+                    'owned_folders_count' => Merchant::where('user_id', $user->id)->count(),
+                    'max_folders' => (int) ($user->max_folders ?? 3),
+                ]
             ]);
         }
 
@@ -55,6 +63,15 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
+        // Check Folder Creation Limit (User level)
+        $ownedFoldersCount = Merchant::where('user_id', $user->id)->count();
+        if ($ownedFoldersCount >= ($user->max_folders ?? 3)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Folder creation limit reached. Maximum :max folders allowed.', ['max' => $user->max_folders ?? 3]),
+            ], 403);
+        }
         
         $data = $request->validate([
             'name' => [
@@ -74,7 +91,7 @@ class ProjectController extends Controller
 
             if ($request->hasFile('logo')) {
                 \App\Support\ImageOptimizer::optimizeUpload($request->file('logo'), 400, 400, 85);
-                $logoPath = $request->file('logo')->store('project-logos', 'public');
+                $logoPath = $request->file('logo')->store('folder-logos', 'public');
                 $config['logo'] = $logoPath;
             }
 
@@ -93,7 +110,7 @@ class ProjectController extends Controller
                 $counter++;
             }
 
-            $project = Merchant::create([
+            $folder = Merchant::create([
                 'user_id' => $user->id,
                 'name' => trim($data['name']),
                 'subdomain' => $subdomain,
@@ -101,11 +118,11 @@ class ProjectController extends Controller
                 'config' => empty($config) ? null : $config,
             ]);
 
-            $user->merchants()->attach($project->id, ['role' => 'owner']);
+            $user->merchants()->attach($folder->id, ['role' => 'owner']);
 
             return response()->json([
                 'status' => 'success',
-                'redirect' => WorkspaceUrl::workspace($request, $project, 'dashboard')
+                'redirect' => WorkspaceUrl::workspace($request, $folder, 'dashboard')
             ]);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -114,22 +131,22 @@ class ProjectController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $project = Merchant::findOrFail($id);
+        $folder = Merchant::findOrFail($id);
         $user = Auth::user();
 
-        if ($request->confirmation !== $project->name) {
-            return response()->json(['status' => 'error', 'message' => 'Project name does not match.'], 422);
+        if ($request->confirmation !== $folder->name) {
+            return response()->json(['status' => 'error', 'message' => 'Folder name does not match.'], 422);
         }
 
         $hasAccess = $user->isSuperAdmin() 
-            || (int)$project->user_id === (int)$user->id 
-            || $project->users()->where('users.id', $user->id)->wherePivot('role', 'owner')->exists();
+            || (int)$folder->user_id === (int)$user->id 
+            || $folder->users()->where('users.id', $user->id)->wherePivot('role', 'owner')->exists();
 
         if (!$hasAccess) abort(403);
 
-        $project->delete();
+        $folder->delete();
 
-        return response()->json(['status' => 'success', 'message' => 'Project deleted successfully.']);
+        return response()->json(['status' => 'success', 'message' => 'Folder deleted successfully.']);
     }
 
     public function getTokenBalance()

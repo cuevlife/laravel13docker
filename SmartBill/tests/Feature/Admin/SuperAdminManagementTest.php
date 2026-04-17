@@ -85,12 +85,12 @@ class SuperAdminManagementTest extends TestCase
         $response = $this
             ->actingAs($superAdmin)
             ->withServerVariables(['HTTP_HOST' => 'admin.localhost'])
-            ->post($this->adminUrl('/projects'), [
-                'name' => 'Acme Holdings',
-                'user_id' => $owner->id,
-                'address' => 'Bangkok HQ',
-                'tax_id' => 'ACME-001',
-                'phone' => '0800000000',
+            ->post($this->adminUrl('/folders'), [
+                'name' => 'New Corp',
+                'user_id' => $managedUser->id,
+                'address' => '123 Test St',
+                'tax_id' => 'TAX-001',
+                'phone' => '0812345678',
             ]);
 
         $response->assertSessionHasNoErrors();
@@ -218,12 +218,12 @@ class SuperAdminManagementTest extends TestCase
         ]);
     }
 
-    public function test_super_admin_can_archive_project(): void
+    public function test_super_admin_can_archive_folder(): void
     {
         $superAdmin = User::factory()->create([
             'role' => User::ROLE_SUPER_ADMIN,
         ]);
-        $project = Merchant::create([
+        $folder = Merchant::create([
             'name' => 'Archive Me',
             'subdomain' => 'archive-me',
             'status' => 'active',
@@ -232,35 +232,35 @@ class SuperAdminManagementTest extends TestCase
         $response = $this
             ->actingAs($superAdmin)
             ->withServerVariables(['HTTP_HOST' => 'admin.localhost'])
-            ->patch($this->adminUrl('/projects/' . $project->id . '/status'), [
+            ->patch($this->adminUrl('/folders/' . $folder->id . '/status'), [
                 'status' => 'archived',
             ]);
 
         $response->assertSessionHasNoErrors();
         $this->assertDatabaseHas('merchants', [
-            'id' => $project->id,
+            'id' => $folder->id,
             'status' => 'archived',
         ]);
     }
 
-    public function test_archived_project_blocks_regular_workspace_access(): void
+    public function test_archived_folder_blocks_regular_workspace_access(): void
     {
         $user = User::factory()->create();
-        $project = Merchant::create([
+        $folder = Merchant::create([
             'user_id' => $user->id,
             'name' => 'Blocked Workspace',
             'subdomain' => 'blocked-workspace',
             'status' => 'archived',
         ]);
 
-        $project->users()->syncWithoutDetaching([
+        $folder->users()->syncWithoutDetaching([
             $user->id => ['role' => 'owner'],
         ]);
 
         $response = $this
             ->actingAs($user)
             ->withServerVariables(['HTTP_HOST' => '192.168.9.113'])
-            ->get('http://192.168.9.113/projects/open/' . $project->id);
+            ->get('http://192.168.9.113/folders/open/' . $folder->id);
 
         $response->assertStatus(423);
     }

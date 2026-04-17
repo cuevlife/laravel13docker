@@ -11,27 +11,27 @@ class CentralController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $stores = $user->accessibleMerchants()
-            ->with([
-                'users' => fn ($query) => $query->where('users.id', $user->id),
-            ])
+        
+        // Show ALL active folders for everyone in the company
+        $stores = Merchant::where('status', 'active')
+            ->withCount('slips')
             ->get();
 
         return view('main.central-dashboard', compact('stores'));
     }
 
-    public function openProject(Request $request, Merchant $project)
+    public function openFolder(Request $request, Merchant $folder)
     {
         $user = Auth::user();
 
         $hasAccess = $user->isSuperAdmin()
-            || $user->merchants()->where('merchant_id', $project->id)->exists()
-            || (int) $project->user_id === (int) $user->id;
+            || $user->merchants()->where('merchant_id', $folder->id)->exists()
+            || (int) $folder->user_id === (int) $user->id;
 
         abort_unless($hasAccess, 403);
-        abort_if(!$project->isActive() && !$user->isSuperAdmin(), 423, 'This workspace is archived and currently unavailable.');
+        abort_if(!$folder->isActive() && !$user->isSuperAdmin(), 423, 'This workspace is archived and currently unavailable.');
 
-        $request->session()->put('active_project_id', $project->id);
+        $request->session()->put('active_folder_id', $folder->id);
 
         $next = trim((string) $request->query('next', 'slips'), '/');
 

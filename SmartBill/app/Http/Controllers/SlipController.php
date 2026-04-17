@@ -44,7 +44,7 @@ class SlipController extends Controller
             'template_id' => 'required|string',
         ]);
 
-        $tenant = Merchant::findOrFail(session('active_project_id'));
+        $tenant = Merchant::findOrFail(session('active_folder_id'));
         $user = Auth::user();
         $fullPath = Storage::disk('public')->path($data['temp_path']);
 
@@ -62,7 +62,7 @@ class SlipController extends Controller
                 $dynamicInstruction = $preset['main_instruction'];
                 
                 $template = SlipTemplate::firstOrCreate(
-                    ['merchant_id' => $tenant->id, 'name' => \"Auto: {\['name']}\"],
+                    ['merchant_id' => $tenant->id, 'name' => "Auto: " . $preset['name']],
                     ['user_id' => $user->id, 'main_instruction' => $dynamicInstruction, 'ai_fields' => $dynamicFields]
                 );
             } else {

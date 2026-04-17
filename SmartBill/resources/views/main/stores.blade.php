@@ -26,7 +26,7 @@
                 <thead class="hidden sm:table-header-group">
                     <tr class="border-b border-[#e3e5e8] dark:border-[#313338] text-[10px] uppercase font-black tracking-widest text-[#80848e] bg-transparent">
                         <th class="px-6 py-4">Store Name</th>
-                        <th class="px-6 py-4">Project</th>
+                        <th class="px-6 py-4">Folder</th>
                         <th class="px-6 py-4">Address / Details</th>
                         <th class="px-6 py-4 text-center">Connected Templates</th>
                         <th class="px-6 py-4 text-right">Actions</th>
@@ -47,10 +47,10 @@
                                 </div>
                             </td>
                             <td class="block sm:table-cell px-0 py-2 sm:px-4 sm:py-4">
-                                <div class="sm:hidden text-[9px] font-black uppercase text-[#80848e] tracking-widest mb-1">Project</div>
+                                <div class="sm:hidden text-[9px] font-black uppercase text-[#80848e] tracking-widest mb-1">Folder</div>
                                 <div class="inline-flex items-center gap-2 rounded-xl border border-[#e3e5e8] bg-white px-3 py-2 text-[10px] font-black text-[#1e1f22] dark:border-[#313338] dark:bg-[#2b2d31] dark:text-white">
                                     <i class="bi bi-briefcase-fill w-3.5 h-3.5 text-discord-green"></i>
-                                    <span>Project {{ str_pad((string) $store->id, 2, '0', STR_PAD_LEFT) }}</span>
+                                    <span>Folder {{ str_pad((string) $store->id, 2, '0', STR_PAD_LEFT) }}</span>
                                 </div>
                             </td>
                             <td class="block sm:table-cell px-0 py-2 sm:px-4 sm:py-4">
@@ -193,7 +193,16 @@
                         
                         setTimeout(() => window.location.reload(), 500);
                     } catch (e) {
-                        Swal.fire('Error', e.message, 'error');
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: 'Error',
+                            text: e.message,
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
                         this.loading = false;
                     }
                 },
@@ -221,7 +230,16 @@
                             
                             if (res.ok) window.location.reload();
                         } catch (e) {
-                            Swal.fire('Error', 'Delete Failed.', 'error');
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Delete Failed.',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
                         }
                     }
                 }

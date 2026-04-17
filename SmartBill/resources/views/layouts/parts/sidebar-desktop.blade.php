@@ -7,20 +7,24 @@
             // 1. Admin Core Menus (Always visible for Admin)
             $adminNavs = [
                 ['href' => \App\Support\OwnerUrl::path(request(), 'users'), 'icon' => 'bi-people-fill', 'label' => __('Users'), 'active' => request()->is('admin/users*')],
-                ['href' => \App\Support\OwnerUrl::path(request(), 'projects'), 'icon' => 'bi-folder2-open', 'label' => __('Folders'), 'active' => request()->is('admin/projects*')],
-                ['href' => \App\Support\OwnerUrl::path(request(), 'topups'), 'icon' => 'bi-cash-coin', 'label' => __('Topups'), 'active' => request()->is('admin/topups*')],
+                ['href' => \App\Support\OwnerUrl::path(request(), 'folders'), 'icon' => 'bi-folder2-open', 'label' => __('Folders'), 'active' => request()->is('admin/folders*')],
                 ['href' => route('admin.settings'), 'icon' => 'bi-cpu-fill', 'label' => __('AI Settings'), 'active' => request()->routeIs('admin.settings')],
             ];
 
             // 2. Workspace Menus (Visible for everyone when in a folder)
+            $isOwner = $isTenant && ((int)($activeTenant->user_id ?? 0) === (int)auth()->id() || $isAdmin);
+            
             $workspaceNavs = [
                 ['href' => \App\Support\WorkspaceUrl::current(request(), 'slips'), 'icon' => 'bi-qr-code-scan', 'label' => __('Inbox'), 'active' => request()->is('workspace/slips*')],
             ];
 
+            if ($isOwner) {
+                $workspaceNavs[] = ['href' => \App\Support\WorkspaceUrl::current(request(), 'settings'), 'icon' => 'bi-gear-fill', 'label' => __('Folder Settings'), 'active' => request()->is('workspace/settings*')];
+            }
+
             // 3. Central Hub (Visible for everyone when NOT in Admin mode)
             $hubNavs = [
                 ['href' => route('dashboard'), 'icon' => 'bi-grid-fill', 'label' => __('Hub'), 'active' => request()->routeIs('dashboard')],
-                ['href' => route('billing'), 'icon' => 'bi-wallet2', 'label' => __('Wallet'), 'active' => request()->routeIs('billing')],
             ];
         @endphp
 

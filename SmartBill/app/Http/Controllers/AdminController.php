@@ -40,49 +40,6 @@ class AdminController extends Controller
         return redirect()->to(WorkspaceUrl::current(request(), 'slips'));
     }
 
-    public function billing()
-    {
-        $user = auth()->user();
-        $tokenLogs = TokenLog::where('user_id', $user->id)->latest()->limit(20)->get();
-        $topupRequests = TokenTopupRequest::where('user_id', $user->id)->latest()->limit(10)->get();
-        $usageThisMonth = TokenLog::where('user_id', $user->id)
-            ->where('type', 'usage')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->sum('delta');
-
-        return view('main.billing', [
-            'tokenLogs' => $tokenLogs,
-            'topupRequests' => $topupRequests,
-            'usageThisMonth' => abs((int) $usageThisMonth),
-            'user' => $user,
-        ]);
-    }
-
-    public function submitTopupRequest(Request $request)
-    {
-        $data = $request->validate([
-            'requested_tokens' => 'required|integer|min:1|max:100000',
-            'amount_paid' => 'nullable|numeric|min:0',
-            'payment_slip' => 'required|image|max:5120',
-            'note' => 'nullable|string|max:1000',
-        ]);
-
-        \App\Support\ImageOptimizer::optimizeUpload($request->file('payment_slip'), 1200, 1200, 85);
-        $path = $request->file('payment_slip')->store('topups', 'public');
-
-        TokenTopupRequest::create([
-            'user_id' => auth()->id(),
-            'requested_tokens' => $data['requested_tokens'],
-            'amount_paid' => $data['amount_paid'] ?? null,
-            'payment_slip_path' => $path,
-            'note' => $data['note'] ?? null,
-            'status' => 'pending',
-        ]);
-
-        return back()->with('status', 'Top-up request submitted. Please wait for super admin approval.');
-    }
-
     // --- Store Management ---
     public function stores()
     {
@@ -149,16 +106,16 @@ class AdminController extends Controller
         $data = $request->validate([
             'confirmation_name' => 'required|string|max:255',
         ]);
+if ($request->confirmation !== $merchant->name) {
+    return response()->json([
+        'status' => 'error',
+        'message' => 'Folder name confirmation does not match.',
+    ], 422);
+}
 
-        if (trim($data['confirmation_name']) !== $merchant->name) {
-            return response()->json([
-                'message' => 'Project name confirmation does not match.',
-            ], 422);
-        }
-
-        if ((int) $request->session()->get('active_project_id') === (int) $merchant->id) {
-            $request->session()->forget('active_project_id');
-        }
+if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) {
+    $request->session()->forget('active_folder_id');
+}
 
         $merchant->delete();
 
@@ -190,6 +147,21 @@ class AdminController extends Controller
         $slips = $slipsQuery->paginate(50)->withQueryString();
         $slips->getCollection()->transform(fn (Slip $slip) => $this->decorateSlipForDisplay($slip));
 
+        // Folder-specific Export Settings
+        $exportColumns = $tenant->config['export_columns'] ?? null;
+        if (!$exportColumns) {
+            $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
+            $exportColumns = $superAdmin?->settings['export_columns'] ?? [
+                ['key' => 'processed_at', 'label' => 'Processed Date', 'enabled' => true, 'order' => 1],
+                ['key' => 'uid', 'label' => 'Document UID', 'enabled' => true, 'order' => 2],
+                ['key' => 'shop_name', 'label' => 'Store Name', 'enabled' => true, 'order' => 3],
+                ['key' => 'total_amount', 'label' => 'Total Amount', 'enabled' => true, 'order' => 4],
+                ['key' => 'items', 'label' => 'Items (Single Cell)', 'enabled' => false, 'order' => 5],
+                ['key' => 'item_name', 'label' => 'Item Name (Split Rows)', 'enabled' => false, 'order' => 6],
+                ['key' => 'item_price', 'label' => 'Item Price (Split Rows)', 'enabled' => false, 'order' => 7],
+            ];
+        }
+
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'status' => 'success',
@@ -199,7 +171,8 @@ class AdminController extends Controller
                     'last_page' => $slips->lastPage(),
                     'total' => $slips->total(),
                     'links' => $slips->linkCollection(),
-                ]
+                ],
+                'export_columns' => $exportColumns,
             ]);
         }
 
@@ -228,6 +201,7 @@ class AdminController extends Controller
             'labelSuggestions' => $labelSuggestions,
             'currentCollection' => $currentCollection,
             'currentCollectionSummary' => $currentCollectionSummary,
+            'exportColumns' => $exportColumns,
             'activeFilters' => [
                 'q' => (string) $request->input('q', ''),
                 'date_from' => (string) $request->input('date_from', ''),
@@ -311,7 +285,7 @@ class AdminController extends Controller
     {
         $this->authorizeSlip($slip);
         
-        if ($slip->slip_template_id) {
+        if ($slip->template) {
             $exportColumns = $slip->template->ai_fields ?? [];
         } else {
             $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
@@ -341,8 +315,20 @@ class AdminController extends Controller
         $imageHash = md5_file($request->file('image')->getRealPath());
         $tenant = app('tenant');
 
+        // Check Folder Capacity Limit
+        $tenantSlipsCount = \App\Models\Slip::whereHas('batch', function($q) use ($tenant) {
+            $q->where('merchant_id', $tenant->id);
+        })->count();
+
+        if ($tenantSlipsCount >= ($tenant->max_slips ?? 10000)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Folder limit reached. Maximum ' . number_format($tenant->max_slips ?? 10000) . ' slips allowed per folder. Please contact an administrator.',
+            ], 403);
+        }
+
         $exists = Slip::where('image_hash', $imageHash)
-            ->whereHas('template', function($q) use ($tenant) {
+            ->whereHas('batch', function($q) use ($tenant) {
                 $q->where('merchant_id', $tenant->id);
             })->exists();
 
@@ -357,12 +343,11 @@ class AdminController extends Controller
         $fullPath = Storage::disk('public')->path($path);
 
         try {
-            // Get Global Prompt from Super Admin
+            // Get Folder Configuration (with Global Fallback)
             $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
             $settings = $superAdmin?->settings ?: [];
             
-            $globalPrompt = $settings['global_prompt'] ?? "Extract shop name, date, and total amount from this receipt accurately.";
-            $globalAiFields = $settings['global_ai_fields'] ?? [
+            $aiFields = $tenant->config['ai_fields'] ?? $settings['global_ai_fields'] ?? [
                 ['key' => 'shop_name', 'label' => 'Shop Name', 'type' => 'text'],
                 ['key' => 'date', 'label' => 'Transaction Date', 'type' => 'text'],
                 ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'text'],
@@ -372,8 +357,7 @@ class AdminController extends Controller
             $batch = $this->resolveSlipBatch($request, $tenant, $user);
 
             $data = $this->geminiService->setModel($geminiModel)->extractDataFromImage($fullPath, [
-                'ai_fields' => $globalAiFields,
-                'main_instruction' => $globalPrompt,
+                'ai_fields' => $aiFields,
             ]);
 
             $slip = Slip::create([
@@ -401,6 +385,12 @@ class AdminController extends Controller
                 'batch_name' => $batch->name,
                 'collection_name' => $batch->name,
             ]);
+        } catch (\RuntimeException $e) {
+            Storage::disk('public')->delete($path);
+            return response()->json([
+                'status' => 'rate_limit',
+                'message' => $e->getMessage()
+            ], 429);
         } catch (\Exception $e) {
             Storage::disk('public')->delete($path);
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -496,14 +486,28 @@ class AdminController extends Controller
             return redirect()->to(WorkspaceUrl::current(request(), 'slips'))->with('error', 'No slips matched the current filters for export.');
         }
 
-        // --- 1. Load Global Configuration ---
+        // --- 1. Load Configuration (Folder-specific with Global Fallback) ---
+        $exportConfig = $tenant->config['export_columns'] ?? null;
+        
         $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
-        $settings = $superAdmin?->settings ?: [];
+        $globalSettings = $superAdmin?->settings ?: [];
 
-        $exportConfig = $settings['export_columns'] ?? [];
-        $vendorMaps = collect($settings['vendor_mapping'] ?? [])->pluck('code', 'text')->toArray();
-        $itemMaps = collect($settings['item_mapping'] ?? [])->pluck('code', 'text')->toArray();
-        $excelFilename = $settings['excel_filename'] ?? 'SmartBill_Export.xlsx';
+        if (!$exportConfig) {
+            $exportConfig = $globalSettings['export_columns'] ?? [
+                ['key' => 'processed_at', 'label' => 'Processed Date', 'enabled' => true, 'order' => 1],
+                ['key' => 'uid', 'label' => 'Document UID', 'enabled' => true, 'order' => 2],
+                ['key' => 'shop_name', 'label' => 'Store Name', 'enabled' => true, 'order' => 3],
+                ['key' => 'total_amount', 'label' => 'Total Amount', 'enabled' => true, 'order' => 4],
+            ];
+        }
+
+        $vendorMaps = collect($globalSettings['vendor_mapping'] ?? [])->pluck('code', 'text')->toArray();
+        $itemMaps = collect($globalSettings['item_mapping'] ?? [])->pluck('code', 'text')->toArray();
+        
+        $excelFilename = $tenant->config['excel_filename'] ?? ($tenant->name . '_Export_' . now()->format('Ymd') . '.xlsx');
+        if (!Str::endsWith($excelFilename, '.xlsx')) {
+            $excelFilename .= '.xlsx';
+        }
 
         // Filter and sort active columns
         $activeCols = collect($exportConfig)
@@ -521,46 +525,24 @@ class AdminController extends Controller
         // --- 2. Process Data Rows ---
         foreach ($filteredSlips as $slip) {
             $data = $slip->extracted_data ?: [];
-            $items = $data['items'] ?? [['name' => '-', 'price' => 0]];
+            $itemsRaw = $data['items'] ?? [['name' => '-', 'price' => 0]];
+            $items = is_array($itemsRaw) ? $itemsRaw : [$itemsRaw];
 
-            // Itemized Expansion (One row per item if 'item' related columns exist)
-            foreach ($items as $item) {
+            // Expand to multiple rows only if itemized columns are present
+            $hasItemizedCols = $activeCols->contains(fn($c) => in_array($c['key'], ['item_name', 'item_code', 'item_price']));
+
+            if ($hasItemizedCols) {
+                foreach ($items as $item) {
+                    $row = [];
+                    foreach ($activeCols as $col) {
+                        $row[] = $this->resolveExportValue($col['key'], $slip, $data, $item, $vendorMaps, $itemMaps);
+                    }
+                    $rows[] = $row;
+                }
+            } else {
                 $row = [];
                 foreach ($activeCols as $col) {
-                    $key = $col['key'] ?? '';
-                    $val = '';
-
-                    switch ($key) {
-                        case 'processed_at':
-                            $val = optional($slip->processed_at)->format('Y-m-d H:i:s');
-                            break;
-                        case 'uid':
-                            $val = $slip->uid;
-                            break;
-                        case 'shop_name':
-                            $val = $data['shop_name'] ?? $data['store_name'] ?? '';
-                            break;
-                        case 'vendor_code':
-                            $shopName = trim($data['shop_name'] ?? $data['store_name'] ?? '');
-                            $val = $vendorMaps[$shopName] ?? '';
-                            break;
-                        case 'item_name':
-                            $val = $item['name'] ?? '-';
-                            break;
-                        case 'item_code':
-                            $itemName = trim($item['name'] ?? '');
-                            $val = $itemMaps[$itemName] ?? '';
-                            break;
-                        case 'item_price':
-                            $val = $item['price'] ?? 0;
-                            break;
-                        default:
-                            // Dynamic AI Fields
-                            $val = $data[$key] ?? '';
-                            if (is_array($val)) $val = json_encode($val, JSON_UNESCAPED_UNICODE);
-                            break;
-                    }
-                    $row[] = $val;
+                    $row[] = $this->resolveExportValue($col['key'], $slip, $data, null, $vendorMaps, $itemMaps);
                 }
                 $rows[] = $row;
             }
@@ -571,9 +553,10 @@ class AdminController extends Controller
 
         \App\Models\SlipExport::create([
             'user_id' => auth()->id(),
+            'merchant_id' => $tenant->id,
             'file_name' => $excelFilename,
             'file_format' => 'xlsx',
-            'export_mode' => 'granular',
+            'export_mode' => $hasItemizedCols ? 'granular' : 'summary',
             'slips_count' => $filteredSlips->count(),
             'filters' => $request->all(),
             'exported_at' => now(),
@@ -591,94 +574,108 @@ class AdminController extends Controller
         );
     }
 
-    private function buildExportSheet(string $title, $slips, array $exportFields): array
+    public function updateExportSettings(Request $request)
     {
-        $baseHeadings = ['Processed Date'];
-        $baseKeys = [];
-        $arrayKeys = [];
+        $tenant = app('tenant');
+        $data = $request->validate([
+            'export_columns' => 'required|array',
+            'excel_filename' => 'nullable|string|max:255',
+        ]);
 
-        foreach ($exportFields as $field) {
-            if (!is_array($field) || !isset($field['key'])) continue;
-            
-            $isArray = false;
-            $subKeys = [];
-            foreach ($slips as $slip) {
-                $val = $slip->extracted_data[$field['key']] ?? null;
-                if (is_array($val) && count($val) > 0 && is_array(reset($val))) {
-                    $isArray = true;
-                    foreach ($val as $item) {
-                        if (is_array($item)) {
-                            foreach (array_keys($item) as $sk) {
-                                $subKeys[$sk] = true;
-                            }
-                        }
-                    }
-                }
-            }
+        $config = $tenant->config ?: [];
+        $config['export_columns'] = $data['export_columns'];
+        $config['excel_filename'] = $data['excel_filename'] ?? null;
+        $tenant->update(['config' => $config]);
 
-            if ($isArray) {
-                $arrayKeys[$field['key']] = array_keys($subKeys);
-            } else {
-                $baseHeadings[] = $field['label'];
-                $baseKeys[] = $field['key'];
-            }
-        }
+        return response()->json(['status' => 'success']);
+    }
 
-        $finalHeadings = $baseHeadings;
-        foreach ($arrayKeys as $parentKey => $sKeys) {
-            $parentLabel = collect($exportFields)->firstWhere('key', $parentKey)['label'] ?? ucfirst($parentKey);
-            foreach ($sKeys as $sk) {
-                $finalHeadings[] = $parentLabel . ' - ' . ucfirst($sk);
-            }
-        }
+    public function exportHistory(Request $request)
+    {
+        $tenant = app('tenant');
+        $exports = \App\Models\SlipExport::where('merchant_id', $tenant->id)
+            ->with('user')
+            ->latest('exported_at')
+            ->limit(20)
+            ->get();
 
-        $rows = [];
-        foreach ($slips as $slip) {
-            $data = $slip->extracted_data ?? [];
-            $baseRow = [optional($slip->processed_at)->format('Y-m-d H:i:s')];
-            foreach ($baseKeys as $key) {
+        return response()->json([
+            'status' => 'success',
+            'data' => $exports->map(fn($e) => [
+                'id' => $e->id,
+                'file_name' => $e->file_name,
+                'slips_count' => $e->slips_count,
+                'user_name' => $e->user->name ?? 'System',
+                'exported_at' => $e->exported_at->format('d M Y H:i'),
+                'mode' => $e->export_mode,
+            ])
+        ]);
+    }
+
+    private function resolveExportValue(string $key, Slip $slip, array $data, $item, array $vendorMaps, array $itemMaps)
+    {
+        switch ($key) {
+            case 'processed_at':
+                return optional($slip->processed_at)->format('Y-m-d H:i:s');
+            case 'uid':
+                return $slip->uid;
+            case 'shop_name':
+                return $data['shop_name'] ?? $data['store_name'] ?? '';
+            case 'vendor_code':
+                $shopName = trim($data['shop_name'] ?? $data['store_name'] ?? '');
+                return $vendorMaps[$shopName] ?? '';
+            case 'item_name':
+                return is_array($item) 
+                    ? ($item['name'] ?? $item['item_name'] ?? $item['item'] ?? $item['description'] ?? $item['desc'] ?? '-')
+                    : (is_string($item) ? $item : '-');
+            case 'item_code':
+                $itemName = is_array($item) 
+                    ? trim($item['name'] ?? $item['item_name'] ?? $item['item'] ?? $item['description'] ?? $item['desc'] ?? '')
+                    : (is_string($item) ? trim($item) : '');
+                return $itemMaps[$itemName] ?? '';
+            case 'item_price':
+                return is_array($item)
+                    ? ($item['price'] ?? $item['amount'] ?? $item['total'] ?? 0)
+                    : 0;
+            default:
                 $val = $data[$key] ?? '';
-                $baseRow[] = is_array($val) ? json_encode($val, JSON_UNESCAPED_UNICODE) : $val;
-            }
-
-            if (empty($arrayKeys)) {
-                $rows[] = $baseRow;
-                continue;
-            }
-
-            $maxRows = 1;
-            $arrayDataCols = [];
-            foreach ($arrayKeys as $parentKey => $sKeys) {
-                $list = (isset($data[$parentKey]) && is_array($data[$parentKey])) ? $data[$parentKey] : [];
-                $maxRows = max($maxRows, count($list));
-                $arrayDataCols[$parentKey] = $list;
-            }
-
-            for ($i = 0; $i < max(1, $maxRows); $i++) {
-                $row = $baseRow;
-                foreach ($arrayKeys as $parentKey => $sKeys) {
-                    $item = $arrayDataCols[$parentKey][$i] ?? [];
-                    foreach ($sKeys as $sk) {
-                        $row[] = $item[$sk] ?? '';
-                    }
+                if (is_array($val)) {
+                    return $this->formatArrayForExcel($val);
                 }
-                $rows[] = $row;
-            }
+                return $val;
         }
+    }
 
-        return [
-            'title' => Str::limit($title, 31, ''),
-            'headings' => $finalHeadings,
-            'rows' => $rows,
-        ];
+    private function formatArrayForExcel(array $arr): string
+    {
+        return collect($arr)->map(function($i) {
+            if (is_array($i)) {
+                $parts = [];
+                $name = $i['name'] ?? $i['item'] ?? $i['description'] ?? $i['desc'] ?? null;
+                $qty = $i['qty'] ?? $i['quantity'] ?? $i['amount'] ?? null;
+                $price = $i['price'] ?? $i['total'] ?? null;
+                
+                if ($qty) $parts[] = $qty . 'x';
+                if ($name) $parts[] = $name;
+                if ($price) $parts[] = '(' . $price . ')';
+                
+                return empty($parts) ? json_encode($i, JSON_UNESCAPED_UNICODE) : implode(' ', $parts);
+            }
+            return (string) $i;
+        })->implode("\n");
     }
 
     private function baseSlipQueryForTenant(Merchant $tenant): Builder
     {
         return Slip::query()
             ->with(['template.merchant', 'batch'])
-            ->whereHas('batch', function (Builder $query) use ($tenant) {
-                $query->where('merchant_id', $tenant->id);
+            ->where(function (Builder $query) use ($tenant) {
+                $query->whereHas('batch', function (Builder $q) use ($tenant) {
+                    $q->where('merchant_id', $tenant->id);
+                })
+                ->orWhereHas('template', function (Builder $q) use ($tenant) {
+                    $q->where('merchant_id', $tenant->id);
+                });
             });
     }
 
@@ -694,14 +691,18 @@ class AdminController extends Controller
         $term = trim((string) $request->input('q', ''));
         if ($term !== '') {
             $query->where(function (Builder $searchQuery) use ($term) {
-                if (is_numeric($term)) {
-                    $searchQuery->orWhereKey((int) $term);
-                }
-
                 $searchQuery
-                    ->orWhere('image_path', 'like', '%' . $term . '%')
+                    ->orWhere('slips.id', 'like', '%' . $term . '%')
+                    ->orWhere('slips.uid', 'like', '%' . $term . '%')
+                    ->orWhere('slips.image_path', 'like', '%' . $term . '%')
+                    ->orWhere('slips.extracted_data', 'like', '%' . $term . '%')
+                    ->orWhere('slips.labels', 'like', '%' . $term . '%')
+                    ->orWhere('slips.processed_at', 'like', '%' . $term . '%')
                     ->orWhereHas('template', function (Builder $templateQuery) use ($term) {
-                        $templateQuery->where('name', 'like', '%' . $term . '%');
+                        $templateQuery->where('name', 'like', '%' . $term . '%')
+                            ->orWhereHas('merchant', function ($q) use ($term) {
+                                $q->where('name', 'like', '%' . $term . '%');
+                            });
                     })
                     ->orWhereHas('batch', function (Builder $batchQuery) use ($term) {
                         $batchQuery->where('name', 'like', '%' . $term . '%');
@@ -739,8 +740,22 @@ class AdminController extends Controller
     {
         $data = $slip->extracted_data ?: [];
         $slip->display_shop = $data['shop_name'] ?? $data['store_name'] ?? $slip->template?->merchant?->name ?? 'Unknown';
-        $slip->display_date = $data['date'] ?? $data['transaction_date'] ?? optional($slip->processed_at)->format('d/m/Y');
-        $slip->display_amount = $data['total_amount'] ?? $data['total'] ?? $data['final_total'] ?? 0;
+        
+        // Ensure date is formatted as d/m/Y for table display
+        $rawDate = $data['date'] ?? $data['transaction_date'] ?? null;
+        if ($rawDate) {
+            try {
+                $slip->display_date = \Carbon\Carbon::parse($rawDate)->format('d/m/Y');
+            } catch (\Exception $e) {
+                $slip->display_date = $rawDate; // Fallback to raw if unparseable
+            }
+        } else {
+            $slip->display_date = optional($slip->processed_at)->format('d/m/Y') ?? '-';
+        }
+        
+        $rawAmount = $data['total_amount'] ?? $data['total'] ?? $data['final_total'] ?? 0;
+        $slip->display_amount = is_numeric($rawAmount) ? $rawAmount : (preg_replace('/[^0-9.]/', '', (string) $rawAmount) ?: 0);
+        
         $slip->batch_name = $slip->batch?->name ?? 'Inbox';
         $slip->display_labels = $this->normalizeSlipLabels($slip->labels ?? []);
 
@@ -858,7 +873,6 @@ class AdminController extends Controller
             'suspended' => $users->where('status', 'suspended')->count(),
             'tokens' => (int) $users->sum('tokens'),
             'slips' => Slip::count(),
-            'pendingTopups' => TokenTopupRequest::where('status', 'pending')->count(),
         ];
 
         return view('main.users', compact('users', 'stats', 'merchants'));
@@ -878,7 +892,7 @@ class AdminController extends Controller
         return redirect()->to(\App\Support\OwnerUrl::path(request(), 'users'));
     }
 
-    public function projects()
+    public function folders()
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
@@ -890,24 +904,24 @@ class AdminController extends Controller
         $candidateOwners = User::query()->orderBy('name')->get();
 
         $stats = [
-            'projects' => $merchants->count(),
+            'folders' => $merchants->count(),
             'archived' => $merchants->where('status', 'archived')->count(),
             'memberships' => (int) $merchants->sum(fn (Merchant $merchant) => $merchant->users->count()),
             'templates' => (int) $merchants->sum('templates_count'),
             'slips' => (int) $merchants->sum('slips_count'),
         ];
 
-        return view('main.projects', compact('merchants', 'candidateOwners', 'stats'));
+        return view('main.folders', compact('merchants', 'candidateOwners', 'stats'));
     }
 
-    public function createProject()
+    public function createFolder()
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
         $candidateOwners = User::query()->orderBy('name')->get();
-        return view('main.project-create', compact('candidateOwners'));
+        return view('main.folder-create', compact('candidateOwners'));
     }
 
-    public function storeProjectForAdmin(Request $request)
+    public function storeFolderForAdmin(Request $request)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
@@ -935,10 +949,10 @@ class AdminController extends Controller
             ]);
         }
 
-        return back()->with('status', 'Project created successfully.');
+        return back()->with('status', 'Folder created successfully.');
     }
 
-    public function showProject(Merchant $merchant)
+    public function showFolder(Merchant $merchant)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
@@ -950,17 +964,34 @@ class AdminController extends Controller
 
         $candidateUsers = User::query()->orderBy('name')->get();
         $recentSlips = Slip::with(['user', 'template'])
-            ->whereHas('template', function ($query) use ($merchant) {
-                $query->where('merchant_id', $merchant->id);
+            ->where(function ($query) use ($merchant) {
+                $query->whereHas('template', function ($q) use ($merchant) {
+                    $q->where('merchant_id', $merchant->id);
+                })
+                ->orWhereHas('batch', function ($q) use ($merchant) {
+                    $q->where('merchant_id', $merchant->id);
+                });
             })
             ->latest('processed_at')
             ->limit(12)
             ->get();
 
-        return view('main.project-detail', compact('merchant', 'candidateUsers', 'recentSlips'));
+        // AI Schema Designer Data
+        $schemaFields = $merchant->config['ai_fields'] ?? null;
+        if (!$schemaFields) {
+            $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
+            $schemaFields = $superAdmin?->settings['global_ai_fields'] ?? [
+                ['key' => 'shop_name', 'label' => 'ชื่อร้าน', 'type' => 'text', 'hint' => ''],
+                ['key' => 'date', 'label' => 'วันที่', 'type' => 'date', 'hint' => ''],
+                ['key' => 'total_amount', 'label' => 'ยอดรวม', 'type' => 'number', 'hint' => ''],
+                ['key' => 'items', 'label' => 'รายการสินค้า', 'type' => 'array', 'hint' => ''],
+            ];
+        }
+
+        return view('main.folder-detail', compact('merchant', 'candidateUsers', 'recentSlips', 'schemaFields'));
     }
 
-    public function updateProjectForAdmin(Request $request, Merchant $merchant)
+    public function updateFolderForAdmin(Request $request, Merchant $merchant)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
@@ -970,9 +1001,16 @@ class AdminController extends Controller
             'address' => 'nullable|string',
             'tax_id' => 'nullable|string|max:50',
             'phone' => 'nullable|string|max:50',
+            'max_slips' => 'required|integer|min:1|max:1000000',
+            'ai_fields' => 'nullable|array',
         ]);
 
         $previousOwnerId = $merchant->user_id;
+
+        $config = $merchant->config ?: [];
+        if (isset($data['ai_fields'])) {
+            $config['ai_fields'] = $data['ai_fields'];
+        }
 
         $merchant->update([
             'name' => $data['name'],
@@ -981,6 +1019,8 @@ class AdminController extends Controller
             'address' => $data['address'] ?? null,
             'tax_id' => $data['tax_id'] ?? null,
             'phone' => $data['phone'] ?? null,
+            'max_slips' => (int) $data['max_slips'],
+            'config' => $config,
         ]);
 
         if (!empty($data['user_id'])) {
@@ -993,10 +1033,10 @@ class AdminController extends Controller
             }
         }
 
-        return back()->with('status', 'Project updated successfully.');
+        return back()->with('status', 'Folder updated successfully.');
     }
 
-    public function updateProjectStatus(Request $request, Merchant $merchant)
+    public function updateFolderStatus(Request $request, Merchant $merchant)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
@@ -1008,10 +1048,10 @@ class AdminController extends Controller
             'status' => $data['status'],
         ]);
 
-        return back()->with('status', 'Project status updated successfully.');
+        return back()->with('status', 'Folder status updated successfully.');
     }
 
-    public function attachProjectMember(Request $request, Merchant $merchant)
+    public function attachFolderMember(Request $request, Merchant $merchant)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
@@ -1033,10 +1073,10 @@ class AdminController extends Controller
             }
         }
 
-        return back()->with('status', 'Project member added successfully.');
+        return back()->with('status', 'Folder member added successfully.');
     }
 
-    public function updateProjectMemberRole(Request $request, Merchant $merchant, User $user)
+    public function updateFolderMemberRole(Request $request, Merchant $merchant, User $user)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
@@ -1057,20 +1097,20 @@ class AdminController extends Controller
             }
         }
 
-        return back()->with('status', 'Project member role updated successfully.');
+        return back()->with('status', 'Folder member role updated successfully.');
     }
 
-    public function detachProjectMember(Merchant $merchant, User $user)
+    public function detachFolderMember(Merchant $merchant, User $user)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
 
         if ((int) $merchant->user_id === (int) $user->id) {
-            return back()->withErrors(['project' => 'Primary owner cannot be removed from the project.']);
+            return back()->withErrors(['folder' => 'Primary owner cannot be removed from the folder.']);
         }
 
         $merchant->users()->detach($user->id);
 
-        return back()->with('status', 'Project member removed successfully.');
+        return back()->with('status', 'Folder member removed successfully.');
     }
 
     public function storeUser(Request $request)
@@ -1197,7 +1237,7 @@ class AdminController extends Controller
         }
 
         if (Merchant::query()->where('user_id', $user->id)->exists()) {
-            return back()->withErrors(['user' => 'This user owns one or more projects. Reassign those projects before deleting the account.']);
+            return back()->withErrors(['user' => 'This user owns one or more folders. Reassign those folders before deleting the account.']);
         }
 
         $user->delete();
@@ -1215,13 +1255,15 @@ class AdminController extends Controller
                 User::ROLE_TENANT_ADMIN,
                 User::ROLE_SUPER_ADMIN,
             ]),
+            'max_folders' => 'required|integer|min:1|max:100',
         ]);
 
         $user->update([
             'role' => (int) $data['role'],
+            'max_folders' => (int) $data['max_folders'],
         ]);
 
-        return back()->with('status', 'User role updated successfully.');
+        return back()->with('status', 'User access and limits updated successfully.');
     }
 
     public function attachUserWorkspace(Request $request, User $user)
@@ -1321,65 +1363,15 @@ class AdminController extends Controller
             ]
         );
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Token balance updated successfully.',
+                'redirect' => \App\Support\OwnerUrl::path($request, 'users')
+            ]);
+        }
+
         return back()->with('status', 'Token balance updated successfully.');
-    }
-
-    public function topupRequests()
-    {
-        abort_unless(auth()->user()->isSuperAdmin(), 403);
-
-        $requests = TokenTopupRequest::with(['user', 'reviewer'])->latest()->get();
-
-        return view('main.topups', compact('requests'));
-    }
-
-    public function approveTopupRequest(Request $request, TokenTopupRequest $topupRequest)
-    {
-        abort_unless(auth()->user()->isSuperAdmin(), 403);
-        abort_if($topupRequest->status !== 'pending', 422, 'This request has already been reviewed.');
-
-        $data = $request->validate([
-            'admin_note' => 'nullable|string|max:1000',
-        ]);
-
-        $topupRequest->user->increment('tokens', $topupRequest->requested_tokens);
-        $topupRequest->user->refresh();
-
-        $topupRequest->update([
-            'status' => 'approved',
-            'reviewed_by' => auth()->id(),
-            'reviewed_at' => now(),
-            'admin_note' => $data['admin_note'] ?? null,
-        ]);
-
-        $this->recordTokenEvent(
-            $topupRequest->user,
-            $topupRequest->requested_tokens,
-            'manual_topup_approved',
-            'Top-up request approved',
-            ['topup_request_id' => $topupRequest->id, 'reviewed_by' => auth()->id()]
-        );
-
-        return back()->with('status', 'Top-up request approved successfully.');
-    }
-
-    public function rejectTopupRequest(Request $request, TokenTopupRequest $topupRequest)
-    {
-        abort_unless(auth()->user()->isSuperAdmin(), 403);
-        abort_if($topupRequest->status !== 'pending', 422, 'This request has already been reviewed.');
-
-        $data = $request->validate([
-            'admin_note' => 'nullable|string|max:1000',
-        ]);
-
-        $topupRequest->update([
-            'status' => 'rejected',
-            'reviewed_by' => auth()->id(),
-            'reviewed_at' => now(),
-            'admin_note' => $data['admin_note'] ?? null,
-        ]);
-
-        return back()->with('status', 'Top-up request rejected.');
     }
 
     public function systemSettings()
@@ -1391,79 +1383,41 @@ class AdminController extends Controller
         // --- AI Defaults ---
         if (empty($settings['global_ai_fields'])) {
             $settings['global_ai_fields'] = [
-                ['key' => 'shop_name', 'label' => 'Shop Name', 'type' => 'text'],
-                ['key' => 'date', 'label' => 'Transaction Date', 'type' => 'text'],
-                ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'number'],
-                ['key' => 'items', 'label' => 'Items List', 'type' => 'array'],
+                ['key' => 'shop_name', 'label' => 'ชื่อร้าน', 'type' => 'text', 'hint' => ''],
+                ['key' => 'date', 'label' => 'วันที่', 'type' => 'date', 'hint' => ''],
+                ['key' => 'total_amount', 'label' => 'ยอดรวม', 'type' => 'number', 'hint' => ''],
+                ['key' => 'items', 'label' => 'รายการสินค้า', 'type' => 'array', 'hint' => ''],
             ];
         }
 
-        if (empty($settings['global_prompt'])) {
-            $settings['global_prompt'] = "Extract shop name, date, total amount, and itemized list from this receipt accurately.";
-        }
+        // Always pass as JSON string for the editor
+        $viewSettings = $settings;
+        $viewSettings['global_ai_fields'] = json_encode($settings['global_ai_fields'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-        if (empty($settings['gemini_model'])) {
-            $settings['gemini_model'] = config('services.gemini.model', 'gemini-1.5-flash');
+        // Fetch usage counts for keys
+        $apiKeys = $settings['gemini_api_keys'] ?? [];
+        $keyUsage = [];
+        foreach ($apiKeys as $key) {
+            $keyUsage[$key] = (int) \Illuminate\Support\Facades\Cache::get('gemini_key_usage_' . md5($key), 0);
         }
+        $viewSettings['api_key_usage'] = $keyUsage;
 
-        // --- Concept Mappings Defaults ---
-        if (empty($settings['vendor_mapping'])) {
-            $settings['vendor_mapping'] = [
-                ['text' => 'Sample Shop', 'code' => 'V-001']
-            ];
-        }
-
-        if (empty($settings['item_mapping'])) {
-            $settings['item_mapping'] = [
-                ['text' => 'Sample Item', 'code' => 'SKU-001']
-            ];
-        }
-
-        // --- Export Designer Defaults ---
-        if (empty($settings['export_columns'])) {
-            $settings['export_columns'] = [
-                ['key' => 'processed_at', 'label' => 'Scan Date', 'enabled' => true, 'order' => 1],
-                ['key' => 'shop_name', 'label' => 'Vendor Name', 'enabled' => true, 'order' => 2],
-                ['key' => 'vendor_code', 'label' => 'Vendor Code', 'enabled' => true, 'order' => 3],
-                ['key' => 'date', 'label' => 'Receipt Date', 'enabled' => true, 'order' => 4],
-                ['key' => 'total_amount', 'label' => 'Total Amount', 'enabled' => true, 'order' => 5],
-            ];
-        }
-
-        if (empty($settings['excel_filename'])) {
-            $settings['excel_filename'] = 'SmartBill_Export.xlsx';
-        }
-
-        return view('main.admin-settings', compact('settings'));
+        return view('main.admin-settings', ['settings' => $viewSettings]);
     }
 
     public function updateSystemSettings(Request $request)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
         $data = $request->validate([
-            'global_prompt' => 'required|string',
-            'global_ai_fields' => 'required', // Can be string (JSON) or array
             'gemini_model' => 'required|string|max:50',
-            'vendor_mapping' => 'nullable|array',
-            'item_mapping' => 'nullable|array',
-            'export_columns' => 'nullable|array',
-            'excel_filename' => 'nullable|string|max:255',
+            'api_keys' => 'nullable|array',
         ]);
-
-        $fields = is_string($data['global_ai_fields']) ? json_decode($data['global_ai_fields'], true) : $data['global_ai_fields'];
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return back()->withErrors(['global_ai_fields' => 'Invalid JSON format for AI Fields.']);
-        }
 
         $user = auth()->user();
         $settings = $user->settings ?: [];
-        $settings['global_prompt'] = $data['global_prompt'];
-        $settings['global_ai_fields'] = $fields;
+        
         $settings['gemini_model'] = $data['gemini_model'];
-        $settings['vendor_mapping'] = $data['vendor_mapping'] ?? [];
-        $settings['item_mapping'] = $data['item_mapping'] ?? [];
-        $settings['export_columns'] = $data['export_columns'] ?? [];
-        $settings['excel_filename'] = $data['excel_filename'] ?? 'SmartBill_Export.xlsx';
+        $settings['gemini_api_keys'] = array_filter($data['api_keys'] ?? []);
 
         $user->update(['settings' => $settings]);
 
@@ -1573,7 +1527,7 @@ class AdminController extends Controller
         $workspaceMembership = $merchant->users()->where('user_id', $user->id)->first();
         $workspaceRole = $workspaceMembership?->pivot?->role;
 
-        abort_if($workspaceRole !== 'owner', 403, 'Only project owners can delete this workspace.');
+        abort_if($workspaceRole !== 'owner', 403, 'Only folder owners can delete this workspace.');
     }
 
     private function authorizeTemplate(SlipTemplate $template): void
@@ -1593,7 +1547,17 @@ class AdminController extends Controller
     private function authorizeSlip(Slip $slip): void
     {
         if (app()->bound('tenant')) {
-            abort_if($slip->template->merchant_id !== app('tenant')->id, 403);
+            $merchantId = null;
+
+            if ($slip->template) {
+                $merchantId = (int) $slip->template->merchant_id;
+            } elseif ($slip->batch) {
+                $merchantId = (int) $slip->batch->merchant_id;
+            }
+
+            // If neither is found, we should probably check if it belongs to the tenant at all.
+            // But if it's orphaned, it's definitely not authorized.
+            abort_if($merchantId !== (int) app('tenant')->id, 403);
         }
     }
 

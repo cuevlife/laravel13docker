@@ -45,7 +45,7 @@ class WorkspaceUrl
             ? '?next='.urlencode($normalizedPath)
             : '';
 
-        return self::centralBase($request).'/projects/open/'.$projectId.$query;
+        return self::centralBase($request).'/folders/open/'.$projectId.$query;
     }
 
     public static function current(Request $request, string $path = 'dashboard'): string

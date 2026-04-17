@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['user_id', 'name', 'subdomain', 'status', 'address', 'tax_id', 'phone', 'config'])]
+#[Fillable(['user_id', 'name', 'subdomain', 'status', 'address', 'tax_id', 'phone', 'config', 'max_slips'])]
 class Merchant extends Model
 {
     protected function casts(): array
     {
         return [
             'config' => 'array',
+            'max_slips' => 'integer',
         ];
     }
 
@@ -48,13 +49,13 @@ class Merchant extends Model
         return $this->hasMany(SlipTemplate::class);
     }
 
-    public function slips()
-    {
-        return $this->hasManyThrough(Slip::class, SlipTemplate::class);
-    }
-
     public function slipBatches()
     {
         return $this->hasMany(SlipBatch::class);
+    }
+
+    public function slips()
+    {
+        return $this->hasManyThrough(Slip::class, SlipBatch::class);
     }
 }

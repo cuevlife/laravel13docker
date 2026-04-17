@@ -72,26 +72,8 @@
             </p>
         </div>
 
-        <!-- Notification Toggles -->
-        <div class="space-y-4 pt-8">
-            <h3 class="text-[10px] font-black text-[#80848e] uppercase tracking-widest mb-4">{{ __('Advanced Preferences') }}</h3>
-            
-            <div class="flex items-center justify-between p-4 bg-[#f2f3f5] dark:bg-[#1e1f22] rounded-[14px]">
-                <div>
-                    <h4 class="text-xs font-bold text-[#1e1f22] dark:text-[#f2f3f5]">Compact List View</h4>
-                    <p class="text-[10px] text-[#5c5e66] dark:text-[#b5bac1] mt-0.5">Use smaller padding inside data tables (not yet implemented)</p>
-                </div>
-                <!-- Checkbox styling as toggle switch -->
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="hidden" name="settings[compact_view]" value="0">
-                    <input type="checkbox" name="settings[compact_view]" value="1" class="sr-only peer" {{ !empty($settings['compact_view']) && $settings['compact_view'] !== '0' ? 'checked' : '' }}>
-                    <div class="w-11 h-6 bg-[#d5d6d9] dark:bg-[#313338] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#e3e5e8] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-discord-green"></div>
-                </label>
-            </div>
-        </div>
-
         <div class="flex flex-col sm:flex-row items-center gap-4 pt-8">
-            <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[14px] transition-all shadow-md active:scale-95 text-center">
+            <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-md active:scale-95 text-center">
                 {{ __('Save Settings') }}
             </button>
 

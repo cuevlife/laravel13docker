@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CentralController;
+use App\Http\Controllers\FolderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,20 +47,16 @@ Route::middleware(['web', 'auth', 'role:super_admin'])->prefix('admin')->group(f
     Route::post('/users/{user}/workspaces', [AdminController::class, 'attachUserWorkspace'])->name('admin.users.workspaces.attach');
     Route::delete('/users/{user}/workspaces/{merchant}', [AdminController::class, 'detachUserWorkspace'])->name('admin.users.workspaces.detach');
     
-    Route::get('/projects', [AdminController::class, 'projects'])->name('admin.projects.index');
-    Route::get('/projects/create', [AdminController::class, 'createProject'])->name('admin.projects.create');
-    Route::post('/projects', [AdminController::class, 'storeProjectForAdmin'])->name('admin.projects.store');
-    Route::get('/projects/{merchant}', [AdminController::class, 'showProject'])->name('admin.projects.show');
-    Route::patch('/projects/{merchant}', [AdminController::class, 'updateProjectForAdmin'])->name('admin.projects.update');
-    Route::patch('/projects/{merchant}/status', [AdminController::class, 'updateProjectStatus'])->name('admin.projects.status');
-    Route::post('/projects/{merchant}/members', [AdminController::class, 'attachProjectMember'])->name('admin.projects.members.attach');
-    Route::patch('/projects/{merchant}/members/{user}', [AdminController::class, 'updateProjectMemberRole'])->name('admin.projects.members.update');
-    Route::delete('/projects/{merchant}/members/{user}', [AdminController::class, 'detachProjectMember'])->name('admin.projects.members.detach');
+    Route::get('/folders', [AdminController::class, 'folders'])->name('admin.folders.index');
+    Route::get('/folders/create', [AdminController::class, 'createFolder'])->name('admin.folders.create');
+    Route::post('/folders', [AdminController::class, 'storeFolderForAdmin'])->name('admin.folders.store');
+    Route::get('/folders/{merchant}', [AdminController::class, 'showFolder'])->name('admin.folders.show');
+    Route::patch('/folders/{merchant}', [AdminController::class, 'updateFolderForAdmin'])->name('admin.folders.update');
+    Route::patch('/folders/{merchant}/status', [AdminController::class, 'updateFolderStatus'])->name('admin.folders.status');
+    Route::post('/folders/{merchant}/members', [AdminController::class, 'attachFolderMember'])->name('admin.folders.members.attach');
+    Route::patch('/folders/{merchant}/members/{user}', [AdminController::class, 'updateFolderMemberRole'])->name('admin.folders.members.update');
+    Route::delete('/folders/{merchant}/members/{user}', [AdminController::class, 'detachFolderMember'])->name('admin.folders.members.detach');
     
-    Route::get('/topups', [AdminController::class, 'topupRequests'])->name('admin.topups');
-    Route::post('/topups/{topupRequest}/approve', [AdminController::class, 'approveTopupRequest'])->name('admin.topups.approve');
-    Route::post('/topups/{topupRequest}/reject', [AdminController::class, 'rejectTopupRequest'])->name('admin.topups.reject');
-
     Route::get('/settings', [AdminController::class, 'systemSettings'])->name('admin.settings');
     Route::patch('/settings', [AdminController::class, 'updateSystemSettings'])->name('admin.settings.update');
     Route::post('/settings/suggest', [AdminController::class, 'suggestPrompt'])->name('admin.settings.suggest');
@@ -70,13 +67,19 @@ Route::middleware(['web', 'auth', 'role:super_admin'])->prefix('admin')->group(f
 // ============================================
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
     // Folder Hub (The Profile Chooser)
-    Route::get('/dashboard', [\App\Http\Controllers\ProjectController::class, 'index'])->name('dashboard');
-    Route::post('/projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('workspace.projects.store');
-    Route::delete('/projects/{id}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('workspace.projects.destroy');
-    Route::get('/tokens/balance', [\App\Http\Controllers\ProjectController::class, 'getTokenBalance'])->name('workspace.tokens.balance');
+    Route::get('/dashboard', [FolderController::class, 'index'])->name('dashboard');
+    Route::post('/folders', [FolderController::class, 'store'])->name('workspace.folders.store');
+    Route::delete('/folders/{id}', [FolderController::class, 'destroy'])->name('workspace.folders.destroy');
+    Route::get('/tokens/balance', [FolderController::class, 'getTokenBalance'])->name('workspace.tokens.balance');
 
     // Entry point to a folder
-    Route::get('/projects/open/{project}', [CentralController::class, 'openProject'])->name('projects.open');
+    Route::get('/folders/open/{folder}', [CentralController::class, 'openFolder'])->name('folders.open');
+
+    // Legacy Redirects
+    Route::get('/projects/open/{id}', fn($id) => redirect()->route('folders.open', ['folder' => $id]));
+    Route::get('/admin/projects', fn() => redirect()->route('admin.folders.index'));
+    Route::get('/admin/projects/create', fn() => redirect()->route('admin.folders.create'));
+    Route::get('/admin/projects/{id}', fn($id) => redirect()->route('admin.folders.show', ['merchant' => $id]));
 
     // Inside a Workspace
     Route::middleware([\App\Http\Middleware\IdentifyTenant::class])->prefix('workspace')->group(function () {
@@ -87,6 +90,8 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::delete('/slips/delete/{slip}', [AdminController::class, 'deleteSlip'])->name('workspace.slip.delete');
         Route::post('/slips/bulk', [AdminController::class, 'bulkUpdateSlips'])->name('workspace.slip.bulk');
         Route::get('/slips/export', [AdminController::class, 'exportExcel'])->name('workspace.slip.export');
+        Route::get('/slips/export-history', [AdminController::class, 'exportHistory'])->name('workspace.slip.export-history');
+        Route::patch('/slips/export-settings', [AdminController::class, 'updateExportSettings'])->name('workspace.slip.export-settings');
         
         // Settings
         
@@ -95,10 +100,6 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::patch('/stores/{merchant}', [AdminController::class, 'updateStore'])->name('workspace.stores.update');
     });
 
-    // Global Billing
-    Route::get('/billing', [AdminController::class, 'billing'])->name('billing');
-    Route::post('/billing/topups', [AdminController::class, 'submitTopupRequest'])->name('billing.topups.store');
-    
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

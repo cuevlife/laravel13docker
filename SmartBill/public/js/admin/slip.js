@@ -188,13 +188,13 @@ window.slipRegistry = function () {
 
             if (this.selectedIds.length === 0) {
                 event.preventDefault();
-                Swal.fire('Select slips first', 'Choose at least one slip before applying a bulk action.', 'warning');
+                Toast.fire({ icon: 'warning', title: 'Select slips first', text: 'Choose at least one slip before applying a bulk action.' });
                 return;
             }
 
             if (this.requiresBulkLabel() && !this.bulkLabel.trim()) {
                 event.preventDefault();
-                Swal.fire('Label required', 'Enter a label for this bulk action.', 'warning');
+                Toast.fire({ icon: 'warning', title: 'Label required', text: 'Enter a label for this bulk action.' });
             }
         },
 
@@ -283,7 +283,7 @@ window.slipRegistry = function () {
 
         async submitForm() {
             if (this.files.length === 0) {
-                Swal.fire('Error', 'Please select at least one image file', 'error');
+                Toast.fire({ icon: 'error', title: 'Error', text: 'Please select at least one image file' });
                 return;
             }
 
@@ -319,7 +319,7 @@ window.slipRegistry = function () {
             }
 
             if (errorCount > 0) {
-                Swal.fire('Completed with Errors', `Processed: ${successCount}. Failed: ${errorCount}.`, 'warning').then(() => window.location.reload());
+                Toast.fire({ icon: 'warning', title: 'Completed with Errors', text: `Processed: ${successCount}. Failed: ${errorCount}.` }).then(() => window.location.reload());
                 return;
             }
 

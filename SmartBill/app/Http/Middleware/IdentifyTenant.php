@@ -13,19 +13,19 @@ class IdentifyTenant
 {
     public function handle(Request $request, Closure $next)
     {
-        $merchantParameter = $request->route('project') ?? $request->route('workspace') ?? $request->route('merchant');
+        $merchantParameter = $request->route('folder') ?? $request->route('project') ?? $request->route('workspace') ?? $request->route('merchant');
         $subdomain = $request->route('subdomain');
 
         if ($merchantParameter instanceof Merchant) {
             $merchant = $merchantParameter;
         } elseif (!$merchantParameter) {
-            $activeProjectId = (int) $request->session()->get('active_project_id');
+            $activeFolderId = (int) $request->session()->get('active_folder_id');
 
-            if (!$activeProjectId) {
+            if (!$activeFolderId) {
                 return redirect()->route('dashboard');
             }
 
-            $merchant = Merchant::query()->findOrFail($activeProjectId);
+            $merchant = Merchant::query()->findOrFail($activeFolderId);
         } else {
             $lookupSubdomain = $subdomain ?: $merchantParameter;
 
@@ -51,12 +51,13 @@ class IdentifyTenant
         if (Auth::check()) {
             $user = Auth::user();
 
+            // Check if user is owner or has a membership record
             $hasAccess = $user->isSuperAdmin()
                 || $user->merchants()->where('merchant_id', $merchant->id)->exists()
-                || $merchant->user_id === $user->id;
+                || (int) $merchant->user_id === (int) $user->id;
 
             if (!$hasAccess) {
-                abort(403, 'You do not have permission to access this store.');
+                abort(403, 'You do not have permission to access this folder.');
             }
         }
 
@@ -65,6 +66,7 @@ class IdentifyTenant
 
         if ($request->route()) {
             $request->route()->forgetParameter('subdomain');
+            $request->route()->forgetParameter('folder');
             $request->route()->forgetParameter('project');
             $request->route()->forgetParameter('workspace');
             $request->route()->forgetParameter('merchant');

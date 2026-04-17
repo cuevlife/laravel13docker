@@ -7,19 +7,23 @@
         if ($isAdminMode) {
             $navs = [
                 ['href' => \App\Support\OwnerUrl::path(request(), 'users'), 'icon' => 'bi-people-fill', 'label' => 'Users', 'active' => request()->routeIs('admin.users*')],
-                ['href' => \App\Support\OwnerUrl::path(request(), 'projects'), 'icon' => 'bi-folder2-open', 'label' => 'Folders', 'active' => request()->routeIs('admin.projects*')],
-                ['href' => \App\Support\OwnerUrl::path(request(), 'topups'), 'icon' => 'bi-cash-coin', 'label' => 'Topups', 'active' => request()->routeIs('admin.topups*')],
+                ['href' => \App\Support\OwnerUrl::path(request(), 'folders'), 'icon' => 'bi-folder2-open', 'label' => 'Folders', 'active' => request()->routeIs('admin.folders*')],
                 ['href' => route('admin.settings'), 'icon' => 'bi-cpu-fill', 'label' => 'AI Settings', 'active' => request()->routeIs('admin.settings')],
             ];
         } elseif ($isTenant) {
             $slipIndexActive = request()->routeIs('tenant.dashboard') || request()->routeIs('workspace.dashboard') || request()->routeIs('workspace.slip.index') || request()->routeIs('workspace.slip.edit');
+            $isOwner = ((int)($activeTenant->user_id ?? 0) === (int)auth()->id() || auth()->user()->isSuperAdmin());
+            
             $navs = [
                 ['href' => \App\Support\WorkspaceUrl::current(request(), 'slips'), 'icon' => 'bi-qr-code-scan', 'label' => 'Inbox', 'active' => $slipIndexActive],
             ];
+
+            if ($isOwner) {
+                $navs[] = ['href' => \App\Support\WorkspaceUrl::current(request(), 'settings'), 'icon' => 'bi-gear-fill', 'label' => 'Settings', 'active' => request()->routeIs('workspace.settings')];
+            }
         } else {
             $navs = [
                 ['href' => route('dashboard'), 'icon' => 'bi-grid-fill', 'label' => 'Hub', 'active' => request()->routeIs('dashboard')],
-                ['href' => route('billing'), 'icon' => 'bi-wallet2', 'label' => 'Tokens', 'active' => request()->routeIs('billing')],
             ];
         }
     @endphp
