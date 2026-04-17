@@ -1,0 +1,15 @@
+$encrypt = "v0001";
+//ส่ง
+$ciphering = "AES-128-CTR";
+$options = 0;  
+$encryption_iv = '1234567890111213';
+$encryption_key = "vcard_system";  
+$encryption = openssl_encrypt($encrypt, $ciphering, $encryption_key, $options, $encryption_iv);
+
+//รับ
+$ciphering = "AES-128-CTR";
+$options = 0;
+$encryption_iv = '1234567890111213';
+$decryption_key = "vcard_system";
+$encrypt = openssl_decrypt($encryption, $ciphering, $decryption_key, $options, $decryption_iv);
+echo $encrypt;

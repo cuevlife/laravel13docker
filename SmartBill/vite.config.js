@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+﻿import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
@@ -9,12 +9,12 @@ export default defineConfig({
         }),
     ],
     server: {
-        host: true, // ฟังทุก interfaces (0.0.0.0)
-        port: 5173,
-        strictPort: true,
-        cors: true,
+        host: '0.0.0.0',
         hmr: {
-            host: '192.168.9.113', // บังคับให้ WebSocket วิ่งไปที่ IP นี้
+            host: 'localhost',
+        },
+        watch: {
+            usePolling: true,
         },
     },
 });

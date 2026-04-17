@@ -33,7 +33,7 @@
         </div>
 
         <div class="flex flex-col sm:flex-row items-center gap-4 pt-6">
-            <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[14px] transition-all shadow-md active:scale-95 text-center">
+            <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-discord-green hover:bg-[#1f8b4c] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-md active:scale-95 text-center">
                 {{ __('Update Password') }}
             </button>
 

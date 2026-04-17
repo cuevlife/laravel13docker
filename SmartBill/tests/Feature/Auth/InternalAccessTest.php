@@ -11,7 +11,7 @@ class InternalAccessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_authenticated_internal_users_can_access_the_project_selector_without_email_verification(): void
+    public function test_authenticated_internal_users_can_access_the_folder_selector_without_email_verification(): void
     {
         $user = User::factory()->unverified()->create();
 
@@ -20,7 +20,7 @@ class InternalAccessTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_single_workspace_users_still_see_the_project_selector_in_ip_mode(): void
+    public function test_single_workspace_users_still_see_the_folder_selector_in_ip_mode(): void
     {
         $user = User::factory()->create();
         $merchant = Merchant::create([
@@ -40,11 +40,11 @@ class InternalAccessTest extends TestCase
             ->get('http://192.168.9.113/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Choose Project');
+        $response->assertSee('Folder Hub');
         $response->assertSee('LAN Workspace');
     }
 
-    public function test_users_can_open_a_project_and_access_workspace_routes_in_ip_mode(): void
+    public function test_users_can_open_a_folder_and_access_workspace_routes_in_ip_mode(): void
     {
         $user = User::factory()->create([
             'tokens' => 25,
@@ -63,20 +63,20 @@ class InternalAccessTest extends TestCase
         $openResponse = $this
             ->actingAs($user)
             ->withServerVariables(['HTTP_HOST' => '192.168.9.113'])
-            ->get('http://192.168.9.113/projects/open/' . $merchant->id);
+            ->get('http://192.168.9.113/folders/open/' . $merchant->id);
 
         $openResponse->assertRedirect('http://192.168.9.113/workspace/slips');
 
         $workspaceResponse = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->withServerVariables(['HTTP_HOST' => '192.168.9.113'])
             ->get('http://192.168.9.113/workspace/slips');
 
         $workspaceResponse->assertOk();
     }
 
-    public function test_project_owner_can_delete_a_project_after_confirming_the_name(): void
+    public function test_folder_owner_can_delete_a_folder_after_confirming_the_name(): void
     {
         $user = User::factory()->create();
         $merchant = Merchant::create([
@@ -92,8 +92,8 @@ class InternalAccessTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->deleteJson('/stores/' . $merchant->id, [
-                'confirmation_name' => 'Delete Me',
+            ->deleteJson('/folders/' . $merchant->id, [
+                'confirmation' => 'Delete Me',
             ]);
 
         $response->assertOk();
@@ -102,14 +102,14 @@ class InternalAccessTest extends TestCase
         ]);
     }
 
-    public function test_non_owner_cannot_delete_a_project_even_with_the_correct_name(): void
+    public function test_non_owner_cannot_delete_a_folder_even_with_the_correct_name(): void
     {
         $owner = User::factory()->create();
         $member = User::factory()->create();
         $merchant = Merchant::create([
             'user_id' => $owner->id,
-            'name' => 'Protected Project',
-            'subdomain' => 'protected-project',
+            'name' => 'Protected Folder',
+            'subdomain' => 'protected-folder',
             'status' => 'active',
         ]);
 
@@ -120,8 +120,8 @@ class InternalAccessTest extends TestCase
 
         $response = $this
             ->actingAs($member)
-            ->deleteJson('/stores/' . $merchant->id, [
-                'confirmation_name' => 'Protected Project',
+            ->deleteJson('/folders/' . $merchant->id, [
+                'confirmation' => 'Protected Folder',
             ]);
 
         $response->assertForbidden();

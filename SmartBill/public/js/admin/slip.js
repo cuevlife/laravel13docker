@@ -188,13 +188,13 @@ window.slipRegistry = function () {
 
             if (this.selectedIds.length === 0) {
                 event.preventDefault();
-                Swal.fire('Select slips first', 'Choose at least one slip before applying a bulk action.', 'warning');
+                Toast.fire({ icon: 'warning', title: 'Select slips first', text: 'Choose at least one slip before applying a bulk action.' });
                 return;
             }
 
             if (this.requiresBulkLabel() && !this.bulkLabel.trim()) {
                 event.preventDefault();
-                Swal.fire('Label required', 'Enter a label for this bulk action.', 'warning');
+                Toast.fire({ icon: 'warning', title: 'Label required', text: 'Enter a label for this bulk action.' });
             }
         },
 
@@ -283,7 +283,7 @@ window.slipRegistry = function () {
 
         async submitForm() {
             if (this.files.length === 0) {
-                Swal.fire('Error', 'Please select at least one image file', 'error');
+                Toast.fire({ icon: 'error', title: 'Error', text: 'Please select at least one image file' });
                 return;
             }
 
@@ -319,7 +319,7 @@ window.slipRegistry = function () {
             }
 
             if (errorCount > 0) {
-                Swal.fire('Completed with Errors', `Processed: ${successCount}. Failed: ${errorCount}.`, 'warning').then(() => window.location.reload());
+                Toast.fire({ icon: 'warning', title: 'Completed with Errors', text: `Processed: ${successCount}. Failed: ${errorCount}.` }).then(() => window.location.reload());
                 return;
             }
 
@@ -328,32 +328,53 @@ window.slipRegistry = function () {
         },
 
         async deleteSlip(id) {
-            const confirm = await Swal.fire({
-                title: 'Delete this slip?',
-                text: 'This process cannot be undone.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ed4245',
-                cancelButtonColor: '#80848e',
-                confirmButtonText: 'Yes, delete it',
-                background: document.documentElement.classList.contains('dark') ? '#313338' : '#ffffff',
-                color: document.documentElement.classList.contains('dark') ? '#f2f3f5' : '#1e1f22',
-            });
-
-            if (!confirm.isConfirmed) return;
+            if(!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสลิปนี้?')) return;
+            
+            // 1. Optimistic UI: เก็บข้อมูลเดิมไว้ก่อน แล้วลบออกจากหน้าจอทันที
+            const originalSlips = [...this.slips];
+            this.slips = this.slips.filter(slip => slip.id !== id);
+            const originalTotal = (this.pagination && this.pagination.total) ? this.pagination.total : this.slips.length + 1;
+            if(this.pagination) {
+                this.pagination.total = Math.max(0, (this.pagination.total || 1) - 1);
+            }
 
             try {
+                // 2. ส่งคำสั่งไปลบที่หลังบ้านเงียบๆ
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-                const route = config.deleteRouteTemplate.replace('__SLIP__', id);
-                const response = await fetch(route, {
+                const route = `/workspace/slips/delete/${id}`;
+                const res = await fetch(route, {
                     method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': csrfToken, Accept: 'application/json' },
+                    headers: { 
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken 
+                    }
                 });
 
-                if (!response.ok) throw new Error('Delete failed.');
-                window.location.reload();
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Server error: ${res.status}`);
+                }
+
+                const data = await res.json();
+                
+                if(data.status !== 'success') {
+                    throw new Error(data.message || 'Delete failed');
+                }
+                
+                // ถ้ายอดรวมในหน้านี้น้อยเกินไป ให้ดึงข้อมูลใหม่เพื่อเอาสลิปหน้าถัดไปมาเติม
+                if(this.slips.length < 5 && this.pagination && this.pagination.total > 0) {
+                    this.fetchSlips();
+                }
+
             } catch (error) {
-                Swal.fire('Error', error.message || 'Delete failed.', 'error');
+                // 3. Rollback: ถ้าหลังบ้านมีปัญหา ให้ดึงข้อมูลสลิปกลับมาแสดงเหมือนเดิม
+                console.error('Delete error:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+                this.slips = originalSlips;
+                if(this.pagination) {
+                    this.pagination.total = originalTotal;
+                }
             }
         },
     };

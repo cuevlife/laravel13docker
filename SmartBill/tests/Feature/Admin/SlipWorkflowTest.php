@@ -20,7 +20,7 @@ class SlipWorkflowTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->postJson('/workspace/slips/batches', [
                 'name' => 'April Inbox',
                 'note' => 'First review queue',
@@ -81,7 +81,7 @@ class SlipWorkflowTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->get('/workspace/slips?batch_id=' . $approvedBatch->id . '&workflow_status=' . Slip::WORKFLOW_APPROVED);
 
         $response->assertOk();
@@ -119,7 +119,7 @@ class SlipWorkflowTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->get('/workspace/slips?label=priority');
 
         $response->assertOk();
@@ -153,7 +153,7 @@ class SlipWorkflowTest extends TestCase
 
         $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->post('/workspace/slips/bulk', [
                 'slip_ids' => [$slipOne->id, $slipTwo->id],
                 'bulk_action' => 'add_label',
@@ -169,7 +169,7 @@ class SlipWorkflowTest extends TestCase
 
         $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->post('/workspace/slips/bulk', [
                 'slip_ids' => [$slipOne->id, $slipTwo->id],
                 'bulk_action' => 'mark_approved',
@@ -201,7 +201,7 @@ class SlipWorkflowTest extends TestCase
 
         $archiveResponse = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->patch('/workspace/slips/' . $slip->id . '/archive', [
                 'archive' => 1,
             ]);
@@ -214,7 +214,7 @@ class SlipWorkflowTest extends TestCase
 
         $restoreResponse = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->patch('/workspace/slips/' . $slip->id . '/archive', [
                 'archive' => 0,
             ]);
@@ -252,7 +252,7 @@ class SlipWorkflowTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->get('/workspace/exports?batch_id=' . $batch->id);
 
         $response->assertOk();
@@ -276,7 +276,7 @@ class SlipWorkflowTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['active_project_id' => $merchant->id])
+            ->withSession(['active_folder_id' => $merchant->id])
             ->patchJson('/workspace/slips/batches/' . $batch->id, [
                 'name' => 'Updated Collection Name',
                 'note' => 'Updated note for export queue',

@@ -1,0 +1,135 @@
+{
+    "ID_1773985558_2345": {
+        "id": "ID_1773985558_2345",
+        "filename": "1773985555_1000010695.jpg",
+        "date": "2026-03-11",
+        "shop_name": "MDV Solution",
+        "customer_name": "คุณคฤ จักรพันธ์ 1",
+        "pet_info": "Becasw \/ 6900018",
+        "items": [
+            {
+                "name": "น้ำเกลือ",
+                "price": 300,
+                "category": "Medicine"
+            },
+            {
+                "name": "Antibiotic (ยาปฏิชีวนะ)",
+                "price": 15,
+                "category": "Medicine"
+            },
+            {
+                "name": "PetCare AquaPro",
+                "price": 80,
+                "category": "Other"
+            },
+            {
+                "name": "Diazepam (Vetosot)",
+                "price": 110,
+                "category": "Medicine"
+            },
+            {
+                "name": "ชุดขนมและอาหารเสริม",
+                "price": 999,
+                "category": "Food"
+            },
+            {
+                "name": "Bactacin 30 g หลอด",
+                "price": 180,
+                "category": "Medicine"
+            }
+        ],
+        "subtotal": 1684,
+        "deposit_deduction": 0,
+        "final_total": 1684,
+        "validation": {
+            "math_ok": true,
+            "diff": 0
+        }
+    },
+    "ID_1773985562_5386": {
+        "id": "ID_1773985562_5386",
+        "filename": "1773985558_1000010696.jpg",
+        "date": "2026-03-11",
+        "shop_name": "MDV Solution",
+        "customer_name": "คุณณ จักรพันธ์",
+        "pet_info": "Becasw \/ 6900018",
+        "items": [
+            {
+                "name": "น้ำเกลือ",
+                "price": 300,
+                "category": "Medicine"
+            },
+            {
+                "name": "Antibiotic (ยาปฏิชีวนะ)",
+                "price": 15,
+                "category": "Medicine"
+            },
+            {
+                "name": "PetCare AquaPro",
+                "price": 80,
+                "category": "Other"
+            },
+            {
+                "name": "Diazepam (Vetosot)",
+                "price": 110,
+                "category": "Medicine"
+            }
+        ],
+        "subtotal": 505,
+        "deposit_deduction": 0,
+        "final_total": 505,
+        "validation": {
+            "math_ok": true,
+            "diff": 0
+        }
+    },
+    "ID_1773985565_7102": {
+        "id": "ID_1773985565_7102",
+        "filename": "1773985562_1000010697.jpg",
+        "date": "2026-03-11",
+        "shop_name": "MDV Solution",
+        "customer_name": "คุณเรา",
+        "pet_info": "ซิกกี้ \/ 6900015",
+        "items": [
+            {
+                "name": "ยากิน",
+                "price": 300,
+                "category": "Medicine"
+            }
+        ],
+        "subtotal": 300,
+        "deposit_deduction": 0,
+        "final_total": 300,
+        "validation": {
+            "math_ok": true,
+            "diff": 0
+        }
+    },
+    "ID_1773985569_6812": {
+        "id": "ID_1773985569_6812",
+        "filename": "1773985565_IMG_20260304_093027.jpg",
+        "date": "2026-03-04",
+        "shop_name": "MDV Solution",
+        "customer_name": "คุณเอ นามสกุลบี",
+        "pet_info": "แต่ม \/ HN66-5555",
+        "items": [
+            {
+                "name": "ค่าบริการ",
+                "price": 37736.7,
+                "category": "Service"
+            },
+            {
+                "name": "เจลล้างมือ",
+                "price": 9811.9,
+                "category": "Other"
+            }
+        ],
+        "subtotal": 47548.6,
+        "deposit_deduction": 10000,
+        "final_total": 37548.6,
+        "validation": {
+            "math_ok": true,
+            "diff": 0
+        }
+    }
+}

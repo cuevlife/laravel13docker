@@ -12,7 +12,9 @@ const Toast = Swal.mixin({
 
 window.slipEditor = function(config) {
     const originalData = config.originalData || {};
-    const columns = (config.columns || []).map(c => ({ key: c.key, label: c.label }));
+    const columns = (config.columns || [])
+        .filter(c => c.key !== 'items')
+        .map(c => ({ key: c.key, label: c.label }));
     
     return {
         viewMode: 'ui', 
@@ -22,17 +24,30 @@ window.slipEditor = function(config) {
         columns,
         jsonContent: JSON.stringify(originalData, null, 4),
         fields: columns.reduce((a, c) => { a[c.key] = originalData[c.key] ?? ''; return a; }, {}),
-        items: Array.isArray(originalData.items) ? originalData.items.map((i, idx) => ({ uid: Date.now()+idx, name: i.name||'', price: i.price||'' })) : [],
+        items: Array.isArray(originalData.items) ? originalData.items.map((i, idx) => {
+            const parseName = (item) => item.name || item.item_name || item.item || item.description || item.desc || item.title || item.product || (typeof item === 'string' ? item : '');
+            const parsePrice = (item) => {
+                let p = item.price ?? item.amount ?? item.total ?? item.total_price ?? item.value ?? item.cost;
+                return p !== undefined && p !== null ? String(p).replace(/[^0-9.-]+/g,"") : '';
+            };
+            return { uid: Date.now()+idx, name: parseName(i), price: parsePrice(i) };
+        }) : [],
         showItems: true,
         
         get mathMismatch() {
             if (!this.showItems || this.items.length === 0) return false;
-            const sum = this.items.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
+            
+            const sum = this.items.reduce((acc, curr) => {
+                const cleanPrice = String(curr.price || '').replace(/[^0-9.-]+/g,"");
+                return acc + (parseFloat(cleanPrice) || 0);
+            }, 0);
             
             const totalKey = Object.keys(this.fields).find(k => k.toLowerCase().includes('total') || k.toLowerCase().includes('amount'));
             if (!totalKey) return false;
             
-            const declaredTotal = parseFloat(this.fields[totalKey]) || 0;
+            const cleanDeclaredTotal = String(this.fields[totalKey] || '').replace(/[^0-9.-]+/g,"");
+            const declaredTotal = parseFloat(cleanDeclaredTotal) || 0;
+
             if (declaredTotal > 0 && Math.abs(sum - declaredTotal) > 0.1) {
                 return `Warning: Items calculate to ฿${sum.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})} but declared total is ฿${declaredTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
             }
@@ -71,7 +86,12 @@ window.slipEditor = function(config) {
             this.originalData = data;
             this.columns.forEach(c => this.fields[c.key] = data[c.key] ?? '');
             if (Array.isArray(data.items)) {
-                this.items = data.items.map((i, idx) => ({ uid: Date.now()+idx, name: i.name||'', price: i.price||'' }));
+                const parseName = (item) => item.name || item.item_name || item.item || item.description || item.desc || item.title || item.product || (typeof item === 'string' ? item : '');
+                const parsePrice = (item) => {
+                    let p = item.price ?? item.amount ?? item.total ?? item.total_price ?? item.value ?? item.cost;
+                    return p !== undefined && p !== null ? String(p).replace(/[^0-9.-]+/g,"") : '';
+                };
+                this.items = data.items.map((i, idx) => ({ uid: Date.now()+idx, name: parseName(i), price: parsePrice(i) }));
             } else {
                 this.items = [];
             }

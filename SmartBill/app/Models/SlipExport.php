@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
     'user_id',
+    'merchant_id',
     'file_name',
     'file_format',
     'export_mode',
@@ -34,5 +35,10 @@ class SlipExport extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function merchant()
+    {
+        return $this->belongsTo(Merchant::class);
     }
 }
