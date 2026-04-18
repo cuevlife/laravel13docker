@@ -18,9 +18,6 @@
                 ['href' => \App\Support\WorkspaceUrl::current(request(), 'slips'), 'icon' => 'bi-qr-code-scan', 'label' => 'Inbox', 'active' => $slipIndexActive],
             ];
 
-            if ($isOwner) {
-                $navs[] = ['href' => \App\Support\WorkspaceUrl::current(request(), 'settings'), 'icon' => 'bi-gear-fill', 'label' => 'Settings', 'active' => request()->routeIs('workspace.settings')];
-            }
         } else {
             $navs = [
                 ['href' => route('dashboard'), 'icon' => 'bi-grid-fill', 'label' => 'Hub', 'active' => request()->routeIs('dashboard')],

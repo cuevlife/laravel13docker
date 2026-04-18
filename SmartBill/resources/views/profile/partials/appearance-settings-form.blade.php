@@ -1,13 +1,4 @@
 <section>
-    <header>
-        <h2 class="text-sm font-black text-[#1e1f22] dark:text-[#f2f3f5] uppercase tracking-widest">
-            {{ __('Appearance & Preferences') }}
-        </h2>
-        <p class="mt-1 text-xs text-[#5c5e66] dark:text-[#b5bac1]">
-            {{ __('Customize how SmartBill looks and behaves for your account. These settings are synced across your devices.') }}
-        </p>
-    </header>
-
     <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('patch')
@@ -31,7 +22,7 @@
                         </div>
                     </div>
                     <div class="text-center mt-2 text-xs font-black text-[#5c5e66] dark:text-[#80848e] peer-checked:text-[#1e1f22] dark:peer-checked:text-white transition-colors">
-                        Light Mode
+                        {{ __('Light Mode') }}
                     </div>
                 </label>
 
@@ -44,7 +35,7 @@
                         </div>
                     </div>
                     <div class="text-center mt-2 text-xs font-black text-[#5c5e66] dark:text-[#80848e] peer-checked:text-[#1e1f22] dark:peer-checked:text-white transition-colors">
-                        Dark Mode
+                        {{ __('Dark Mode') }}
                     </div>
                 </label>
                 
@@ -63,12 +54,12 @@
                         </div>
                     </div>
                     <div class="text-center mt-2 text-xs font-black text-[#5c5e66] dark:text-[#80848e] peer-checked:text-[#1e1f22] dark:peer-checked:text-white transition-colors">
-                        Sync with System
+                        {{ __('Sync with System') }}
                     </div>
                 </label>
             </div>
             <p x-data x-init="$watch('[...document.querySelectorAll(`input[name=\'settings[theme]\']`)].find(e => e.checked)?.value', val => { if(val==='dark'){darkMode=true;localStorage.setItem('theme','dark')} else if(val==='light'){darkMode=false;localStorage.setItem('theme','light')} else { localStorage.removeItem('theme'); darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches; } })" class="text-[10px] text-[#5c5e66] dark:text-[#80848e] italic mt-2">
-                * Note: Selecting a theme applies it instantly for preview, but you must click 'Save Settings' to permanently sync to your account.
+                {{ __("* Note: Selecting a theme applies it instantly for preview, but you must click 'Save Settings' to permanently sync to your account.") }}
             </p>
         </div>
 

@@ -1,13 +1,4 @@
 <section>
-    <header>
-        <h2 class="text-sm font-black text-[#1e1f22] dark:text-[#f2f3f5] uppercase tracking-widest">
-            {{ __('Profile Information') }}
-        </h2>
-        <p class="mt-1 text-xs text-[#5c5e66] dark:text-[#b5bac1]">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
-    </header>
-
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
         @csrf
     </form>
@@ -24,7 +15,7 @@
                     <i class="bi bi-person-lock text-sm"></i>
                     {{ $user->username }}
                 </div>
-                <p class="mt-1.5 text-[9px] font-bold text-[#80848e] uppercase tracking-widest ml-1">Username cannot be changed</p>
+                <p class="mt-1.5 text-[9px] font-bold text-[#80848e] uppercase tracking-widest ml-1">{{ __('Username cannot be changed') }}</p>
             </div>
 
             <div>
@@ -61,10 +52,10 @@
             <div class="pt-2 border-t border-black/[0.03] dark:border-white/[0.03]">
                 <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-[#80848e]">
                     <i class="bi bi-calendar3"></i>
-                    <span>Member Since: {{ $user->created_at?->format('d M Y') }}</span>
+                    <span>{{ __('Member Since') }}: {{ $user->created_at?->format('d M Y') }}</span>
                     <span class="mx-2 opacity-30">|</span>
                     <i class="bi bi-shield-check"></i>
-                    <span>Status: {{ $user->isActive() ? 'Verified' : 'Unverified' }}</span>
+                    <span>{{ __('Status') }}: {{ $user->isActive() ? __('Verified') : __('Unverified') }}</span>
                 </div>
             </div>
         </div>

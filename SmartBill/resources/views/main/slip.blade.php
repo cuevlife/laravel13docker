@@ -6,28 +6,28 @@
             <!-- Header Section -->
             <div class="mb-8 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-discord-green/10 text-discord-green">
-                        <i class="bi bi-inbox-fill h-6 w-6"></i>
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-discord-green/10 text-discord-green">
+                        <i class="bi bi-inbox-fill text-2xl leading-none"></i>
                     </div>
-                    <h1 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">Workspace Inbox</h1>
+                    <h1 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">{{ __('Workspace Inbox') }}</h1>
                 </div>
                 
                 <button @click="triggerScan()" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">
-                    <i class="bi bi-qr-code-scan h-4 w-4"></i>
-                    <span>Scan Receipt</span>
+                    <i class="bi bi-qr-code-scan text-sm leading-none"></i>
+                    <span>{{ __('Scan Receipt') }}</span>
                 </button>
             </div>
 
             <!-- Filters Section -->
             <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-12">
                 <div class="relative sm:col-span-6">
-                    <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e] z-10"></i>
-                    <input type="text" x-model="filters.q" @input.debounce.500ms="fetchSlips()" placeholder="ค้นหาด่วน (ชื่อร้าน, UID, ยอดเงิน)..." class="h-10 w-full rounded-xl border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white transition-all">
+                    <i class="bi bi-search absolute left-5 top-1/2 z-10 -translate-y-1/2 text-sm leading-none text-[#80848e]"></i>
+                    <input type="text" x-model="filters.q" @input.debounce.500ms="fetchSlips()" placeholder="{{ __('Search Slips...') }}" class="h-10 w-full rounded-xl border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white transition-all">
                 </div>
                 
                 <div class="sm:col-span-2">
                     <select x-model="filters.workflow_status" @change="fetchSlips()" class="h-10 w-full rounded-xl border border-black/5 bg-white px-3 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
-                        <option value="">ทุกสถานะ</option>
+                        <option value="">{{ __('All Statuses') }}</option>
                         @foreach($workflowOptions ?? [] as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -36,84 +36,85 @@
 
                 <div class="sm:col-span-2">
                     <div class="relative">
-                        <i class="bi bi-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#80848e] z-10"></i>
-                        <input type="text" id="date-range-picker" placeholder="เลือกวันที่..." class="h-10 w-full rounded-xl border border-black/5 bg-white pl-10 pr-3 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
+                        <i class="bi bi-calendar absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm leading-none text-[#80848e]"></i>
+                        <input type="text" id="date-range-picker" placeholder="{{ __('Select Date...') }}" class="h-10 w-full rounded-xl border border-black/5 bg-white pl-10 pr-3 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
                     </div>
                 </div>
 
                 <div class="sm:col-span-2">
                     <button @click="resetFilters()" class="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-100 bg-rose-50 text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
-                        <i class="bi bi-arrow-counterclockwise text-xs"></i> ล้างค่า
+                        <i class="bi bi-arrow-counterclockwise text-xs"></i> {{ __('Reset') }}
                     </button>
                 </div>
             </div>
 
-            <!-- Bulk Actions Row -->
-            <div class="mb-4 flex flex-wrap items-center justify-between gap-4 border-t border-black/[0.04] pt-4 dark:border-white/[0.04]">
-                <div class="flex items-center gap-3">
-                    <div class="inline-flex h-9 items-center rounded-xl bg-discord-green/10 px-4 text-[10px] font-black text-discord-green">
-                        <span x-text="selectedSlips.length">0</span> รายการที่เลือก
-                    </div>
-                    
-                    <div class="flex items-center gap-1">
-                        <button @click="bulkAction('mark_approved')" :disabled="selectedSlips.length === 0" class="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 shadow-sm disabled:opacity-50" title="Approve Selected">
-                            <i class="bi bi-check-all h-5 w-5"></i>
-                        </button>
-                        <button @click="bulkAction('delete')" :disabled="selectedSlips.length === 0" class="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-500 transition hover:bg-rose-100 shadow-sm disabled:opacity-50" title="Delete Selected">
-                            <i class="bi bi-trash-fill h-4 w-4"></i>
-                        </button>
-                    </div>
-                </div>
+            <!-- Export Actions Row -->
+            <div class="mb-4 flex flex-wrap items-center justify-end gap-2 border-t border-black/[0.04] pt-4 dark:border-white/[0.04]">
+                <button @click="fetchExportHistory()"
+                   class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white dark:bg-[#1e1f22] text-[#80848e] hover:text-indigo-600 px-4 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-black/5 dark:border-white/5">
+                    <i class="bi bi-clock-history"></i>
+                    <span>{{ __('History') }}</span>
+                </button>
 
-                <div class="flex gap-2">
-                    <button @click="fetchExportHistory()"
-                       class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white dark:bg-[#1e1f22] text-[#80848e] hover:text-indigo-600 px-4 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-black/5 dark:border-white/5">
-                        <i class="bi bi-clock-history"></i>
-                        <span>History</span>
-                    </button>
+                <button @click="openExportDesigner()"
+                   class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white dark:bg-[#1e1f22] text-[#80848e] hover:text-discord-green px-4 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-black/5 dark:border-white/5">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>{{ __('Designer') }}</span>
+                </button>
 
-                    <button @click="openExportDesigner()"
-                       class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white dark:bg-[#1e1f22] text-[#80848e] hover:text-discord-green px-4 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-black/5 dark:border-white/5">
-                        <i class="bi bi-gear-fill"></i>
-                        <span>Designer</span>
-                    </button>
-
-                    <button @click="if(selectedSlips.length > 0) window.location.href = '{{ route('workspace.slip.export') }}?' + new URLSearchParams({...filters, ids: selectedSlips.join(',')}).toString()"
-                       :disabled="selectedSlips.length === 0"
-                       class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-discord-green/10 text-discord-green hover:bg-discord-green/20 px-6 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-discord-green/20 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="bi bi-file-earmark-spreadsheet-fill text-sm"></i>
-                        <span>Export Excel</span>
-                    </button>
-                </div>
+                <button @click="window.location.href = '{{ route('workspace.slip.export') }}?' + new URLSearchParams(filters).toString()"
+                   class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-discord-green/10 text-discord-green hover:bg-discord-green/20 px-6 text-[10px] font-black uppercase tracking-widest transition shadow-sm border border-discord-green/20">
+                    <i class="bi bi-file-earmark-spreadsheet-fill text-sm"></i>
+                    <span>{{ __('Export Excel') }}</span>
+                </button>
             </div>
 
             <!-- Table Section -->
             <div class="overflow-hidden relative min-h-[400px]">
                 <div x-show="is_loading" class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center dark:bg-black/20" x-cloak>
-                    <i class="bi bi-arrow-repeat h-8 w-8 animate-spin text-discord-green"></i>
+                    <i class="bi bi-arrow-repeat animate-spin text-3xl leading-none text-discord-green"></i>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-[11px] font-bold text-[#1e1f22] dark:text-[#b5bac1]">
                         <thead class="border-y border-black/[0.04] text-[10px] font-black uppercase tracking-widest text-[#80848e] dark:border-white/[0.04]">
                             <tr>
-                                <th class="px-4 py-4 w-[40px]">
-                                    <input type="checkbox" @click="toggleSelectAll()" :checked="selectedSlips.length === slips.length && slips.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
+                                <th class="px-4 py-4 min-w-[200px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('shop')">
+                                    <div class="flex items-center justify-between">
+                                        <span>{{ __('Slip Details') }}</span>
+                                        <i class="bi text-[11px]" :class="sortIcon('shop')"></i>
+                                    </div>
                                 </th>
-                                <th class="px-4 py-4 min-w-[200px]">รายละเอียดสลิป</th>
-                                <th class="px-4 py-4 text-center w-[120px]">วันที่ในสลิป <i class="bi bi-chevron-down text-discord-green"></i></th>
-                                <th class="px-4 py-4 text-center w-[140px]">ประมวลผลเมื่อ</th>
-                                <th class="px-4 py-4 text-center w-[140px]">สถานะ</th>
-                                <th class="px-4 py-4 text-right w-[120px]">ยอดเงินรวม</th>
-                                <th class="px-4 py-4 text-right w-[100px]">จัดการ</th>
+                                <th class="px-4 py-4 text-center w-[120px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('date')">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <span>{{ __('Date in Slip') }}</span>
+                                        <i class="bi text-[11px]" :class="sortIcon('date')"></i>
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-center w-[140px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('processed_at')">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <span>{{ __('Processed At') }}</span>
+                                        <i class="bi text-[11px]" :class="sortIcon('processed_at')"></i>
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-center w-[140px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('status')">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <span>{{ __('Status') }}</span>
+                                        <i class="bi text-[11px]" :class="sortIcon('status')"></i>
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-right w-[120px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('amount')">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <span>{{ __('Total Amount') }}</span>
+                                        <i class="bi text-[11px]" :class="sortIcon('amount')"></i>
+                                    </div>
+                                </th>
+                                <th class="px-4 py-4 text-right w-[100px]">{{ __('Operations') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
                             <template x-for="slip in slips" :key="slip.id">
                                 <tr class="group transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02]">
-                                    <td class="px-4 py-5 align-top">
-                                        <input type="checkbox" x-model="selectedSlips" :value="slip.id" class="slip-checkbox h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
-                                    </td>
                                     <td class="px-4 py-5 align-top">
                                         <div class="flex items-start gap-4">
                                             <div class="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-xl border border-black/5 shadow-sm dark:border-white/5 bg-white dark:bg-[#1e1f22]">
@@ -145,14 +146,11 @@
                                     </td>
                                     <td class="px-4 py-5 align-top text-right pt-5">
                                         <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                            <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                                <i class="bi bi-eye-fill h-4 w-4"></i>
+                                            <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white" title="View">
+                                            <i class="bi bi-eye-fill text-sm leading-none"></i>
                                             </a>
-                                            <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white">
-                                                <i class="bi bi-pencil-square h-4 w-4"></i>
-                                            </a>
-                                            <button @click="deleteSlip(slip.id)" class="flex h-8 w-8 items-center justify-center rounded-xl text-discord-red transition hover:bg-rose-50 dark:hover:bg-rose-500/10">
-                                                <i class="bi bi-trash-fill h-4 w-4"></i>
+                                            <button @click="deleteSlip(slip.id)" class="flex h-8 w-8 items-center justify-center rounded-xl text-discord-red transition hover:bg-rose-50 dark:hover:bg-rose-500/10" title="Delete">
+                                                <i class="bi bi-trash-fill text-sm leading-none"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -160,9 +158,9 @@
                             </template>
                             <template x-if="slips.length === 0 && !is_loading">
                                 <tr>
-                                    <td colspan="7" class="py-24 text-center">
+                                    <td colspan="6" class="py-24 text-center">
                                         <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5">
-                                            <i class="bi bi-receipt h-8 w-8 text-[#80848e]"></i>
+                                            <i class="bi bi-receipt text-3xl leading-none text-[#80848e]"></i>
                                         </div>
                                         <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">ไม่พบสลิปในโฟลเดอร์นี้</h3>
                                         <p class="mt-1 text-xs font-bold text-[#80848e]">ลองค้นหาด้วยคำอื่น หรือกด Scan Receipt เพื่อเพิ่มสลิปใหม่</p>
@@ -177,7 +175,7 @@
             <!-- Pagination -->
             <div class="mt-6 flex items-center justify-between border-t border-black/[0.04] pt-6 dark:border-white/[0.04]" x-show="pagination && pagination.total > 0">
                 <div class="text-[11px] font-bold text-[#80848e]">
-                    Showing <span class="font-black text-[#1e1f22] dark:text-white" x-text="slips.length"></span> of <span class="font-black text-[#1e1f22] dark:text-white" x-text="pagination.total"></span> slips
+                    {{ __('Showing') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="slips.length"></span> {{ __('of') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="pagination.total"></span> {{ __('Slips') }}
                 </div>
                 <div class="flex items-center gap-2">
                     <template x-for="link in pagination.links">
@@ -207,27 +205,33 @@
                 <div class="p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-4">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-discord-green/10 text-discord-green">
-                                <i class="bi bi-qr-code-scan h-6 w-6"></i>
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-discord-green/10 text-discord-green">
+                                <i class="bi bi-qr-code-scan text-2xl leading-none"></i>
                             </div>
                             <div>
-                                <h2 class="text-xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Auto-Scan Receipt</h2>
-                                <p class="text-xs font-bold text-[#80848e]">เลือกไฟล์รูปสลิปเพื่อแสกนและบันทึกอัตโนมัติ</p>
+                                <h2 class="text-xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">{{ __('Auto-Scan Receipt') }}</h2>
+                                <p class="text-xs font-bold text-[#80848e]">{{ __('Select image files to scan and save automatically') }}</p>
                             </div>
                         </div>
                         <button @click="scanModalOpen = false" :disabled="isScanning" class="text-[#80848e] hover:text-rose-500 transition disabled:opacity-50">
-                            <i class="bi bi-x-lg h-6 w-6"></i>
+                            <i class="bi bi-x-lg text-xl leading-none"></i>
                         </button>
                     </div>
 
                     <!-- Dropzone -->
-                    <label class="group relative flex flex-col items-center justify-center py-12 border-2 border-dashed border-[#e3e5e8] dark:border-[#313338] rounded-xl bg-[#f8fafb] dark:bg-[#1e1f22] cursor-pointer hover:border-discord-green/50 transition-colors mb-6">
+                    <label class="group relative flex border-2 border-dashed border-[#e3e5e8] dark:border-[#313338] rounded-xl bg-[#f8fafb] dark:bg-[#1e1f22] cursor-pointer hover:border-discord-green/50 transition-all mb-6"
+                           :class="scanFiles.length > 0 ? 'flex-row items-center gap-4 py-3 px-6' : 'flex-col items-center justify-center py-12'">
                         <input type="file" multiple accept="image/*" class="hidden" @change="handleFileSelect">
-                        <div class="flex h-16 w-16 items-center justify-center rounded-xl bg-white dark:bg-[#2b2d31] shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                            <i class="bi bi-image h-8 w-8 text-discord-green"></i>
+                        
+                        <div class="flex items-center justify-center rounded-xl bg-white dark:bg-[#2b2d31] shadow-sm transition-transform group-hover:scale-110"
+                             :class="scanFiles.length > 0 ? 'h-9 w-9 shrink-0' : 'h-16 w-16 mb-4'">
+                            <i class="bi bi-image text-discord-green" :class="scanFiles.length > 0 ? 'text-base' : 'text-2xl'"></i>
                         </div>
-                        <p class="text-sm font-black text-[#1e1f22] dark:text-white">คลิกเพื่อเลือก หรือลากไฟล์มาวางที่นี่</p>
-                        <p class="text-[10px] font-bold text-[#80848e] mt-1">รองรับ JPG, PNG (สูงสุด 10MB ต่อไฟล์)</p>
+                        
+                        <div :class="scanFiles.length > 0 ? 'text-left' : 'text-center'">
+                            <p class="font-black text-[#1e1f22] dark:text-white" :class="scanFiles.length > 0 ? 'text-[11px]' : 'text-sm'" x-text="scanFiles.length > 0 ? 'คลิกเพื่อเลือก หรือลากไฟล์มาวางเพิ่มเติม' : 'คลิกเพื่อเลือก หรือลากไฟล์มาวางที่นี่'"></p>
+                            <p x-show="scanFiles.length === 0" class="font-bold text-[#80848e] mt-0.5 text-[10px]">รองรับ JPG, PNG (สูงสุด 10MB ต่อไฟล์)</p>
+                        </div>
                     </label>
 
                     <!-- File Queue -->
@@ -239,10 +243,12 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between mb-1">
-                                        <span class="text-[11px] font-black text-[#1e1f22] dark:text-white truncate" x-text="f.name"></span>
-                                        <span class="text-[10px] font-bold text-[#80848e]" x-text="f.size"></span>
-                                    </div>
-                                    <div class="w-full h-1.5 bg-black/5 dark:bg-white/5 rounded-xl overflow-hidden">
+                                       <div class="flex items-center gap-2 overflow-hidden">
+                                           <span class="text-[11px] font-black text-[#1e1f22] dark:text-white truncate" x-text="f.name"></span>
+                                           <span x-show="f.duration" class="text-[9px] font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded-md" x-text="f.duration + 's'"></span>
+                                       </div>
+                                       <span class="text-[10px] font-bold text-[#80848e]" x-text="f.size"></span>
+                                    </div>                                    <div class="w-full h-1.5 bg-black/5 dark:bg-white/5 rounded-xl overflow-hidden">
                                         <div class="h-full bg-discord-green transition-all duration-500" 
                                              :style="'width: ' + (f.status === 'completed' || f.status === 'duplicate' ? '100%' : (f.status === 'uploading' ? '50%' : '0%'))"></div>
                                     </div>
@@ -304,7 +310,7 @@
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-3">
                             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-discord-green/10 text-discord-green shadow-sm">
-                                <i class="bi bi-gear-fill text-lg"></i>
+                            <i class="bi bi-gear-fill text-lg leading-none"></i>
                             </div>
                             <div>
                                 <h2 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Export Designer</h2>
@@ -455,6 +461,11 @@
     </div>
 
     @push('scripts')
+    <style>
+        .flatpickr-calendar.flatpickr-buddhist-year .flatpickr-current-month .numInput.cur-year {
+            min-width: 72px;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         document.addEventListener('alpine:init', () => {
@@ -467,7 +478,7 @@
                     workflow_status: {!! json_encode($activeFilters['workflow_status'] ?? '') !!},
                     date_from: '',
                     date_to: '',
-                    sort: {!! json_encode($activeFilters['sort'] ?? 'latest') !!},
+                    sort: {!! json_encode($activeFilters['sort'] ?? 'processed_at_desc') !!},
                     batch_id: {!! json_encode($activeFilters['batch_id'] ?? '') !!}
                 },
                 selectedSlips: [],
@@ -483,8 +494,40 @@
 
                 async init() {
                     this.setupDatePicker();
+                    // Normalize legacy sort values
+                    if (this.filters.sort === 'latest') this.filters.sort = 'processed_at_desc';
+                    if (this.filters.sort === 'oldest') this.filters.sort = 'processed_at_asc';
+                    
                     await this.fetchSlips();
                     this.initSortable();
+                },
+
+                toggleSort(column) {
+                    let currentSort = this.filters.sort;
+                    // Normalize for comparison
+                    if (currentSort === 'latest') currentSort = 'processed_at_desc';
+                    if (currentSort === 'oldest') currentSort = 'processed_at_asc';
+
+                    if (currentSort.startsWith(column)) {
+                        this.filters.sort = currentSort.endsWith('_asc') ? column + '_desc' : column + '_asc';
+                    } else {
+                        // Default directions
+                        if (['processed_at', 'date', 'amount'].includes(column)) {
+                            this.filters.sort = column + '_desc';
+                        } else {
+                            this.filters.sort = column + '_asc';
+                        }
+                    }
+                    this.fetchSlips();
+                },
+
+                sortIcon(column) {
+                    let currentSort = this.filters.sort;
+                    if (currentSort === 'latest') currentSort = 'processed_at_desc';
+                    if (currentSort === 'oldest') currentSort = 'processed_at_asc';
+
+                    if (!currentSort.startsWith(column)) return 'bi-arrow-down-up opacity-20 text-[#80848e]';
+                    return currentSort.endsWith('_asc') ? 'bi-arrow-up text-discord-green' : 'bi-arrow-down text-discord-green';
                 },
 
                 initSortable() {
@@ -569,10 +612,50 @@
 
                 setupDatePicker() {
                     if (typeof flatpickr !== 'undefined') {
+                        const currentLocale = @json(app()->getLocale());
+                        const isThaiLocale = currentLocale === 'th';
+
                         flatpickr('#date-range-picker', {
                             mode: 'range',
                             dateFormat: 'd/m/Y',
-                            locale: 'th',
+                            locale: isThaiLocale ? 'th' : 'default',
+                            formatDate: (date, format, locale) => {
+                                if (format === 'd/m/Y' && isThaiLocale) {
+                                    const day = String(date.getDate()).padStart(2, '0');
+                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                    const year = date.getFullYear() + 543;
+                                    return `${day}/${month}/${year}`;
+                                }
+
+                                return flatpickr.formatDate(date, format, locale);
+                            },
+                            onReady: (selectedDates, dateStr, instance) => {
+                                if (isThaiLocale) {
+                                    instance.calendarContainer.classList.add('flatpickr-buddhist-year');
+                                } else {
+                                    instance.calendarContainer.classList.remove('flatpickr-buddhist-year');
+                                }
+                            },
+                            onOpen: (selectedDates, dateStr, instance) => {
+                                if (isThaiLocale) {
+                                    instance.currentYearElement.value = instance.currentYear + 543;
+                                }
+                            },
+                            onMonthChange: (selectedDates, dateStr, instance) => {
+                                if (isThaiLocale) {
+                                    instance.currentYearElement.value = instance.currentYear + 543;
+                                }
+                            },
+                            onYearChange: (selectedDates, dateStr, instance) => {
+                                if (isThaiLocale) {
+                                    instance.currentYearElement.value = instance.currentYear + 543;
+                                }
+                            },
+                            onValueUpdate: (selectedDates, dateStr, instance) => {
+                                if (isThaiLocale && instance.currentYearElement) {
+                                    instance.currentYearElement.value = instance.currentYear + 543;
+                                }
+                            },
                             onClose: (selectedDates, dateStr) => {
                                 if (selectedDates.length === 2) {
                                     const format = (d) => {
@@ -632,7 +715,7 @@
                 },
 
                 resetFilters() {
-                    this.filters = { q: '', workflow_status: '', date_from: '', date_to: '', sort: 'latest' };
+                    this.filters = { q: '', workflow_status: '', date_from: '', date_to: '', sort: 'processed_at_desc', batch_id: '' };
                     const picker = document.querySelector('#date-range-picker');
                     if (picker && picker._flatpickr) picker._flatpickr.clear();
                     this.fetchSlips();
@@ -778,6 +861,7 @@
 
                     this.isScanning = true;
                     pendingFile.status = 'uploading';
+                    const startTime = performance.now();
                     const formData = new FormData();
                     formData.append('image', pendingFile.file);
 
@@ -788,6 +872,9 @@
                             body: formData
                         });
                         
+                        const endTime = performance.now();
+                        pendingFile.duration = ((endTime - startTime) / 1000).toFixed(1);
+
                         if (res.status === 429) {
                             const errorData = await res.json();
                             pendingFile.status = 'error';

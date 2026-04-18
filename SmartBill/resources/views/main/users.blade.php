@@ -10,14 +10,14 @@
                         <i class="bi bi-people-fill"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">User Management</h1>
-                        <p class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest mt-1">Control Plane / System Registry</p>
+                        <h1 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">{{ __('User Management') }}</h1>
+                        <p class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest mt-1">{{ __('Control Plane / System Registry') }}</p>
                     </div>
                 </div>
                 
                 <a href="{{ \App\Support\OwnerUrl::path(request(), 'users/create') }}" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c]">
                     <i class="bi bi-person-plus-fill text-base"></i>
-                    <span>Add Account</span>
+                    <span>{{ __('Add Account') }}</span>
                 </a>
             </div>
 
@@ -57,7 +57,7 @@
             <div class="mb-4 flex flex-wrap items-center justify-between gap-4 border-t border-black/[0.04] pt-4 dark:border-white/[0.04]">
                 <div class="flex items-center gap-3">
                     <div class="inline-flex h-9 items-center rounded-xl bg-[#f2f7ff] px-4 text-[10px] font-black text-[#4f86f7]">
-                        <span x-text="selectedUsers.length">0</span> รายการที่เลือก
+                        <span x-text="selectedUsers.length">0</span> {{ __('selected') }}
                     </div>
                     
                     <div class="flex items-center gap-1">
@@ -81,12 +81,12 @@
                                 <th class="px-4 py-4" style="width: 40px;">
                                     <input type="checkbox" @click="toggleSelectAll()" :checked="selectedUsers.length === filteredUsers.length && filteredUsers.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm">
                                 </th>
-                                <th class="px-4 py-4">Identity</th>
-                                <th class="px-4 py-4 text-center" style="width: 150px;">Access Layer</th>
-                                <th class="px-4 py-4 text-center" style="width: 120px;">Tokens</th>
-                                <th class="px-4 py-4 text-center" style="width: 100px;">Workspaces</th>
-                                <th class="px-4 py-4 text-center" style="width: 100px;">Slips</th>
-                                <th class="px-4 py-4 text-right" style="width: 100px;">Operations</th>
+                                <th class="px-4 py-4">{{ __('Identity') }}</th>
+                                <th class="px-4 py-4 text-center" style="width: 150px;">{{ __('Access Layer') }}</th>
+                                <th class="px-4 py-4 text-center" style="width: 120px;">{{ __('Tokens') }}</th>
+                                <th class="px-4 py-4 text-center" style="width: 100px;">{{ __('Workspaces') }}</th>
+                                <th class="px-4 py-4 text-center" style="width: 100px;">{{ __('Slips') }}</th>
+                                <th class="px-4 py-4 text-right" style="width: 100px;">{{ __('Operations') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
@@ -143,7 +143,7 @@
                                             <form method="POST" :action="'{{ \App\Support\OwnerUrl::base(request()) }}/users/' + user.id + '/status'" class="m-0">
                                                 @csrf @method('PATCH')
                                                 <input type="hidden" name="status" :value="user.status === 'active' ? 'suspended' : 'active'">
-                                                <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 dark:hover:bg-white/5" :class="user.status === 'active' ? 'hover:text-amber-500' : 'hover:text-emerald-500'" :title="user.status === 'active' ? 'Suspend User' : 'Reactivate User'">
+                                                <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 dark:hover:bg-white/5" :class="user.status === 'active' ? 'hover:text-amber-500' : 'hover:text-emerald-500'" :title="user.status === 'active' ? '{{ __('Suspend User') }}' : '{{ __('Reactivate User') }}'">
                                                     <i :class="user.status === 'active' ? 'bi bi-person-x-fill' : 'bi bi-person-check-fill'" class="text-sm"></i>
                                                 </button>
                                             </form>
@@ -157,8 +157,8 @@
                                         <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5 text-3xl text-[#80848e]">
                                             <i class="bi bi-people"></i>
                                         </div>
-                                        <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">ไม่พบผู้ใช้งาน</h3>
-                                        <p class="mt-1 text-xs font-bold text-[#80848e]">ลองค้นหาด้วยคำอื่น หรือกด Add Account เพื่อเพิ่มใหม่</p>
+                                        <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">{{ __('No users found') }}</h3>
+                                        <p class="mt-1 text-xs font-bold text-[#80848e]">{{ __('Search using other terms or click Add Account to add new') }}</p>
                                     </td>
                                 </tr>
                             </template>
@@ -170,7 +170,7 @@
             <!-- Footer Stats -->
             <div class="mt-6 flex items-center justify-between border-t border-black/[0.04] pt-6 dark:border-white/[0.04]">
                 <div class="text-[11px] font-bold text-[#80848e]">
-                    Showing <span class="font-black text-[#1e1f22] dark:text-white" x-text="filteredUsers.length"></span> of <span class="font-black text-[#1e1f22] dark:text-white" x-text="allUsers.length"></span> users
+                    {{ __('Showing') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="filteredUsers.length"></span> {{ __('of') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="allUsers.length"></span> {{ __('users') }}
                 </div>
             </div>
         </div>

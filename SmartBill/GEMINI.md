@@ -1,44 +1,51 @@
-# smartbill - Project State & Directives
+# smartbill - Project State & Design Mandates (Final Sync: April 2026)
 
-## 🎯 Current Focus: Secure Organizational Scanning
-The system has been transformed into a professional internal tool following the **Express Accounting** philosophy.
-
-### Key Logic:
-1. **Scoped Access:** Users must be explicitly linked to a **Folder** to see or interact with its data.
-2. **Accountability:** All actions (scanning, tokens, exports) are linked to individual accounts, providing clear tracking of who performed which action and from where.
-3. **Master Card UI:** All Admin/Edit pages use the **Master Container Card** pattern for a unified, clean, and minimal feel.
+## 🎯 Current Focus: High-Performance Internal Scanning Tool
+The system is now a production-ready internal tool following the **Express Accounting** philosophy (scoped access) with a **Premium Minimal** aesthetic.
 
 ---
 
-## 📐 Design Guidelines (Mandatory)
-- **Full-Size:** Use `w-full px-4 py-8 sm:px-6 lg:px-8` for all main containers.
-- **Master Card:** Wrap content in a single white card with `rounded-xl` and `shadow-sm`.
-- **Aesthetic:** Clean & Minimal. Use `#f8fafb` for subtle backgrounds and thin borders (`border-black/[0.03]`).
-- **Corner Radius:** Strictly **`rounded-xl`** maximum.
+## 🎨 Design Philosophy & UI Standards (MEMORIZED)
+1. **Aesthetic: "Premium Minimal"**
+   - High information density (Density over Distance).
+   - No unnecessary gray backgrounds or thick dividers.
+   - Use ultra-thin borders (`border-black/[0.03]`) and whitespaces for separation.
+2. **Layout: "Full-Size Control Plane"**
+   - No `max-width` constraints on main admin pages (Always `w-full`).
+   - Content must be wrapped in a **Master Container Card** (`bg-white`, `rounded-xl`, `shadow-sm`).
+   - Horizontal balance: Use 2 or 3 Column Grids for forms to prevent stretched inputs.
+3. **Corner Radius:** Strictly **`rounded-xl`** maximum across the entire system.
 
 ---
 
-## 🔧 Component Status
+## 🔧 Core Component Status
 
-### Folder Management
-- **Hub:** Profile-chooser style. Shows slips volume.
-- **Access Control:** Managed via `IdentifyTenant` middleware. Any authenticated member can access their linked folder.
+### Folder & User Management (Express Style)
+- **Scoped Access:** Users see only folders they are members/owners of.
+- **Form Layouts:** Linear, Row-based structure with clear section headers and status dots.
+- **Simplified Terminology:** Replaced "Provision/Initialize/Identity" with "Create/Register/User Details".
 
-### AI Extraction (Gemini)
-- **API Key Pool:** Rotates between multiple keys in `Admin Settings`.
-- **Usage Tracking:** Tracks call counts per key in real-time.
-- **Reactive Limits:** SweetAlert2 popup triggers on actual API 429 errors.
+### AI & API Control (Gemini)
+- **API Key Pool:** Rotation system supporting multiple keys in Admin Settings.
+- **Usage Tracking:** Real-time "Calls Counter" next to each key in the pool (Stored in Cache).
+- **Reactive Errors:** No proactive rate-limits. Triggers **SweetAlert2** only upon actual 429 API errors.
 
-### Tokens & Billing
-- **Integrated Settings:** Token balance, usage history, and LINE topup CTA are all consolidated in the **Profile Settings** page.
-- **History Grouping:** Usage logs are grouped by **Hour** to keep the list concise.
+### Tokens & Billing (Integrated)
+- **Consolidated Profile:** Balance, LINE Topup CTA, and Usage History are all nested within the User Profile settings.
+- **Smart History:** Usage logs are **Grouped by Hour** to maintain a concise list.
 
 ---
 
-## 📝 Terminology Mapping
-- **Folder:** The logical unit for a company/workspace (formerly Project/Merchant).
-- **Profile:** AI Extraction Schema (formerly Template).
-- **Inbox:** The main slip management area.
+## 📝 Terminology Mapping (Global)
+- **Folder:** Mandatory term for logical workspaces (Merchants/Projects).
+- **Profile:** AI Extraction Schema (Templates).
+- **Inbox:** The main slip management registry.
 
-*Record of truth for smartbill architecture.*
-*Last Sync: 2026-04-17*
+---
+
+## 🚀 Git Status
+- **Remote:** `https://github.com/cuevlife/smartbill-docker.git`
+- **Visibility:** Private.
+- **Last Sync:** Committed and Pushed latest UI refinements.
+
+*End of Session Report. Project is stable and strictly follows the Clean & Minimal vision.*

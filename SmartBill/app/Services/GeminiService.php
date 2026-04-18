@@ -23,9 +23,18 @@ class GeminiService
      */
     protected function resolveApiKey(): void
     {
-        $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
-        $settings = $superAdmin?->settings ?: [];
-        $keys = $settings['gemini_api_keys'] ?? [];
+        // Try current auth user first if they are admin
+        $user = auth()->user();
+        if (!$user || (int)$user->role < User::ROLE_TENANT_ADMIN) {
+            // Fallback to the latest Super Admin who has keys configured
+            $user = User::where('role', User::ROLE_SUPER_ADMIN)
+                ->whereNotNull('settings')
+                ->latest('updated_at')
+                ->first();
+        }
+
+        $settings = $user?->settings ?: [];
+        $keys = array_values($settings['gemini_api_keys'] ?? []);
 
         if (empty($keys)) {
             $this->apiKey = config('services.gemini.key');
@@ -61,6 +70,13 @@ class GeminiService
 
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                ->timeout(60)
+                ->retry(3, function ($attempt, $exception) {
+                    // Incremental wait: 3s, 10s, 20s
+                    return [3000, 10000, 20000][$attempt - 1] ?? 0;
+                }, function ($exception, $request) {
+                    return $exception instanceof \Illuminate\Http\Client\ResponseException && $exception->response->status() === 429;
+                }, throw: false)
                 ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
                     "contents" => [
                         [
@@ -114,6 +130,13 @@ class GeminiService
 
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                ->timeout(60)
+                ->retry(3, function ($attempt, $exception) {
+                    // Incremental wait: 3s, 10s, 20s
+                    return [3000, 10000, 20000][$attempt - 1] ?? 0;
+                }, function ($exception, $request) {
+                    return $exception instanceof \Illuminate\Http\Client\ResponseException && $exception->response->status() === 429;
+                }, throw: false)
                 ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
                     "contents" => [
                         [
@@ -161,6 +184,13 @@ class GeminiService
 
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                ->timeout(60)
+                ->retry(3, function ($attempt, $exception) {
+                    // Incremental wait: 3s, 10s, 20s
+                    return [3000, 10000, 20000][$attempt - 1] ?? 0;
+                }, function ($exception, $request) {
+                    return $exception instanceof \Illuminate\Http\Client\ResponseException && $exception->response->status() === 429;
+                }, throw: false)
                 ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
                     "contents" => [
                         [
@@ -182,7 +212,9 @@ class GeminiService
 
             if ($response->failed()) {
                 $errorBody = $response->json();
-                throw new \Exception($errorBody['error']['message'] ?? 'AI Engine Error');
+                $msg = $errorBody['error']['message'] ?? 'AI Engine Error';
+                $keyHint = substr($this->apiKey, -4);
+                throw new \Exception("{$msg} (Key suffix: ...{$keyHint})");
             }
 
             $data = $response->json();
@@ -207,14 +239,22 @@ class GeminiService
             $key = $field['key'] ?? 'unknown';
             $label = $field['label'] ?? $key;
             $type = $field['type'] ?? 'text';
-            $hint = !empty($field['hint']) ? " (Special Instruction: {$field['hint']})" : "";
-            $fieldGuide .= "- `{$key}`: This is the '{$label}'. Expected type: {$type}.{$hint}\n";
+            $hint = !empty($field['hint']) ? " (Context: {$field['hint']})" : "";
+            $fieldGuide .= "- `{$key}`: {$label}. Type: {$type}.{$hint}\n";
         }
 
-        return "### ROLE: PROFESSIONAL DATA EXTRACTION ENGINE\n" .
-               "### TASK: EXTRACT SPECIFIC FIELDS FROM THE ATTACHED IMAGE\n\n" .
-               "### FIELDS TO EXTRACT:\n" . $fieldGuide . 
-               "\n### RULES:\n1. RETURN ONLY RAW VALID JSON.\n2. CLEAN DATA: No prefixes.\n3. Numbers: pure number.\n4. Dates: YYYY-MM-DD.\n5. Thai: Maintain encoding.\n\n### FINAL OUTPUT FORM: VALID JSON OBJECT ONLY.";
+        $extra = !empty($config['extra_instructions']) ? "### USER FEEDBACK/INSTRUCTIONS:\n" . $config['extra_instructions'] . "\n\n" : "";
+
+        return "### ROLE: PROFESSIONAL DOCUMENT ANALYST\n" .
+               "### TASK: Extract data from the provided receipt/slip image accurately.\n\n" .
+               $extra .
+               "### EXTRACTION GUIDE:\n" . $fieldGuide . 
+               "\n### SPECIAL INSTRUCTIONS:\n" .
+               "1. **Shop Name Detection**: Search the very top of the document. Look for business names, brand logos, or large headers. If no explicit 'Shop Name' label exists, use the most prominent merchant name found in the header area.\n" .
+               "2. **Language**: The document may be in Thai or English. Maintain Thai characters correctly.\n" .
+               "3. **Orientation**: The text might be rotated; analyze all angles if necessary.\n" .
+               "4. **Reliability**: If a field is present but slightly blurry, use your best intelligence to infer the most likely value instead of returning null.\n" .
+               "\n### RULES:\n1. RETURN ONLY RAW VALID JSON OBJECT.\n2. NO CONVERSATION, NO MARKDOWN BLOCKS (unless requested), NO PREFIXES.\n3. Numbers: pure decimal/integer.\n4. Dates: YYYY-MM-DD.\n\n### OUTPUT: VALID JSON OBJECT ONLY.";
     }
 
     protected function normalizedFieldDefinitions(array $config): array

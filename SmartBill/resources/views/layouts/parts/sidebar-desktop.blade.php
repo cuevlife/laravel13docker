@@ -18,9 +18,6 @@
                 ['href' => \App\Support\WorkspaceUrl::current(request(), 'slips'), 'icon' => 'bi-qr-code-scan', 'label' => __('Inbox'), 'active' => request()->is('workspace/slips*')],
             ];
 
-            if ($isOwner) {
-                $workspaceNavs[] = ['href' => \App\Support\WorkspaceUrl::current(request(), 'settings'), 'icon' => 'bi-gear-fill', 'label' => __('Folder Settings'), 'active' => request()->is('workspace/settings*')];
-            }
 
             // 3. Central Hub (Visible for everyone when NOT in Admin mode)
             $hubNavs = [
@@ -47,7 +44,7 @@
                 <div class="relative flex items-center justify-center w-full group">
                     <div class="absolute left-0 w-1 bg-discord-green rounded-r-full transition-all duration-300 {{ $nav['active'] ? 'h-10 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-50' }}"></div>
                     <a href="{{ $nav['href'] }}" class="w-12 h-12 flex items-center justify-center transition-all duration-200 rounded-[24px] {{ $nav['active'] ? 'bg-discord-green text-white rounded-[16px] shadow-lg shadow-green-500/20' : 'text-[#80848e] hover:bg-white dark:hover:bg-white/5 hover:text-discord-green hover:rounded-[16px]' }}" title="{{ $nav['label'] }}">
-                        <i class="bi {{ $nav['icon'] }} text-xl"></i>
+                        <i class="bi {{ $nav['icon'] }} text-xl"></i>   
                     </a>
                 </div>
             @endforeach
@@ -64,11 +61,5 @@
                 </div>
             @endforeach
         @endif
-    </div>
-
-    <div class="mt-auto">
-        <button class="w-12 h-12 flex items-center justify-center text-[#80848e] hover:text-discord-green transition-colors group">
-            <i class="bi bi-question-circle text-xl group-hover:scale-110 transition-transform"></i>
-        </button>
     </div>
 </div>

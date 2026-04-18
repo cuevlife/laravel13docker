@@ -16,7 +16,7 @@ class ImageOptimizer
      * @param int $quality Quality from 0 to 100.
      * @return bool
      */
-    public static function optimize($path, $maxWidth = 1600, $maxHeight = 1600, $quality = 85)
+    public static function optimize($path, $maxWidth = 2048, $maxHeight = 2048, $quality = 90)
     {
         if (!extension_loaded('gd')) {
             return false;
@@ -51,6 +51,27 @@ class ImageOptimizer
             }
 
             if (!$image) return false;
+
+            // Fix Orientation if EXIF data is available
+            if ($type === IMAGETYPE_JPEG && \function_exists('exif_read_data')) {
+                $exif = @exif_read_data($path);
+                if (!empty($exif['Orientation'])) {
+                    switch ($exif['Orientation']) {
+                        case 3:
+                            $image = \imagerotate($image, 180, 0);
+                            break;
+                        case 6:
+                            $image = \imagerotate($image, -90, 0);
+                            // After rotation, width and height are swapped
+                            $temp = $width; $width = $height; $height = $temp;
+                            break;
+                        case 8:
+                            $image = \imagerotate($image, 90, 0);
+                            $temp = $width; $width = $height; $height = $temp;
+                            break;
+                    }
+                }
+            }
 
             // Calculate new dimensions
             $ratio = $width / $height;
@@ -112,7 +133,7 @@ class ImageOptimizer
     /**
      * Optimize an uploaded file before storing it.
      */
-    public static function optimizeUpload($file, $maxWidth = 1600, $maxHeight = 1600, $quality = 85)
+    public static function optimizeUpload($file, $maxWidth = 2048, $maxHeight = 2048, $quality = 90)
     {
         if (!$file || !method_exists($file, 'getRealPath')) return false;
         return self::optimize($file->getRealPath(), $maxWidth, $maxHeight, $quality);

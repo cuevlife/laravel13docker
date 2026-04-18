@@ -137,11 +137,41 @@ if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) 
         $slipsQuery = $this->baseSlipQueryForTenant($tenant);
         $this->applySlipFilters($slipsQuery, $request);
 
-        $sort = (string) $request->input('sort', 'latest');
-        if ($sort === 'oldest') {
-            $slipsQuery->orderBy('processed_at')->orderBy('id');
-        } else {
-            $slipsQuery->orderByDesc('processed_at')->orderByDesc('id');
+        $sort = (string) $request->input('sort', 'processed_at_desc');
+        switch ($sort) {
+            case 'oldest':
+            case 'processed_at_asc':
+                $slipsQuery->orderBy('processed_at')->orderBy('id');
+                break;
+            case 'date_asc':
+                $slipsQuery->orderByRaw('CAST(JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.date")) AS DATE) ASC')->orderBy('id');
+                break;
+            case 'date_desc':
+                $slipsQuery->orderByRaw('CAST(JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.date")) AS DATE) DESC')->orderByDesc('id');
+                break;
+            case 'amount_asc':
+                $slipsQuery->orderByRaw('CAST(JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.total_amount")) AS DECIMAL(12,2)) ASC')->orderBy('id');
+                break;
+            case 'amount_desc':
+                $slipsQuery->orderByRaw('CAST(JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.total_amount")) AS DECIMAL(12,2)) DESC')->orderByDesc('id');
+                break;
+            case 'shop_asc':
+                $slipsQuery->orderByRaw('COALESCE(JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.shop_name")), JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.store_name"))) ASC')->orderBy('id');
+                break;
+            case 'shop_desc':
+                $slipsQuery->orderByRaw('COALESCE(JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.shop_name")), JSON_UNQUOTE(JSON_EXTRACT(extracted_data, "$.store_name"))) DESC')->orderByDesc('id');
+                break;
+            case 'status_asc':
+                $slipsQuery->orderBy('workflow_status')->orderBy('id');
+                break;
+            case 'status_desc':
+                $slipsQuery->orderByDesc('workflow_status')->orderByDesc('id');
+                break;
+            case 'latest':
+            case 'processed_at_desc':
+            default:
+                $slipsQuery->orderByDesc('processed_at')->orderByDesc('id');
+                break;
         }
 
         $slips = $slipsQuery->paginate(50)->withQueryString();
@@ -309,7 +339,7 @@ if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) 
         ]);
 
         $user = auth()->user();
-        \App\Support\ImageOptimizer::optimizeUpload($request->file('image'), 1600, 1600, 85);
+        \App\Support\ImageOptimizer::optimizeUpload($request->file('image'), 2048, 2048, 90);
         
         // Calculate hash to prevent duplicates
         $imageHash = md5_file($request->file('image')->getRealPath());
@@ -360,6 +390,13 @@ if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) 
                 'ai_fields' => $aiFields,
             ]);
 
+            if (isset($data['status']) && $data['status'] === 'error') {
+                throw new \Exception($data['message'] ?? 'AI Extraction failed');
+            }
+
+            // Optimize for storage: Shrink the image after AI processing is complete
+            \App\Support\ImageOptimizer::optimize($fullPath, 1600, 1600, 75);
+
             $slip = Slip::create([
                 'user_id' => $user->id,
                 'slip_template_id' => null, // No longer using specific templates
@@ -393,6 +430,59 @@ if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) 
             ], 429);
         } catch (\Exception $e) {
             Storage::disk('public')->delete($path);
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function rescanSlip(Request $request, Slip $slip): JsonResponse
+    {
+        $this->authorizeSlip($slip);
+        $user = auth()->user();
+        $tenant = app('tenant');
+        $extraInstructions = $request->input('instructions');
+
+        if ($user->tokens < 1) {
+            return response()->json(['status' => 'error', 'message' => 'Insufficient tokens'], 402);
+        }
+
+        try {
+            $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
+            $settings = $superAdmin?->settings ?: [];
+            
+            $aiFields = $tenant->config['ai_fields'] ?? $settings['global_ai_fields'] ?? [
+                ['key' => 'shop_name', 'label' => 'Shop Name', 'type' => 'text'],
+                ['key' => 'date', 'label' => 'Transaction Date', 'type' => 'text'],
+                ['key' => 'total_amount', 'label' => 'Total Amount', 'type' => 'text'],
+            ];
+            $geminiModel = $settings['gemini_model'] ?? config('services.gemini.model', 'gemini-1.5-flash');
+
+            $fullPath = Storage::disk('public')->path($slip->image_path);
+            
+            $config = ['ai_fields' => $aiFields];
+            if ($extraInstructions) {
+                $config['extra_instructions'] = $extraInstructions;
+            }
+
+            $data = $this->geminiService->setModel($geminiModel)->extractDataFromImage($fullPath, $config);
+
+            if (isset($data['status']) && $data['status'] === 'error') {
+                throw new \Exception($data['message'] ?? 'AI Extraction failed');
+            }
+
+            $slip->update([
+                'extracted_data' => $data,
+                'reviewed_at' => now(),
+            ]);
+
+            $user->decrement('tokens', 1);
+            $this->recordTokenUsage($user, $slip, -1, 'Slip re-scan completed');
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $data,
+                'tokens_remaining' => (int) $user->tokens,
+            ]);
+        } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
@@ -690,23 +780,51 @@ if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) 
 
         $term = trim((string) $request->input('q', ''));
         if ($term !== '') {
-            $query->where(function (Builder $searchQuery) use ($term) {
-                $searchQuery
-                    ->orWhere('slips.id', 'like', '%' . $term . '%')
-                    ->orWhere('slips.uid', 'like', '%' . $term . '%')
-                    ->orWhere('slips.image_path', 'like', '%' . $term . '%')
-                    ->orWhere('slips.extracted_data', 'like', '%' . $term . '%')
-                    ->orWhere('slips.labels', 'like', '%' . $term . '%')
-                    ->orWhere('slips.processed_at', 'like', '%' . $term . '%')
-                    ->orWhereHas('template', function (Builder $templateQuery) use ($term) {
-                        $templateQuery->where('name', 'like', '%' . $term . '%')
-                            ->orWhereHas('merchant', function ($q) use ($term) {
-                                $q->where('name', 'like', '%' . $term . '%');
+            $keywords = collect(preg_split('/\s+/', $term) ?: [])
+                ->map(fn ($keyword) => trim((string) $keyword))
+                ->filter()
+                ->unique()
+                ->values();
+
+            $query->where(function (Builder $searchQuery) use ($term, $keywords) {
+                $allTerms = $keywords->isNotEmpty() ? $keywords->all() : [$term];
+
+                foreach ($allTerms as $keyword) {
+                    $searchQuery->where(function (Builder $nestedQuery) use ($keyword) {
+                        $nestedQuery
+                            ->where('slips.id', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.uid', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.image_path', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.workflow_status', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.processed_at', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.reviewed_at', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.approved_at', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.exported_at', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.extracted_data', 'like', '%' . $keyword . '%')
+                            ->orWhere('slips.labels', 'like', '%' . $keyword . '%')
+                            ->orWhereHas('template', function (Builder $templateQuery) use ($keyword) {
+                                $templateQuery->where('name', 'like', '%' . $keyword . '%')
+                                    ->orWhereHas('merchant', function (Builder $merchantQuery) use ($keyword) {
+                                        $merchantQuery
+                                            ->where('name', 'like', '%' . $keyword . '%')
+                                            ->orWhere('address', 'like', '%' . $keyword . '%')
+                                            ->orWhere('tax_id', 'like', '%' . $keyword . '%')
+                                            ->orWhere('phone', 'like', '%' . $keyword . '%');
+                                    });
+                            })
+                            ->orWhereHas('batch', function (Builder $batchQuery) use ($keyword) {
+                                $batchQuery
+                                    ->where('name', 'like', '%' . $keyword . '%')
+                                    ->orWhere('note', 'like', '%' . $keyword . '%');
+                            })
+                            ->orWhereHas('user', function (Builder $userQuery) use ($keyword) {
+                                $userQuery
+                                    ->where('name', 'like', '%' . $keyword . '%')
+                                    ->orWhere('username', 'like', '%' . $keyword . '%')
+                                    ->orWhere('email', 'like', '%' . $keyword . '%');
                             });
-                    })
-                    ->orWhereHas('batch', function (Builder $batchQuery) use ($term) {
-                        $batchQuery->where('name', 'like', '%' . $term . '%');
                     });
+                }
             });
         }
 
@@ -837,7 +955,7 @@ if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) 
     public function suggestPrompt(Request $request): JsonResponse
     {
         $file = $request->file('image');
-        \App\Support\ImageOptimizer::optimizeUpload($file, 1600, 1600, 85);
+        \App\Support\ImageOptimizer::optimizeUpload($file, 3072, 3072, 95);
         $path = $file->store('temp', 'public');
         $fullPath = Storage::disk('public')->path($path);
 
@@ -1416,8 +1534,8 @@ if ((int) $request->session()->get('active_folder_id') === (int) $merchant->id) 
         $user = auth()->user();
         $settings = $user->settings ?: [];
         
-        $settings['gemini_model'] = $data['gemini_model'];
-        $settings['gemini_api_keys'] = array_filter($data['api_keys'] ?? []);
+        $settings['gemini_model'] = trim($data['gemini_model']);
+        $settings['gemini_api_keys'] = array_values(array_filter(array_map('trim', $data['api_keys'] ?? [])));
 
         $user->update(['settings' => $settings]);
 

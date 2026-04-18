@@ -60,7 +60,7 @@
 
                 @if(auth()->user()->isSuperAdmin() && !request()->is('admin*'))
                     <div class="px-5 py-2">
-                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Control Plane</div>
+                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">{{ __('Control Plane') }}</div>
                     </div>
                     <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
                         <i class="bi bi-shield-lock-fill text-sm"></i> {{ __('System Admin') }}

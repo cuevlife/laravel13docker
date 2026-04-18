@@ -4,8 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - {{ config('app.name', 'SmartBill') }}</title>
+    <title>{{ __('Login') }} - {{ config('app.name', 'SmartBill') }}</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2323a559' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z'/><path d='M16 8h-6'/><path d='M16 12H8'/><path d='M13 16H8'/></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -13,30 +18,20 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'Noto Sans Thai', 'sans-serif'] },
+                    fontFamily: { sans: ['Noto Sans Thai', 'sans-serif'] },
                     colors: {
                         'discord-gray': '#313338',
                         'discord-green': '#23a559',
                         'discord-red': '#da373c',
                         'discord-main': '#1e1f22',
                         'discord-black': '#111214',
-                    },
-                    animation: {
-                        'smartbill': 'smartbill 3s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        smartbill: {
-                            '0%, 100%': { filter: 'brightness(1)', transform: 'scale(1)' },
-                            '50%': { filter: 'brightness(1.2)', transform: 'scale(1.02)' },
-                        }
                     }
                 }
             }
         }
     </script>
     <style>
-        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; src: local('Inter'), local('Segoe UI'), local('Helvetica Neue'), Arial, sans-serif; }
-        body { font-family: 'Inter', 'Noto Sans Thai', sans-serif; }
+        body { font-family: 'Noto Sans Thai', sans-serif; }
         [x-cloak] { display: none !important; }
         
         .animate-gradient-green-red {
@@ -59,7 +54,7 @@
         else if (localStorage.getItem('theme') === 'light') document.documentElement.classList.remove('dark');
     </script>
 </head>
-<body class="bg-[#fafafa] dark:bg-[#111214] font-sans tracking-tight text-slate-900 dark:text-slate-100 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+<body class="bg-slate-50 dark:bg-[#0B0E14] font-sans tracking-tight text-slate-800 dark:text-slate-100 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
     
     <div class="flex flex-col lg:flex-row w-full max-w-5xl bg-white dark:bg-discord-main rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-[0_20px_70px_-10px_rgba(35,165,89,0.15)] overflow-hidden transition-all duration-500">
         
@@ -70,11 +65,11 @@
             <div class="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-discord-red/10 rounded-full blur-3xl"></div>
 
             <div class="relative z-10 text-center lg:text-left space-y-6">
-                <h1 class="text-6xl lg:text-8xl font-black leading-[1] tracking-tighter uppercase animate-smartbill animate-gradient-green-red">
+                <h1 class="text-6xl lg:text-8xl font-black leading-[1] tracking-tighter uppercase animate-gradient-green-red">
                     Smart<br class="hidden lg:block"/>Bill
                 </h1>
                 <div class="h-1.5 w-16 bg-discord-red rounded-full mx-auto lg:mx-0 shadow-lg shadow-rose-500/20"></div>
-                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] ">Intelligence System</p>
+                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] ">{{ __('Intelligence System') }}</p>
             </div>
         </div>
 
@@ -84,8 +79,8 @@
             <div class="flex-1 flex flex-col justify-center">
                 <div class="w-full max-w-sm mx-auto">
                     <div class="mb-12 text-center lg:text-left">
-                        <h2 class="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">{{ __('Login') }}</h2>
-                        <p class="mt-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] opacity-60">Authorize Secure Pipeline</p>
+                        <h2 class="text-3xl font-black text-slate-900 dark:text-slate-100 uppercase tracking-tighter leading-none">{{ __('Login') }}</h2>
+                        <p class="mt-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] opacity-60">{{ __('Authorize Secure Pipeline') }}</p>
                     </div>
 
                     <form method="POST" action="{{ route('login') }}" class="space-y-10">
@@ -95,7 +90,7 @@
                         <div class="relative group">
                             <label class="absolute -top-6 left-0 text-[10px] font-black text-slate-400 uppercase tracking-widest group-focus-within:text-discord-green transition-colors">{{ __('Username') }}</label>
                             <input id="username" type="text" name="username" value="{{ old('username') }}" required autofocus 
-                                   class="block w-full px-0 py-4 bg-transparent border-0 border-b-2 border-slate-100 dark:border-white/10 text-xl font-black text-slate-900 dark:text-white focus:ring-0 focus:border-discord-green transition-all outline-none placeholder-slate-200 dark:placeholder-slate-800">
+                                   class="block w-full px-0 py-4 bg-transparent border-0 border-b-2 border-slate-100 dark:border-white/10 text-xl font-black text-slate-900 dark:text-slate-100 focus:ring-0 focus:border-discord-green transition-all outline-none placeholder-slate-200 dark:placeholder-slate-800">
                             @if($errors->has('username'))
                                 <p class="mt-2 text-[10px] font-bold text-discord-red uppercase">{{ $errors->first('username') }}</p>
                             @endif
@@ -105,7 +100,7 @@
                         <div class="relative group">
                             <label class="absolute -top-6 left-0 text-[10px] font-black text-slate-400 uppercase tracking-widest group-focus-within:text-discord-green transition-colors">{{ __('Password') }}</label>
                             <input id="password" type="password" name="password" required 
-                                   class="block w-full px-0 py-4 bg-transparent border-0 border-b-2 border-slate-100 dark:border-white/10 text-xl font-black text-slate-900 dark:text-white focus:ring-0 focus:border-discord-green transition-all outline-none placeholder-slate-200 dark:placeholder-slate-800">
+                                   class="block w-full px-0 py-4 bg-transparent border-0 border-b-2 border-slate-100 dark:border-white/10 text-xl font-black text-slate-900 dark:text-slate-100 focus:ring-0 focus:border-discord-green transition-all outline-none placeholder-slate-200 dark:placeholder-slate-800">
                             @if($errors->has('password'))
                                 <p class="mt-2 text-[10px] font-bold text-discord-red uppercase">{{ $errors->first('password') }}</p>
                             @endif
@@ -142,8 +137,8 @@
                     </div>
                     <span class="h-3 w-px bg-slate-200 dark:bg-white/10"></span>
                     <button @click="toggleDarkMode()" class="hover:text-amber-500 transition-colors uppercase" :class="darkMode ? 'text-amber-400' : 'text-slate-500'">
-                        <span x-show="!darkMode">Dark Mode</span>
-                        <span x-show="darkMode" x-cloak>Light Mode</span>
+                        <span x-show="!darkMode">{{ __('Dark Mode') }}</span>
+                        <span x-show="darkMode" x-cloak>{{ __('Light Mode') }}</span>
                     </button>
                 </div>
             </div>

@@ -88,6 +88,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::post('/slips/process', [AdminController::class, 'processSlip'])->middleware('tokens:1')->name('workspace.slip.process');
         Route::get('/slips/edit/{slip}', [AdminController::class, 'editSlip'])->name('workspace.slip.edit');
         Route::delete('/slips/delete/{slip}', [AdminController::class, 'deleteSlip'])->name('workspace.slip.delete');
+        Route::post('/slips/rescan/{slip}', [AdminController::class, 'rescanSlip'])->name('workspace.slip.rescan');
         Route::post('/slips/bulk', [AdminController::class, 'bulkUpdateSlips'])->name('workspace.slip.bulk');
         Route::get('/slips/export', [AdminController::class, 'exportExcel'])->name('workspace.slip.export');
         Route::get('/slips/export-history', [AdminController::class, 'exportHistory'])->name('workspace.slip.export-history');

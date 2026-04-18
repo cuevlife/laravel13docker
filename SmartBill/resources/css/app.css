@@ -5,6 +5,7 @@
 [x-cloak] { display: none !important; }
 
 body { 
+    font-family: 'Noto Sans Thai', 'Inter', sans-serif;
     @apply font-sans bg-[#fafafa] text-[#1e1f22] dark:bg-[#1e1f22] dark:text-[#f2f3f5] transition-colors duration-300 tracking-tight; 
 }
 

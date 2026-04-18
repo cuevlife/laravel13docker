@@ -23,7 +23,7 @@ class SlipController extends Controller
         $paths = [];
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
-                \App\Support\ImageOptimizer::optimizeUpload($file, 1600, 1600, 85);
+                \App\Support\ImageOptimizer::optimizeUpload($file, 3072, 3072, 95);
                 $filename = time() . '-' . Str::random(10) . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('temp-uploads', $filename, 'public');
                 $paths[] = [

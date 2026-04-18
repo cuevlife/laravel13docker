@@ -14,14 +14,14 @@
                             <i class="bi bi-folder2-open"></i>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tightest">Folder Management</h1>
-                            <p class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest mt-1">Control Plane / Logical Workspace Units</p>
+                            <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tightest">{{ __('Folder Management') }}</h1>
+                            <p class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest mt-1">{{ __('Control Plane / Logical Workspace Units') }}</p>
                         </div>
                     </div>
                     
                     <a href="{{ \App\Support\OwnerUrl::path(request(), 'folders/create') }}" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-discord-green px-6 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-green-500/20 transition hover:bg-[#1f8b4c] active:scale-95">
                         <i class="bi bi-plus-lg text-base"></i>
-                        <span>Create Folder</span>
+                        <span>{{ __('Create Folder') }}</span>
                     </a>
                 </div>
             </div>
@@ -31,21 +31,21 @@
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-12">
                     <div class="relative sm:col-span-6">
                         <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-[#80848e] z-10"></i>
-                        <input type="text" x-model.debounce.300ms="filters.q" placeholder="Search folders (Name, Subdomain, Owner)..." 
+                        <input type="text" x-model.debounce.300ms="filters.q" placeholder="{{ __('Search folders (Name, Subdomain, Owner)...') }}" 
                                class="h-12 w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] pl-14 pr-4 text-xs font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-discord-green/10 focus:border-discord-green/30 transition-all">
                     </div>
                     
                     <div class="sm:col-span-3">
                         <select x-model="filters.status" class="h-12 w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 text-xs font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-discord-green/10 focus:border-discord-green/30 transition-all cursor-pointer">
-                            <option value="">All Statuses</option>
-                            <option value="active">Active</option>
-                            <option value="archived">Archived</option>
+                            <option value="">{{ __('All Statuses') }}</option>
+                            <option value="active">{{ __('Active') }}</option>
+                            <option value="archived">{{ __('Archived') }}</option>
                         </select>
                     </div>
 
                     <div class="sm:col-span-3">
                         <button @click="resetFilters()" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-rose-100 bg-white text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-500 hover:text-white dark:border-rose-500/20 dark:bg-transparent">
-                            <i class="bi bi-arrow-counterclockwise text-xs"></i> Reset Filters
+                            <i class="bi bi-arrow-counterclockwise text-xs"></i> {{ __('Reset Filters') }}
                         </button>
                     </div>
                 </div>
@@ -59,11 +59,11 @@
                                     <th class="px-6 py-4 w-[40px]">
                                         <input type="checkbox" @click="toggleSelectAll()" :checked="selectedFolders.length === filteredFolders.length && filteredFolders.length > 0" class="h-4 w-4 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm transition-all">
                                     </th>
-                                    <th class="px-6 py-4">Folder Details</th>
-                                    <th class="px-6 py-4 text-center w-[180px]">Owner</th>
-                                    <th class="px-6 py-4 text-center w-[120px]">Data Volume</th>
-                                    <th class="px-6 py-4 text-center w-[120px]">Status</th>
-                                    <th class="px-6 py-4 text-right w-[120px]">Operations</th>
+                                    <th class="px-6 py-4">{{ __('Folder Details') }}</th>
+                                    <th class="px-6 py-4 text-center w-[180px]">{{ __('Owner') }}</th>
+                                    <th class="px-6 py-4 text-center w-[120px]">{{ __('Data Volume') }}</th>
+                                    <th class="px-6 py-4 text-center w-[120px]">{{ __('Status') }}</th>
+                                    <th class="px-6 py-4 text-right w-[120px]">{{ __('Operations') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-black/[0.03] dark:divide-white/[0.03]">
@@ -95,7 +95,7 @@
                                         <td class="px-6 py-5 align-top text-center pt-6 text-[11px] font-bold text-[#5c5e66] dark:text-[#b5bac1]">
                                             <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-black/[0.03] dark:border-white/[0.03] bg-white dark:bg-transparent">
                                                 <span class="text-[11px] font-black text-[#1e1f22] dark:text-white" x-text="Number(folder.slips_count).toLocaleString()"></span>
-                                                <span class="text-[8px] font-black uppercase tracking-widest text-[#80848e]">Slips</span>
+                                                <span class="text-[8px] font-black uppercase tracking-widest text-[#80848e]">{{ __('Slips') }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 align-top text-center pt-6">
@@ -127,7 +127,7 @@
                 <!-- Footer Stats -->
                 <div class="flex items-center justify-between px-2 pt-4">
                     <div class="text-[9px] font-black text-[#80848e] uppercase tracking-[0.2em]">
-                        Total Capacity: <span class="text-slate-900 dark:text-white" x-text="allFolders.length"></span> Active Folders
+                        {{ __('Total Capacity') }}: <span class="text-slate-900 dark:text-white" x-text="allFolders.length"></span> {{ __('Active Folders') }}
                     </div>
                 </div>
             </div>
