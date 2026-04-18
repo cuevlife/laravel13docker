@@ -81,15 +81,51 @@
                 <main class="flex-1 overflow-y-auto p-2 md:p-4 lg:p-8" :class="{'modal-open-blur': modalActive}">
                     <div class="w-full">
                         @if (session('status'))
-                            <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
-                                {{ session('status') }}
-                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'success',
+                                        title: "{{ session('status') }}",
+                                        showConfirmButton: false,
+                                        timer: 4000,
+                                        timerProgressBar: true
+                                    });
+                                });
+                            </script>
+                        @endif
+
+                        @if (session('error'))
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'error',
+                                        title: "{{ session('error') }}",
+                                        showConfirmButton: false,
+                                        timer: 5000,
+                                        timerProgressBar: true
+                                    });
+                                });
+                            </script>
                         @endif
 
                         @if ($errors->any())
-                            <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
-                                {{ $errors->first() }}
-                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'error',
+                                        title: "{{ $errors->first() }}",
+                                        showConfirmButton: false,
+                                        timer: 5000,
+                                        timerProgressBar: true
+                                    });
+                                });
+                            </script>
                         @endif
 
                         @yield('content')

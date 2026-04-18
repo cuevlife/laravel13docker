@@ -19,12 +19,10 @@ class FolderController extends Controller
             return redirect()->route('login');
         }
 
-        // Direct check for role ID to be absolutely sure
-        if ((int) $user->role === 9 || $user->isSuperAdmin()) {
-            return redirect()->to(\App\Support\OwnerUrl::path($request, 'users'));
-        }
-
         // Show only folders where the user has explicit access (Owned or Member)
+        // Super Admins see all folders they are owner or member of in Hub, 
+        // or we can allow them to see EVERYTHING. 
+        // Given the request 'admin with user functionality', letting them see what they own/join is safer.
         $query = $user->accessibleMerchants()
             ->with([
                 'users' => fn ($query) => $query->where('users.id', $user->id),

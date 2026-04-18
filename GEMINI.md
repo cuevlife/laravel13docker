@@ -38,10 +38,11 @@ smartbill is an AI-powered slip-scanning SaaS designed for internal organization
 ---
 
 ## 🚀 Recent Accomplishments (April 2026)
-1. **Comprehensive Refactor:** "Project" semantics fully migrated to "Folder" across routes, controllers, and DB-level session keys (`active_folder_id`).
-2. **Export Designer:** Folder-level control for Excel column mapping and custom filenames.
-3. **Audit Trail:** Every scan and export is logged to a specific user and folder.
-4. **Token History:** Grouped hourly usage logs integrated into the User Profile settings.
+1. **User & Folder Consolidation:** ยุบรวมเมนู Folder Management เข้าไปอยู่ภายใต้ User Management (Single Point of Control) เพื่อความกระชับตามหลัก "Concise Automation"
+2. **Dynamic Quota Check:** เพิ่มระบบตรวจสอบโควต้าการสร้างโฟลเดอร์ (`max_folders`) แบบ Real-time ในหน้า User Detail
+3. **Enhanced Table Standard:** ปรับปรุงระบบ Pagination และเลย์เอาต์ตารางให้เป็นมาตรฐานเดียวกันทั้งระบบ (เหมือนหน้า Slips) ทั้งในส่วน Admin และ Workspace
+4. **Lifecycle Control:** ปรับปรุงส่วน Danger Zone ให้เน้นอำนาจการสั่งการที่เด็ดขาด (Instant Terminate) สำหรับระบบจัดการภายในองค์กร
+5. **Comprehensive Refactor:** "Project" semantics fully migrated to "Folder" across routes, controllers, and DB-level session keys.
 
 *This document serves as the ground truth for smartbill's architectural and design direction.*
-*Updated: 2026-04-17*
+*Updated: 2026-04-18*

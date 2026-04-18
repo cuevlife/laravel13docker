@@ -60,6 +60,7 @@ Route::middleware(['web', 'auth', 'role:super_admin'])->prefix('admin')->group(f
     Route::get('/settings', [AdminController::class, 'systemSettings'])->name('admin.settings');
     Route::patch('/settings', [AdminController::class, 'updateSystemSettings'])->name('admin.settings.update');
     Route::post('/settings/suggest', [AdminController::class, 'suggestPrompt'])->name('admin.settings.suggest');
+    Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('admin.audit-logs');
 });
 
 // ============================================

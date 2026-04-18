@@ -14,11 +14,11 @@
                     </a>
                     <div>
                         <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                            <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="hover:text-indigo-600 transition">Users</a>
+                            <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="hover:text-indigo-600 transition">{{ __('Users') }}</a>
                             <i class="bi bi-chevron-right text-[8px]"></i>
-                            <span class="text-slate-600 dark:text-slate-300">New Account</span>
+                            <span class="text-slate-600 dark:text-slate-300">{{ __('New Account') }}</span>
                         </nav>
-                        <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tightest">Register New User</h1>
+                        <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tightest">{{ __('Register New User') }}</h1>
                     </div>
                 </div>
             </div>
@@ -31,31 +31,31 @@
                     <div class="space-y-8">
                         <div class="flex items-center gap-3">
                             <div class="w-1.5 h-5 bg-indigo-500 rounded-full"></div>
-                            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">User Details</h2>
+                            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">{{ __('User Details') }}</h2>
                         </div>
 
                         <div class="bg-[#f8fafb] dark:bg-black/10 p-8 rounded-xl border border-black/[0.03] dark:border-white/[0.03] space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-1.5">
-                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Full Name</label>
-                                    <input type="text" name="name" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm" placeholder="e.g. John Doe">
+                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">{{ __('Full Name') }}</label>
+                                    <input type="text" name="name" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm" placeholder="{{ __('e.g. John Doe') }}">
                                 </div>
                                 <div class="space-y-1.5">
-                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Username (Login ID)</label>
-                                    <input type="text" name="username" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm" placeholder="e.g. john.doe">
+                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">{{ __('Username (Login ID)') }}</label>
+                                    <input type="text" name="username" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm" placeholder="{{ __('e.g. john.doe') }}">
                                 </div>
                             </div>
                             <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Email Address</label>
-                                <input type="email" name="email" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm" placeholder="john@company.com">
+                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">{{ __('Email Address') }}</label>
+                                <input type="email" name="email" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm" placeholder="{{ __('john@company.com') }}">
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-1.5">
-                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Password</label>
+                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">{{ __('Password') }}</label>
                                     <input type="password" name="password" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm">
                                 </div>
                                 <div class="space-y-1.5">
-                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Confirm Password</label>
+                                    <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">{{ __('Confirm Password') }}</label>
                                     <input type="password" name="password_confirmation" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm">
                                 </div>
                             </div>
@@ -66,20 +66,20 @@
                     <div class="space-y-8">
                         <div class="flex items-center gap-3">
                             <div class="w-1.5 h-5 bg-emerald-500 rounded-full"></div>
-                            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">Access Settings</h2>
+                            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">{{ __('Access Settings') }}</h2>
                         </div>
 
                         <div class="bg-[#f8fafb] dark:bg-black/10 p-8 rounded-xl border border-black/[0.03] dark:border-white/[0.03] grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Initial Role</label>
+                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">{{ __('Initial Role') }}</label>
                                 <select name="role" required class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all cursor-pointer">
-                                    <option value="{{ \App\Models\User::ROLE_USER }}">Standard Staff</option>
-                                    <option value="{{ \App\Models\User::ROLE_TENANT_ADMIN }}">Folder Admin</option>
-                                    <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}">Super Admin</option>
+                                    <option value="{{ \App\Models\User::ROLE_USER }}">{{ __('Standard Staff') }}</option>
+                                    <option value="{{ \App\Models\User::ROLE_TENANT_ADMIN }}">{{ __('Folder Admin') }}</option>
+                                    <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}">{{ __('Super Admin') }}</option>
                                 </select>
                             </div>
                             <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Initial Tokens</label>
+                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">{{ __('Initial Tokens') }}</label>
                                 <input type="number" name="tokens" value="0" min="0" class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-3 text-sm font-bold dark:text-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all shadow-sm">
                             </div>
                         </div>
@@ -88,10 +88,10 @@
                     <!-- Form Actions -->
                     <div class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-6 border-t border-black/[0.03]">
                         <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="px-8 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">
-                            Cancel
+                            {{ __('Cancel') }}
                         </a>
                         <button type="submit" class="w-full sm:w-auto px-10 py-3.5 bg-discord-green text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-green-500/20 hover:bg-[#1f8b4c] transition-all active:scale-95">
-                            Create User Account
+                            {{ __('Create User Account') }}
                         </button>
                     </div>
                 </form>

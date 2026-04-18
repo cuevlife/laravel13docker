@@ -20,9 +20,22 @@
 
             <!-- Filters Section -->
             <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-12">
-                <div class="relative sm:col-span-6">
+                <div class="relative sm:col-span-5">
                     <i class="bi bi-search absolute left-5 top-1/2 z-10 -translate-y-1/2 text-sm leading-none text-[#80848e]"></i>
-                    <input type="text" x-model="filters.q" @input.debounce.500ms="fetchSlips()" placeholder="{{ __('Search Slips...') }}" class="h-10 w-full rounded-xl border border-black/5 bg-white pl-14 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white transition-all">
+                    <input type="text" x-model="filters.q" @input.debounce.500ms="fetchSlips()" placeholder="{{ __('Search by Shop, UID or Amount...') }}" class="h-10 w-full rounded-xl border border-black/5 bg-white pl-12 pr-4 text-xs font-bold outline-none shadow-sm focus:border-discord-green/30 dark:bg-[#1e1f22] dark:text-white transition-all">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <select x-model="filters.sort" @change="fetchSlips()" class="h-10 w-full rounded-xl border border-black/5 bg-white px-3 text-xs font-bold outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
+                        <option value="processed_at_desc">{{ __('Latest Scan') }}</option>
+                        <option value="processed_at_asc">{{ __('Oldest Scan') }}</option>
+                        <option value="date_desc">{{ __('Slip Date: Newest') }}</option>
+                        <option value="date_asc">{{ __('Slip Date: Oldest') }}</option>
+                        <option value="amount_desc">{{ __('Amount: High-Low') }}</option>
+                        <option value="amount_asc">{{ __('Amount: Low-High') }}</option>
+                        <option value="shop_asc">{{ __('Shop: A-Z') }}</option>
+                        <option value="shop_desc">{{ __('Shop: Z-A') }}</option>
+                    </select>
                 </div>
                 
                 <div class="sm:col-span-2">
@@ -41,9 +54,9 @@
                     </div>
                 </div>
 
-                <div class="sm:col-span-2">
-                    <button @click="resetFilters()" class="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-100 bg-rose-50 text-[10px] font-black uppercase tracking-widest text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10">
-                        <i class="bi bi-arrow-counterclockwise text-xs"></i> {{ __('Reset') }}
+                <div class="sm:col-span-1">
+                    <button @click="resetFilters()" class="flex h-10 w-full items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10" title="{{ __('Reset Filters') }}">
+                        <i class="bi bi-arrow-counterclockwise text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -69,113 +82,91 @@
                 </button>
             </div>
 
-            <!-- Table Section -->
+            <!-- Grid Section -->
             <div class="overflow-hidden relative min-h-[400px]">
                 <div x-show="is_loading" class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center dark:bg-black/20" x-cloak>
                     <i class="bi bi-arrow-repeat animate-spin text-3xl leading-none text-discord-green"></i>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-[11px] font-bold text-[#1e1f22] dark:text-[#b5bac1]">
-                        <thead class="border-y border-black/[0.04] text-[10px] font-black uppercase tracking-widest text-[#80848e] dark:border-white/[0.04]">
-                            <tr>
-                                <th class="px-4 py-4 min-w-[200px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('shop')">
-                                    <div class="flex items-center justify-between">
-                                        <span>{{ __('Slip Details') }}</span>
-                                        <i class="bi text-[11px]" :class="sortIcon('shop')"></i>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                    <template x-for="slip in slips" :key="slip.id">
+                        <div class="flex flex-col bg-white dark:bg-[#1e1f22] border border-black/5 dark:border-white/5 rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden group">
+                            
+                            <!-- Image Area -->
+                            <div class="relative h-40 bg-[#f8fafb] dark:bg-[#2b2d31] overflow-hidden">
+                                <img :src="'/storage/' + slip.image_path" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity">
+                                <!-- Status Badge -->
+                                <div class="absolute top-2 right-2" x-show="slip.workflow_status !== 'reviewed'">
+                                    <span class="inline-flex items-center rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-widest shadow-sm backdrop-blur-md bg-white/90 dark:bg-black/50"
+                                          :class="{
+                                              'text-[#4f86f7]': slip.workflow_status === 'exported',
+                                              'text-emerald-600': slip.workflow_status === 'approved',
+                                              'text-slate-600 dark:text-slate-300': !['reviewed', 'exported', 'approved'].includes(slip.workflow_status)
+                                          }"
+                                          x-text="slip.workflow_status === 'exported' ? '{{ __('Exported to Excel') }}' : (slip.workflow_status === 'approved' ? '{{ __('Approved') }}' : slip.workflow_status)">
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Content Area -->
+                            <div class="flex flex-col flex-1 p-4">
+                                <div class="mb-3">
+                                    <h3 class="text-sm font-black text-[#1e1f22] dark:text-white truncate" x-text="slip.display_shop"></h3>
+                                    <p class="text-[9px] font-bold text-[#80848e] tracking-widest uppercase mt-0.5" x-text="slip.uid"></p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 mt-auto mb-4 border-y border-black/[0.04] dark:border-white/[0.04] py-3">
+                                    <div>
+                                        <p class="text-[9px] font-black text-[#80848e] uppercase tracking-widest mb-0.5">{{ __('Slip Date') }}</p>
+                                        <p class="text-[11px] font-bold text-[#313338] dark:text-[#b5bac1] truncate" x-text="slip.display_date"></p>
                                     </div>
-                                </th>
-                                <th class="px-4 py-4 text-center w-[120px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('date')">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <span>{{ __('Date in Slip') }}</span>
-                                        <i class="bi text-[11px]" :class="sortIcon('date')"></i>
+                                    <div class="text-right">
+                                        <p class="text-[9px] font-black text-[#80848e] uppercase tracking-widest mb-0.5">{{ __('Amount') }}</p>
+                                        <p class="text-[11px] font-black text-[#1e1f22] dark:text-white truncate" x-text="'฿' + Number(slip.display_amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></p>
                                     </div>
-                                </th>
-                                <th class="px-4 py-4 text-center w-[140px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('processed_at')">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <span>{{ __('Processed At') }}</span>
-                                        <i class="bi text-[11px]" :class="sortIcon('processed_at')"></i>
+                                </div>
+
+                                <!-- Footer Actions -->
+                                <div class="flex items-center justify-between mt-auto">
+                                    <p class="text-[9px] font-bold text-[#80848e]" x-text="formatDate(slip.processed_at)"></p>
+                                    
+                                    <div class="flex gap-1">
+                                        <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-lg bg-black/5 text-[#5c5e66] hover:bg-discord-green/10 hover:text-discord-green dark:bg-white/5 dark:text-[#b5bac1] dark:hover:bg-discord-green/20 transition-all" title="{{ __('View') }}">
+                                            <i class="bi bi-eye-fill text-xs"></i>
+                                        </a>
+                                        <button @click="deleteSlip(slip.id)" class="flex h-8 w-8 items-center justify-center rounded-lg bg-black/5 text-[#5c5e66] hover:bg-rose-500/10 hover:text-rose-500 dark:bg-white/5 dark:text-[#b5bac1] dark:hover:bg-rose-500/20 transition-all" title="{{ __('Delete') }}">
+                                            <i class="bi bi-trash-fill text-xs"></i>
+                                        </button>
                                     </div>
-                                </th>
-                                <th class="px-4 py-4 text-center w-[140px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('status')">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <span>{{ __('Status') }}</span>
-                                        <i class="bi text-[11px]" :class="sortIcon('status')"></i>
-                                    </div>
-                                </th>
-                                <th class="px-4 py-4 text-right w-[120px] cursor-pointer hover:bg-black/[0.02] transition-colors" @click="toggleSort('amount')">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <span>{{ __('Total Amount') }}</span>
-                                        <i class="bi text-[11px]" :class="sortIcon('amount')"></i>
-                                    </div>
-                                </th>
-                                <th class="px-4 py-4 text-right w-[100px]">{{ __('Operations') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
-                            <template x-for="slip in slips" :key="slip.id">
-                                <tr class="group transition hover:bg-[#fafcfa] dark:hover:bg-white/[0.02]">
-                                    <td class="px-4 py-5 align-top">
-                                        <div class="flex items-start gap-4">
-                                            <div class="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-xl border border-black/5 shadow-sm dark:border-white/5 bg-white dark:bg-[#1e1f22]">
-                                                <img :src="'/storage/' + slip.image_path" class="h-full w-full object-cover opacity-90 transition-opacity group-hover:opacity-100">
-                                            </div>
-                                            <div class="flex flex-col pt-0.5">
-                                                <span class="text-[13px] font-black leading-tight text-[#1e1f22] dark:text-white transition-colors group-hover:text-[#4f86f7]" x-text="slip.display_shop"></span>
-                                                <div class="mt-1 flex flex-wrap items-center gap-2">
-                                                    <span class="text-[10px] font-black tracking-widest text-[#80848e]" x-text="slip.uid"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-5 align-top text-center text-[11px] font-black text-[#5c5e66] dark:text-[#b5bac1] pt-6" x-text="slip.display_date"></td>
-                                    <td class="px-4 py-5 align-top text-center text-[11px] font-black text-[#5c5e66] dark:text-[#b5bac1] pt-6" x-text="formatDate(slip.processed_at)"></td>
-                                    <td class="px-4 py-5 align-top text-center pt-5">
-                                        <span class="inline-flex items-center rounded-xl px-3 py-1 text-[9px] font-black uppercase tracking-widest"
-                                              :class="{
-                                                  'bg-[#e0f5ea] text-[#12a170]': slip.workflow_status === 'reviewed',
-                                                  'bg-[#f2f7ff] text-[#4f86f7]': slip.workflow_status === 'exported',
-                                                  'bg-emerald-100 text-emerald-700': slip.workflow_status === 'approved',
-                                                  'bg-slate-50 text-slate-600': slip.workflow_status !== 'reviewed' && slip.workflow_status !== 'exported' && slip.workflow_status !== 'approved'
-                                              }"
-                                              x-text="slip.workflow_status === 'reviewed' ? 'แสกนแล้ว (AI)' : (slip.workflow_status === 'exported' ? 'ส่งออก Excel แล้ว' : (slip.workflow_status === 'approved' ? 'อนุมัติแล้ว' : slip.workflow_status))">
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-5 align-top text-right pt-6">
-                                        <span class="text-[13px] font-black tracking-tight text-[#1e1f22] dark:text-white" x-text="'THB ' + Number(slip.display_amount).toLocaleString(undefined, {minimumFractionDigits: 2})"></span>
-                                    </td>
-                                    <td class="px-4 py-5 align-top text-right pt-5">
-                                        <div class="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                            <a :href="'/workspace/slips/edit/' + slip.id" class="flex h-8 w-8 items-center justify-center rounded-xl text-[#80848e] transition hover:bg-black/5 hover:text-[#1e1f22] dark:hover:bg-white/5 dark:hover:text-white" title="View">
-                                            <i class="bi bi-eye-fill text-sm leading-none"></i>
-                                            </a>
-                                            <button @click="deleteSlip(slip.id)" class="flex h-8 w-8 items-center justify-center rounded-xl text-discord-red transition hover:bg-rose-50 dark:hover:bg-rose-500/10" title="Delete">
-                                                <i class="bi bi-trash-fill text-sm leading-none"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                            <template x-if="slips.length === 0 && !is_loading">
-                                <tr>
-                                    <td colspan="6" class="py-24 text-center">
-                                        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5">
-                                            <i class="bi bi-receipt text-3xl leading-none text-[#80848e]"></i>
-                                        </div>
-                                        <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">ไม่พบสลิปในโฟลเดอร์นี้</h3>
-                                        <p class="mt-1 text-xs font-bold text-[#80848e]">ลองค้นหาด้วยคำอื่น หรือกด Scan Receipt เพื่อเพิ่มสลิปใหม่</p>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
+                
+                <template x-if="slips.length === 0 && !is_loading">
+                    <div class="py-24 text-center">
+                        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-[#f8fafb] border border-black/[0.02] shadow-sm dark:bg-[#1e1f22] dark:border-white/5">
+                            <i class="bi bi-receipt text-3xl leading-none text-[#80848e]"></i>
+                        </div>
+                        <h3 class="text-[13px] font-black text-[#1e1f22] dark:text-white">{{ __('No slips found in this folder') }}</h3>
+                        <p class="mt-1 text-xs font-bold text-[#80848e]">{{ __('Search using other terms or click Scan Receipt to add new') }}</p>
+                    </div>
+                </template>
             </div>
 
             <!-- Pagination -->
-            <div class="mt-6 flex items-center justify-between border-t border-black/[0.04] pt-6 dark:border-white/[0.04]" x-show="pagination && pagination.total > 0">
-                <div class="text-[11px] font-bold text-[#80848e]">
-                    {{ __('Showing') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="slips.length"></span> {{ __('of') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="pagination.total"></span> {{ __('Slips') }}
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-black/[0.04] pt-6 dark:border-white/[0.04]" x-show="pagination && pagination.total > 0">
+                <div class="flex items-center gap-4">
+                    <div class="text-[11px] font-bold text-[#80848e]">
+                        {{ __('Showing') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="slips.length"></span> {{ __('of') }} <span class="font-black text-[#1e1f22] dark:text-white" x-text="pagination.total"></span> {{ __('Slips') }}
+                    </div>
+                    
+                    <select x-model="filters.per_page" @change="fetchSlips()" class="h-8 rounded-lg border border-black/5 bg-[#f8fafb] px-2 text-[10px] font-black outline-none shadow-sm dark:bg-[#1e1f22] dark:text-white transition-all">
+                        <option value="20">20 / {{ __('Page') }}</option>
+                        <option value="50">50 / {{ __('Page') }}</option>
+                        <option value="100">100 / {{ __('Page') }}</option>
+                    </select>
                 </div>
                 <div class="flex items-center gap-2">
                     <template x-for="link in pagination.links">
@@ -187,7 +178,7 @@
                                     'bg-[#f8fafb] text-[#5c5e66] hover:bg-black/5 dark:bg-[#1e1f22] dark:text-[#b5bac1]': !link.active && link.url,
                                     'opacity-30 cursor-not-allowed': !link.url
                                 }"
-                                x-html="link.label">
+                                x-html="formatPaginationLabel(link.label)">
                         </button>
                     </template>
                 </div>
@@ -229,8 +220,8 @@
                         </div>
                         
                         <div :class="scanFiles.length > 0 ? 'text-left' : 'text-center'">
-                            <p class="font-black text-[#1e1f22] dark:text-white" :class="scanFiles.length > 0 ? 'text-[11px]' : 'text-sm'" x-text="scanFiles.length > 0 ? 'คลิกเพื่อเลือก หรือลากไฟล์มาวางเพิ่มเติม' : 'คลิกเพื่อเลือก หรือลากไฟล์มาวางที่นี่'"></p>
-                            <p x-show="scanFiles.length === 0" class="font-bold text-[#80848e] mt-0.5 text-[10px]">รองรับ JPG, PNG (สูงสุด 10MB ต่อไฟล์)</p>
+                            <p class="font-black text-[#1e1f22] dark:text-white" :class="scanFiles.length > 0 ? 'text-[11px]' : 'text-sm'" x-text="scanFiles.length > 0 ? '{{ __('Click to select or drag additional files here') }}' : '{{ __('Click to select or drag and drop files here') }}'"></p>
+                            <p x-show="scanFiles.length === 0" class="font-bold text-[#80848e] mt-0.5 text-[10px]">{{ __('Supports JPG, PNG (Max 10MB per file)') }}</p>
                         </div>
                     </label>
 
@@ -261,7 +252,7 @@
                                                   'text-amber-500': f.status === 'duplicate',
                                                   'text-rose-500': f.status === 'error'
                                               }"
-                                              x-text="f.status === 'error' ? 'Error: ' + f.error : (f.status === 'duplicate' ? 'มีสลิปนี้อยู่แล้ว' : f.status)"></span>
+                                              x-text="f.status === 'error' ? '{{ __('Error') }}: ' + f.error : (f.status === 'duplicate' ? '{{ __('Duplicate slip found') }}' : f.status)"></span>
                                         <button @click="removeFile(index)" x-show="f.status !== 'uploading'" class="text-[#80848e] hover:text-rose-500 transition p-1">
                                             <i class="bi bi-trash-fill h-3.5 w-3.5"></i>
                                         </button>
@@ -276,7 +267,7 @@
                         <template x-if="scanFiles.length === 0">
                             <div class="py-8 text-center text-[#80848e]">
                                 <i class="bi bi-inbox-fill h-8 w-8 mx-auto mb-2 opacity-50"></i>
-                                <p class="text-xs font-bold">ยังไม่มีไฟล์ในคิวแสกน</p>
+                                <p class="text-xs font-bold">{{ __('No files in scan queue yet') }}</p>
                             </div>
                         </template>
                     </div>
@@ -285,13 +276,13 @@
                 <div class="bg-[#f2f3f5] dark:bg-[#232428] p-6 flex items-center justify-between border-t border-black/5 dark:border-white/5">
                     <div class="text-[10px] font-black uppercase tracking-widest text-[#80848e]">
                         <span x-text="scanFiles.filter(f => f.status === 'completed' || f.status === 'duplicate').length"></span> / 
-                        <span x-text="scanFiles.length"></span> เสร็จสิ้น
+                        <span x-text="scanFiles.length"></span> {{ __('Finished') }}
                     </div>
                     <div class="flex gap-3">
                         <button @click="scanFiles = []; scanModalOpen = false" 
                                 :disabled="isScanning"
                                 class="px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition rounded-xl disabled:opacity-50">
-                            ปิดหน้าต่าง
+                            {{ __('Close Window') }}
                         </button>
                     </div>
                 </div>
@@ -313,8 +304,8 @@
                             <i class="bi bi-gear-fill text-lg leading-none"></i>
                             </div>
                             <div>
-                                <h2 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Export Designer</h2>
-                                <p class="text-[10px] font-bold text-[#80848e] uppercase tracking-widest">จัดลำดับและเปลี่ยนชื่อหัวตาราง Excel</p>
+                                <h2 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">{{ __('Export Designer') }}</h2>
+                                <p class="text-[10px] font-bold text-[#80848e] uppercase tracking-widest">{{ __('Order and rename Excel table headers') }}</p>
                             </div>
                         </div>
                         <button @click="exportModalOpen = false" :disabled="savingExport" class="h-8 w-8 flex items-center justify-center rounded-full text-[#80848e] hover:bg-black/5 dark:hover:bg-white/5 transition disabled:opacity-50">
@@ -324,7 +315,7 @@
 
                     {{-- Filename Customization --}}
                     <div class="bg-[#f8fafb] dark:bg-black/20 p-4 rounded-xl border border-black/5 dark:border-white/5">
-                        <label class="block text-[9px] font-black uppercase text-slate-400 mb-2 ml-1">Default Excel Filename</label>
+                        <label class="block text-[9px] font-black uppercase text-slate-400 mb-2 ml-1">{{ __('Default Excel Filename') }}</label>
                         <div class="relative">
                             <i class="bi bi-file-earmark-excel absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             <input type="text" x-model="exportFilename" placeholder="e.g. My_Export.xlsx" 
@@ -335,12 +326,17 @@
                     <div class="overflow-hidden border border-black/5 dark:border-white/5 rounded-xl bg-[#f8fafb] dark:bg-[#1e1f22]">
                         <div class="max-h-[45vh] overflow-y-auto custom-scrollbar">
                             <table class="w-full text-left border-collapse">
-                                <thead class="sticky top-0 bg-[#f8fafb] dark:bg-[#1e1f22] shadow-[0_1px_0_rgba(0,0,0,0.05)] z-10 text-[9px] font-black uppercase tracking-widest text-[#80848e]">
+                <thead class="sticky top-0 bg-[#f8fafb] dark:bg-[#1e1f22] shadow-[0_1px_0_rgba(0,0,0,0.05)] z-10 text-[9px] font-black uppercase tracking-widest text-[#80848e]">
                                     <tr>
                                         <th class="px-4 py-3 w-12 text-center">#</th>
-                                        <th class="px-4 py-3 w-16 text-center">Export</th>
-                                        <th class="px-4 py-3">Source Field</th>
-                                        <th class="px-4 py-3">Label in Excel</th>
+                                        <th class="px-4 py-3 w-16 text-center">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span>{{ __('Export') }}</span>
+                                                <input type="checkbox" @click="toggleAllExportColumns()" :checked="exportColumns.every(c => c.enabled)" class="h-3.5 w-3.5 rounded border-black/10 text-discord-green focus:ring-0 shadow-sm transition-all cursor-pointer">
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3">{{ __('Source Field') }}</th>
+                                        <th class="px-4 py-3">{{ __('Label in Excel') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="export-sortable-body" class="divide-y divide-black/5 dark:divide-white/5">
@@ -361,7 +357,7 @@
                                             <td class="px-4 py-3">
                                                 <input type="text" x-model="col.label" 
                                                        class="w-full bg-[#f2f3f5] dark:bg-black/20 border-0 rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#1e1f22] dark:text-white focus:ring-1 focus:ring-discord-green/30 outline-none transition-all" 
-                                                       placeholder="Header Name...">
+                                                       placeholder="{{ __('Header Name...') }}">
                                             </td>
                                         </tr>
                                     </template>
@@ -377,10 +373,10 @@
                         {{ __('Affects only this folder') }}
                     </p>
                     <div class="flex gap-2">
-                        <button @click="exportModalOpen = false" :disabled="savingExport" class="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition rounded-xl">ยกเลิก</button>
+                        <button @click="exportModalOpen = false" :disabled="savingExport" class="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition rounded-xl">{{ __('Cancel') }}</button>
                         <button @click="saveExportSettings()" :disabled="savingExport" class="px-6 py-2 bg-discord-green text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-[#1f8b4c] transition flex items-center gap-2">
                             <i x-show="savingExport" class="bi bi-arrow-repeat animate-spin"></i>
-                            <span x-text="savingExport ? 'กำลังบันทึก...' : 'บันทึกค่า'"></span>
+                            <span x-text="savingExport ? '{{ __('Saving...') }}' : '{{ __('Save Value') }}'"></span>
                         </button>
                     </div>
                 </div>
@@ -402,8 +398,8 @@
                                 <i class="bi bi-clock-history text-lg"></i>
                             </div>
                             <div>
-                                <h2 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">Export History</h2>
-                                <p class="text-[10px] font-bold text-[#80848e] uppercase tracking-widest">ประวัติการส่งออกข้อมูล Excel ล่าสุด</p>
+                                <h2 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">{{ __('Export History') }}</h2>
+                                <p class="text-[10px] font-bold text-[#80848e] uppercase tracking-widest">{{ __('Latest Excel export history') }}</p>
                             </div>
                         </div>
                         <button @click="exportHistoryOpen = false" class="h-8 w-8 flex items-center justify-center rounded-full text-[#80848e] hover:bg-black/5 dark:hover:bg-white/5 transition">
@@ -416,10 +412,10 @@
                             <table class="w-full text-left border-collapse">
                                 <thead class="sticky top-0 bg-[#f8fafb] dark:bg-[#1e1f22] shadow-[0_1px_0_rgba(0,0,0,0.05)] z-10 text-[9px] font-black uppercase tracking-widest text-[#80848e]">
                                     <tr>
-                                        <th class="px-4 py-3">File Name</th>
-                                        <th class="px-4 py-3 text-center">Slips</th>
-                                        <th class="px-4 py-3 text-center">Mode</th>
-                                        <th class="px-4 py-3 text-right">Date</th>
+                                        <th class="px-4 py-3">{{ __('File Name') }}</th>
+                                        <th class="px-4 py-3 text-center">{{ __('Slips') }}</th>
+                                        <th class="px-4 py-3 text-center">{{ __('Mode') }}</th>
+                                        <th class="px-4 py-3 text-right">{{ __('Date') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-black/5 dark:divide-white/5">
@@ -427,7 +423,7 @@
                                         <tr class="group hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
                                             <td class="px-4 py-3">
                                                 <div class="text-[11px] font-black text-[#1e1f22] dark:text-white truncate max-w-[250px]" x-text="exp.file_name"></div>
-                                                <div class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest" x-text="'BY ' + exp.user_name"></div>
+                                                <div class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest" x-text="'{{ __('BY') }} ' + exp.user_name"></div>
                                             </td>
                                             <td class="px-4 py-3 text-center">
                                                 <span class="text-[10px] font-black text-[#1e1f22] dark:text-white" x-text="exp.slips_count"></span>
@@ -444,7 +440,7 @@
                                     </template>
                                     <template x-if="exportHistory.length === 0">
                                         <tr>
-                                            <td colspan="4" class="px-4 py-10 text-center text-[#80848e] italic uppercase tracking-widest text-[9px]">No export history found</td>
+                                            <td colspan="4" class="px-4 py-10 text-center text-[#80848e] italic uppercase tracking-widest text-[9px]">{{ __('No export history found') }}</td>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -454,7 +450,7 @@
                 </div>
 
                 <div class="bg-[#f2f3f5] dark:bg-[#232428] px-6 py-4 flex items-center justify-end border-t border-black/5 dark:border-white/5">
-                    <button @click="exportHistoryOpen = false" class="px-6 py-2 bg-white dark:bg-[#1e1f22] text-[#1e1f22] dark:text-white border border-black/10 dark:border-white/10 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-black/5 transition">ปิดหน้าต่าง</button>
+                    <button @click="exportHistoryOpen = false" class="px-6 py-2 bg-white dark:bg-[#1e1f22] text-[#1e1f22] dark:text-white border border-black/10 dark:border-white/10 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-black/5 transition">{{ __('Close Window') }}</button>
                 </div>
             </div>
         </div>
@@ -479,14 +475,14 @@
                     date_from: '',
                     date_to: '',
                     sort: {!! json_encode($activeFilters['sort'] ?? 'processed_at_desc') !!},
-                    batch_id: {!! json_encode($activeFilters['batch_id'] ?? '') !!}
+                    per_page: {!! json_encode(request('per_page', 20)) !!}
                 },
                 selectedSlips: [],
                 scanModalOpen: false,
                 isScanning: false,
                 scanFiles: [],
                 exportColumns: @json($exportColumns),
-                exportFilename: {!! json_encode($tenant->config['excel_filename'] ?? '') !!},
+                exportFilename: {!! json_encode($tenant->config['excel_filename'] ?? 'SmartBill_Export_' . now()->format('Y-m-d')) !!},
                 exportModalOpen: false,
                 savingExport: false,
                 exportHistoryOpen: false,
@@ -554,6 +550,11 @@
                 openExportDesigner() {
                     this.exportModalOpen = true;
                     this.initSortable();
+                },
+
+                toggleAllExportColumns() {
+                    const allEnabled = this.exportColumns.every(c => c.enabled);
+                    this.exportColumns.forEach(c => c.enabled = !allEnabled);
                 },
 
                 async fetchExportHistory() {
@@ -715,7 +716,7 @@
                 },
 
                 resetFilters() {
-                    this.filters = { q: '', workflow_status: '', date_from: '', date_to: '', sort: 'processed_at_desc', batch_id: '' };
+                    this.filters = { q: '', workflow_status: '', date_from: '', date_to: '', sort: 'processed_at_desc', batch_id: '', per_page: 20 };
                     const picker = document.querySelector('#date-range-picker');
                     if (picker && picker._flatpickr) picker._flatpickr.clear();
                     this.fetchSlips();
@@ -732,6 +733,16 @@
                         const min = String(date.getMinutes()).padStart(2, '0');
                         return `${d}/${m}/${y} ${h}:${min}`;
                     } catch (e) { return dateStr; }
+                },
+
+                formatPaginationLabel(label) {
+                    if (label.includes('Previous')) {
+                        return label.replace('Previous', '{{ __("Previous") }}');
+                    }
+                    if (label.includes('Next')) {
+                        return label.replace('Next', '{{ __("Next") }}');
+                    }
+                    return label;
                 },
 
                 getCsrfToken() {
@@ -813,7 +824,15 @@
                         this.selectedSlips = [];
                         this.fetchSlips(); 
                     } catch (error) {
-                        alert('เกิดข้อผิดพลาด');
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: error.message,
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
                     } finally {
                         this.is_loading = false;
                     }

@@ -77,7 +77,7 @@
                                                 <div class="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-xl border border-black/5 shadow-sm dark:border-white/5 bg-white dark:bg-[#1e1f22] flex items-center justify-center text-lg font-black text-discord-green" x-text="folder.name.substring(0, 1).toUpperCase()">
                                                 </div>
                                                 <div class="flex flex-col pt-0.5">
-                                                    <span class="text-[13px] font-black leading-tight text-[#1e1f22] dark:text-white transition-colors group-hover:text-indigo-600" x-text="folder.name"></span>
+                                                    <a :href="'/folders/open/' + folder.id" class="text-[13px] font-black leading-tight text-[#1e1f22] dark:text-white transition-colors hover:text-discord-green" x-text="folder.name"></a>
                                                     <div class="mt-1.5 flex flex-wrap items-center gap-2">
                                                         <span class="text-[9px] font-black tracking-[0.1em] text-[#80848e] uppercase" x-text="'/' + folder.subdomain"></span>
                                                         <span class="h-1 w-1 rounded-full bg-slate-200"></span>
@@ -109,11 +109,8 @@
                                         </td>
                                         <td class="px-6 py-5 align-top text-right pt-6">
                                             <div class="flex items-center justify-end gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                                                <a :href="'{{ \App\Support\OwnerUrl::base(request()) }}/folders/' + folder.id" class="h-8 w-8 rounded-xl bg-white dark:bg-[#1e1f22] border border-black/10 flex items-center justify-center text-[#80848e] transition hover:text-indigo-600 shadow-sm">
+                                                <a :href="'{{ \App\Support\OwnerUrl::base(request()) }}/folders/' + folder.id" class="h-8 w-8 rounded-xl bg-white dark:bg-[#1e1f22] border border-black/10 flex items-center justify-center text-[#80848e] transition hover:text-indigo-600 shadow-sm" title="{{ __('Edit Folder') }}">
                                                     <i class="bi bi-pencil-square text-sm"></i>
-                                                </a>
-                                                <a :href="'/folders/open/' + folder.id" target="_blank" class="h-8 w-8 rounded-xl bg-white dark:bg-[#1e1f22] border border-black/10 flex items-center justify-center text-[#80848e] transition hover:text-discord-green shadow-sm" title="Launch Workspace">
-                                                    <i class="bi bi-box-arrow-up-right text-xs"></i>
                                                 </a>
                                             </div>
                                         </td>

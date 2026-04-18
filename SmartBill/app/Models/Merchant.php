@@ -34,11 +34,6 @@ class Merchant extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function users()
-    {
-        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
-    }
-
     public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -49,13 +44,8 @@ class Merchant extends Model
         return $this->hasMany(SlipTemplate::class);
     }
 
-    public function slipBatches()
-    {
-        return $this->hasMany(SlipBatch::class);
-    }
-
     public function slips()
     {
-        return $this->hasManyThrough(Slip::class, SlipBatch::class);
+        return $this->hasMany(Slip::class);
     }
 }

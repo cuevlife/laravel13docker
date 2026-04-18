@@ -29,9 +29,19 @@
             </button>
 
             @if (session('status') === 'password-updated')
-                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2500)" class="text-[11px] font-black text-discord-green uppercase tracking-widest">
-                    {{ __('✓ Password updated.') }}
-                </p>
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: "{{ __('✓ Password updated.') }}",
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    });
+                </script>
             @endif
         </div>
     </form>

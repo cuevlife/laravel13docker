@@ -75,11 +75,6 @@ class User extends Authenticatable
         };
     }
 
-    public function merchants()
-    {
-        return $this->belongsToMany(Merchant::class)->withPivot('role')->withTimestamps();
-    }
-
     public function accessibleMerchants(): Builder
     {
         if ($this->isSuperAdmin()) {
@@ -88,13 +83,7 @@ class User extends Authenticatable
 
         return Merchant::query()
             ->where('status', 'active')
-            ->where(function (Builder $query) {
-                $query->where('user_id', $this->id)
-                    ->orWhereHas('users', function (Builder $merchantUserQuery) {
-                        $merchantUserQuery->where('user_id', $this->id);
-                    });
-            })
-            ->distinct()
+            ->where('user_id', $this->id)
             ->latest();
     }
 
@@ -108,23 +97,8 @@ class User extends Authenticatable
         return $this->hasMany(Slip::class);
     }
 
-    public function subscriptions()
-    {
-        return $this->hasMany(Subscription::class);
-    }
-
     public function tokenLogs()
     {
         return $this->hasMany(TokenLog::class);
-    }
-
-    public function tokenTopupRequests()
-    {
-        return $this->hasMany(TokenTopupRequest::class);
-    }
-
-    public function activeSubscription()
-    {
-        return $this->hasOne(Subscription::class)->where('status', 'active')->latestOfMany();
     }
 }

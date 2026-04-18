@@ -18,7 +18,7 @@
                         class="h-12 px-8 rounded-xl bg-discord-green text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-green-500/20 hover:bg-[#1f8b4c] transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2">
                     <i class="bi bi-cloud-check-fill" x-show="!saving"></i>
                     <i class="bi bi-arrow-repeat animate-spin" x-show="saving" x-cloak></i>
-                    <span x-text="saving ? 'Saving...' : 'Save All Settings'"></span>
+                    <span x-text="saving ? '{{ __('Saving...') }}' : '{{ __('Save All Settings') }}'"></span>
                 </button>
             </div>
 
@@ -29,9 +29,9 @@
                     <div class="flex items-center justify-between">
                         <h3 class="text-xs font-black uppercase tracking-[0.2em] text-[#1e1f22] dark:text-white flex items-center gap-2">
                             <i class="bi bi-key-fill text-indigo-500"></i>
-                            Gemini API Pool
+                            {{ __('Gemini API Pool') }}
                         </h3>
-                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]" x-text="form.api_keys.length + ' Keys Active'"></span>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]" x-text="form.api_keys.length + ' ' + '{{ __('Keys Active') }}'"></span>
                     </div>
 
                     <div class="bg-[#f8fafb] dark:bg-black/10 p-6 rounded-xl border border-black/[0.03] dark:border-white/[0.03] space-y-4">
@@ -43,7 +43,7 @@
                                             <i class="bi bi-shield-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                             <input type="password" x-model="form.api_keys[index]" 
                                                    class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] pl-10 pr-4 py-3 text-xs font-bold dark:text-white outline-none focus:ring-2 focus:ring-discord-green/20 transition-all shadow-sm" 
-                                                   placeholder="AIzaSy...">
+                                                   placeholder="{{ __('AIzaSy...') }}">
                                         </div>
                                         <button @click="form.api_keys.splice(index, 1)" class="h-10 w-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
                                             <i class="bi bi-trash-fill"></i>
@@ -52,14 +52,14 @@
                                     <div class="flex items-center justify-end px-1" x-show="usage[form.api_keys[index]] !== undefined">
                                         <div class="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
                                             <span class="h-1 w-1 rounded-full bg-indigo-400"></span>
-                                            Calls: <span class="text-indigo-500" x-text="usage[form.api_keys[index]] || 0"></span>
+                                            {{ __('Calls:') }} <span class="text-indigo-500" x-text="usage[form.api_keys[index]] || 0"></span>
                                         </div>
                                     </div>
                                 </div>
                             </template>
                             
                             <button @click="form.api_keys.push('')" class="w-full py-4 rounded-xl border-2 border-dashed border-black/5 dark:border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-discord-green/30 hover:text-discord-green transition-all bg-white dark:bg-transparent">
-                                <i class="bi bi-plus-lg mr-1"></i> Add New API Key
+                                <i class="bi bi-plus-lg mr-1"></i> {{ __('Add New API Key') }}
                             </button>
                         </div>
                     </div>
@@ -69,15 +69,15 @@
                 <div class="space-y-6">
                     <h3 class="text-xs font-black uppercase tracking-[0.2em] text-[#1e1f22] dark:text-white flex items-center gap-2">
                         <i class="bi bi-robot text-discord-green"></i>
-                        Model Configuration
+                        {{ __('Model Configuration') }}
                     </h3>
 
                     <div class="bg-[#f8fafb] dark:bg-black/10 p-6 rounded-xl border border-black/[0.03] dark:border-white/[0.03] space-y-6">
                         <div class="space-y-2">
-                            <label class="block text-[9px] font-black uppercase text-slate-400 mb-2 ml-1">Active Model ID</label>
+                            <label class="block text-[9px] font-black uppercase text-slate-400 mb-2 ml-1">{{ __('Active Model ID') }}</label>
                             <input type="text" x-model="form.gemini_model" 
                                    class="w-full rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-6 py-4 text-sm font-black text-[#1e1f22] dark:text-white outline-none focus:ring-2 focus:ring-discord-green/20 transition-all shadow-sm" 
-                                   placeholder="e.g. gemini-1.5-flash">
+                                   placeholder="{{ __('e.g. gemini-1.5-flash') }}">
                         </div>
                     </div>
                 </div>
@@ -120,15 +120,15 @@
                             body: JSON.stringify(this.form)
                         });
 
-                        if (!response.ok) throw new Error('Failed to update system configuration');
+                        if (!response.ok) throw new Error('{{ __('Failed to update system configuration') }}');
 
                         Toast.fire({
                             icon: 'success',
-                            title: 'Configuration Saved',
-                            text: 'AI settings updated successfully.'
+                            title: '{{ __('Configuration Saved') }}',
+                            text: '{{ __('AI settings updated successfully.') }}'
                         });
                     } catch (error) {
-                        Toast.fire({ icon: 'error', title: 'Update Failed', text: error.message });
+                        Toast.fire({ icon: 'error', title: '{{ __('Update Failed') }}', text: error.message });
                     } finally {
                         this.saving = false;
                     }

@@ -7,7 +7,18 @@
             : route('dashboard');
     @endphp
     <!-- Ultra-Minimal Premium Settings Hub -->
-    <div x-data="{ activeTab: 'account' }" class="flex flex-col md:flex-row min-h-screen md:min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-[#0B0E14] animate-in fade-in duration-700 pb-20 md:pb-0 font-sans tracking-tight relative">
+    <div x-data="{ 
+        activeTab: window.location.hash ? window.location.hash.substring(1) : 'account',
+        init() {
+            this.$watch('activeTab', value => window.location.hash = value);
+            window.addEventListener('hashchange', () => {
+                const hash = window.location.hash.substring(1);
+                if (hash && ['account', 'security', 'billing'].includes(hash)) {
+                    this.activeTab = hash;
+                }
+            });
+        }
+    }" class="flex flex-col md:flex-row min-h-screen md:min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-[#0B0E14] animate-in fade-in duration-700 pb-20 md:pb-0 font-sans tracking-tight relative">
         
 
         <!-- Minimal Sidebar -->
@@ -19,12 +30,6 @@
                     :class="activeTab === 'account' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-[#313338]' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-[#f2f3f5] dark:hover:bg-[#2b2d31]/50 border border-transparent'">
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-discord-green rounded-r-full transition-all duration-300" :class="activeTab === 'account' ? 'h-5 opacity-100' : 'h-0 opacity-0'"></div>
                 <i class="bi bi-person-fill w-4 h-4 transition-transform group-hover:scale-110"></i> {{ __('My Account') }}
-            </button>
-            <button @click="activeTab = 'appearance'" 
-                    class="w-full text-left px-4 py-3 rounded-[16px] text-xs font-bold transition-all flex items-center gap-3 relative overflow-hidden group"
-                    :class="activeTab === 'appearance' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-[#313338]' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-[#f2f3f5] dark:hover:bg-[#2b2d31]/50 border border-transparent'">
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-discord-green rounded-r-full transition-all duration-300" :class="activeTab === 'appearance' ? 'h-5 opacity-100' : 'h-0 opacity-0'"></div>
-                <i class="bi bi-palette-fill w-4 h-4 transition-transform group-hover:scale-110"></i> {{ __('Appearance') }}
             </button>
             <button @click="activeTab = 'security'" 
                     class="w-full text-left px-4 py-3 rounded-[16px] text-xs font-bold transition-all flex items-center gap-3 relative overflow-hidden group"
@@ -44,23 +49,11 @@
         <!-- Main Content Area -->
         <div class="flex-1 p-6 md:p-12 lg:p-16 w-full">
             <!-- Hidden on mobile because the mobile top nav handles the title -->
-            <h2 class="hidden md:block text-2xl md:text-3xl font-black text-[#1e1f22] dark:text-white tracking-tight mb-10 transition-all duration-300" x-text="activeTab === 'account' ? '{{ __('Profile Details') }}' : (activeTab === 'appearance' ? '{{ __('Interface Settings') }}' : (activeTab === 'security' ? '{{ __('Security & Access') }}' : '{{ __('Billing & Tokens') }}'))"></h2>
+            <h2 class="hidden md:block text-2xl md:text-3xl font-black text-[#1e1f22] dark:text-white tracking-tight mb-10 transition-all duration-300" x-text="activeTab === 'account' ? '{{ __('Profile Details') }}' : (activeTab === 'security' ? '{{ __('Security & Access') }}' : '{{ __('Billing & Tokens') }}')"></h2>
 
             <div x-show="activeTab === 'account'" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-12">
                 <div class="max-w-xl">
                     @include('profile.partials.update-profile-information-form')
-                </div>
-                
-                <div class="h-px w-full bg-[#e3e5e8] dark:bg-[#313338] my-10"></div>
-
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
-
-            <div x-show="activeTab === 'appearance'" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak class="space-y-12" style="display: none;">
-                <div class="max-w-2xl">
-                    @include('profile.partials.appearance-settings-form')
                 </div>
             </div>
 
@@ -96,7 +89,7 @@
                         <h4 class="text-lg font-black text-[#1e1f22] dark:text-white mb-1">{{ __('Top up tokens via LINE Official') }}</h4>
                         <p class="text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] leading-relaxed">{{ __('Contact staff to top up tokens instantly') }}</p>
                     </div>
-                    <a href="https://line.me/ti/p/@smartbill" target="_blank" class="px-8 py-3 rounded-xl bg-[#06C755] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[#05b34c] transition-all active:scale-95 shadow-md shadow-green-500/10">
+                    <a href="https://line.me/ti/p/@vetmanage" target="_blank" class="px-8 py-3 rounded-xl bg-[#06C755] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[#05b34c] transition-all active:scale-95 shadow-md shadow-green-500/10">
                         {{ __('Chat via LINE') }}
                     </a>
                 </div>
