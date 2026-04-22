@@ -86,12 +86,12 @@ window.slipEditor = function(config) {
 
                 Toast.fire({
                     icon: 'success',
-                    title: 'Re-scan successful'
+                    title: config.trans.rescan_success
                 });
             } catch (e) {
                 Toast.fire({
                     icon: 'error',
-                    title: e.message || 'An error occurred during re-scan'
+                    title: e.message || config.trans.rescan_failed
                 });
             } finally {
                 this.isRescanning = false;
@@ -113,7 +113,9 @@ window.slipEditor = function(config) {
             const declaredTotal = parseFloat(cleanDeclaredTotal) || 0;
             
             if (Math.abs(sum - declaredTotal) > 0.1) {
-                return `Calculated Sum (฿${sum.toFixed(2)}) doesn't match Declared Total (฿${declaredTotal.toFixed(2)})`;
+                return config.trans.math_mismatch
+                    .replace(':sum', sum.toFixed(2))
+                    .replace(':total', declaredTotal.toFixed(2));
             }
             return false;
         },
@@ -127,7 +129,7 @@ window.slipEditor = function(config) {
                 const obj = JSON.parse(this.jsonContent);
                 this.jsonContent = JSON.stringify(obj, null, 4);
             } catch(e) {
-                Toast.fire({ icon: 'warning', title: 'Invalid JSON format' });
+                Toast.fire({ icon: 'warning', title: config.trans.invalid_json });
             }
         },
 
@@ -153,12 +155,12 @@ window.slipEditor = function(config) {
                     body: JSON.stringify({ data: dataToSave })
                 });
 
-                if (!res.ok) throw new Error('Failed to update');
+                if (!res.ok) throw new Error(config.trans.update_failed);
                 
-                Toast.fire({ icon: 'success', title: 'Intelligence updated' });
+                Toast.fire({ icon: 'success', title: config.trans.update_success });
                 setTimeout(() => window.location.href = config.indexRoute, 900);
             } catch (e) { 
-                Toast.fire({ icon: 'error', title: e.message || 'An error occurred' }); 
+                Toast.fire({ icon: 'error', title: e.message || config.trans.error_occurred }); 
             } finally { 
                 this.saving = false; 
             }

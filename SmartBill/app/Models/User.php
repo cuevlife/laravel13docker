@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'username', 'email', 'email_verified_at', 'password', 'role', 'status', 'settings', 'tokens', 'max_folders'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'username', 'email', 'password', 'role', 'status', 'tokens', 'max_folders'])]
+#[Hidden(['password'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -31,8 +31,6 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
-            'email_verified_at' => 'datetime',
-            'settings' => 'array',
             'max_folders' => 'integer',
         ];
     }
@@ -75,16 +73,36 @@ class User extends Authenticatable
         };
     }
 
+    public function merchants()
+    {
+        return $this->hasMany(Merchant::class);
+    }
+
+    /**
+     * Disable remember token functionality since the column was removed for optimization.
+     */
+    public function getRememberTokenName()
+    {
+        return null;
+    }
+
+    public function setRememberToken($value)
+    {
+        // Do nothing
+    }
+
+    public function getRememberToken()
+    {
+        return null;
+    }
+
     public function accessibleMerchants(): Builder
     {
         if ($this->isSuperAdmin()) {
             return Merchant::query()->where('status', 'active')->latest();
         }
 
-        return Merchant::query()
-            ->where('status', 'active')
-            ->where('user_id', $this->id)
-            ->latest();
+        return $this->merchants()->where('status', 'active')->latest()->getQuery();
     }
 
     public function templates()

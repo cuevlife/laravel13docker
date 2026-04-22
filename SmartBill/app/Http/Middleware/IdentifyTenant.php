@@ -14,7 +14,6 @@ class IdentifyTenant
     public function handle(Request $request, Closure $next)
     {
         $merchantParameter = $request->route('folder') ?? $request->route('project') ?? $request->route('workspace') ?? $request->route('merchant');
-        $subdomain = $request->route('subdomain');
 
         if ($merchantParameter instanceof Merchant) {
             $merchant = $merchantParameter;
@@ -27,19 +26,17 @@ class IdentifyTenant
 
             $merchant = Merchant::query()->findOrFail($activeFolderId);
         } else {
-            $lookupSubdomain = $subdomain ?: $merchantParameter;
+            $lookupId = $merchantParameter;
 
-            if (!$lookupSubdomain) {
+            if (!$lookupId) {
                 abort(404);
             }
 
             $merchant = Merchant::query()
-                ->where(function ($query) use ($lookupSubdomain) {
-                    if (is_numeric($lookupSubdomain)) {
-                        $query->whereKey((int) $lookupSubdomain);
+                ->where(function ($query) use ($lookupId) {
+                    if (is_numeric($lookupId)) {
+                        $query->whereKey((int) $lookupId);
                     }
-
-                    $query->orWhere('subdomain', $lookupSubdomain);
                 })
                 ->firstOrFail();
         }
@@ -51,10 +48,8 @@ class IdentifyTenant
         if (Auth::check()) {
             $user = Auth::user();
 
-            // Check if user is owner or has a membership record
-            $hasAccess = $user->isSuperAdmin()
-                || $user->merchants()->where('merchant_id', $merchant->id)->exists()
-                || (int) $merchant->user_id === (int) $user->id;
+            // Check if user is owner or superadmin
+            $hasAccess = $user->isSuperAdmin() || (int) $merchant->user_id === (int) $user->id;
 
             if (!$hasAccess) {
                 abort(403, 'You do not have permission to access this folder.');
@@ -65,7 +60,6 @@ class IdentifyTenant
         view()->share('activeTenant', $merchant);
 
         if ($request->route()) {
-            $request->route()->forgetParameter('subdomain');
             $request->route()->forgetParameter('folder');
             $request->route()->forgetParameter('project');
             $request->route()->forgetParameter('workspace');

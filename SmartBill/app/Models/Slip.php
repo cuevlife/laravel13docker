@@ -14,12 +14,10 @@ class Slip extends Model
         'image_hash',
         'extracted_data',
         'workflow_status',
-        'processed_at',
     ];
 
     protected $casts = [
         'extracted_data' => 'array',
-        'processed_at' => 'datetime',
     ];
 
     protected static function boot()

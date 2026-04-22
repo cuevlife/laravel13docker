@@ -9,7 +9,7 @@
             {{-- Header Section (Compact & Professional) --}}
             <div class="px-6 py-5 border-b border-black/[0.03] dark:border-white/[0.03] flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="w-8 h-8 rounded-lg bg-white dark:bg-[#1e1f22] border border-black/10 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all">
+                    <a href="{{ route('admin.users') }}" class="w-8 h-8 rounded-lg bg-white dark:bg-[#1e1f22] border border-black/10 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all">
                         <i class="bi bi-arrow-left text-lg"></i>
                     </a>
                     <h1 class="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tightest">{{ __('Register New Folder') }}</h1>
@@ -20,7 +20,7 @@
             </div>
 
             <div class="p-6">
-                <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'folders') }}" class="space-y-10">
+                <form method="POST" action="{{ route('admin.folders.store') }}" class="space-y-10">
                     @csrf
                     
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -71,7 +71,7 @@
 
                     {{-- Actions (Compact) --}}
                     <div class="flex items-center justify-end gap-3 pt-6 border-t border-black/[0.03] dark:border-white/[0.03]">
-                        <a href="{{ !empty($preselectedUserId) ? \App\Support\OwnerUrl::path(request(), 'users/' . $preselectedUserId) : \App\Support\OwnerUrl::path(request(), 'users') }}" class="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-all">
+                        <a href="{{ !empty($preselectedUserId) ? route('admin.users.show', ['user' => $preselectedUserId]) : route('admin.users') }}" class="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-all">
                             {{ __('Cancel') }}
                         </a>
                         <button type="submit" class="px-10 py-2.5 bg-discord-green text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-green-500/20 hover:bg-[#1f8b4c] transition-all active:scale-95">

@@ -45,7 +45,7 @@
         </a>
 
         @if(auth()->user()->isSuperAdmin() && !$isAdminMode && !request()->routeIs('profile.edit'))
-            <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-rose-500/20 shadow-sm shadow-rose-500/5">
+            <a href="{{ route('admin.users') }}" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-rose-500/20 shadow-sm shadow-rose-500/5">
                 <i class="bi bi-shield-lock-fill text-xs"></i>
                 <span>{{ __('Admin Panel') }}</span>
             </a>
@@ -67,7 +67,7 @@
 
                 {{-- Mobile only Admin link if not in admin mode --}}
                 @if(auth()->user()->isSuperAdmin() && !request()->is('admin*'))
-                    <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="md:hidden flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
+                    <a href="{{ route('admin.users') }}" class="md:hidden flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
                         <i class="bi bi-shield-lock-fill text-sm"></i> {{ __('Admin Panel') }}
                     </a>
                 @endif

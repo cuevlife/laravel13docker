@@ -54,6 +54,37 @@
             } else if (localStorage.getItem('theme') === 'light') {
                 document.documentElement.classList.remove('dark');
             }
+
+            // Global Notification Helper
+            window.notify = {
+                toast: Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                }),
+                success(msg) { this.toast.fire({ icon: 'success', title: msg }); },
+                                error(msg) { this.toast.fire({ icon: 'error', title: msg, timer: 6000 }); },
+                info(msg) { this.toast.fire({ icon: 'info', title: msg }); },
+                async confirm(title, text = '') {
+                    return await Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ed4245',
+                        cancelButtonColor: '#4e5058',
+                        confirmButtonText: 'Confirm',
+                        background: document.documentElement.classList.contains('dark') ? '#2b2d31' : '#ffffff',
+                        color: document.documentElement.classList.contains('dark') ? '#ffffff' : '#1e1f22'
+                    });
+                }
+            };
         </script>
     </head>
     <body x-data="{ modalActive: false, profileOpen: false, sidebarOpen: false }" :class="{'overflow-hidden': modalActive || sidebarOpen}" class="bg-[#fafafa] dark:bg-[#1e1f22] font-sans tracking-tight">
@@ -81,51 +112,15 @@
                 <main class="flex-1 overflow-y-auto p-2 md:p-4 lg:p-8" :class="{'modal-open-blur': modalActive}">
                     <div class="w-full">
                         @if (session('status'))
-                            <script>
-                                document.addEventListener('DOMContentLoaded', () => {
-                                    Swal.fire({
-                                        toast: true,
-                                        position: 'top-end',
-                                        icon: 'success',
-                                        title: "{{ session('status') }}",
-                                        showConfirmButton: false,
-                                        timer: 4000,
-                                        timerProgressBar: true
-                                    });
-                                });
-                            </script>
+                            <script>document.addEventListener('DOMContentLoaded', () => window.notify.success("{{ session('status') }}"));</script>
                         @endif
 
                         @if (session('error'))
-                            <script>
-                                document.addEventListener('DOMContentLoaded', () => {
-                                    Swal.fire({
-                                        toast: true,
-                                        position: 'top-end',
-                                        icon: 'error',
-                                        title: "{{ session('error') }}",
-                                        showConfirmButton: false,
-                                        timer: 5000,
-                                        timerProgressBar: true
-                                    });
-                                });
-                            </script>
+                            <script>document.addEventListener('DOMContentLoaded', () => window.notify.error("{{ session('error') }}"));</script>
                         @endif
 
                         @if ($errors->any())
-                            <script>
-                                document.addEventListener('DOMContentLoaded', () => {
-                                    Swal.fire({
-                                        toast: true,
-                                        position: 'top-end',
-                                        icon: 'error',
-                                        title: "{{ $errors->first() }}",
-                                        showConfirmButton: false,
-                                        timer: 5000,
-                                        timerProgressBar: true
-                                    });
-                                });
-                            </script>
+                            <script>document.addEventListener('DOMContentLoaded', () => window.notify.error("{{ $errors->first() }}"));</script>
                         @endif
 
                         @yield('content')

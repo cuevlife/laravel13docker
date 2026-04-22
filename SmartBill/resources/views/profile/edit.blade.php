@@ -18,28 +18,28 @@
                 }
             });
         }
-    }" class="flex flex-col md:flex-row min-h-screen md:min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-[#0B0E14] animate-in fade-in duration-700 pb-20 md:pb-0 font-sans tracking-tight relative">
+    }" class="flex flex-col md:flex-row min-h-screen md:min-h-[calc(100vh-64px)] bg-[#fafafa] dark:bg-[#1e1f22] animate-in fade-in duration-700 pb-20 md:pb-0 font-sans tracking-tight relative">
         
 
         <!-- Minimal Sidebar -->
-        <div class="w-full md:w-[280px] lg:w-[320px] p-6 md:p-10 shrink-0 flex flex-col gap-2 md:h-[calc(100vh-64px)] md:sticky md:top-0 border-r border-[#e3e5e8]/50 dark:border-[#313338]/50 overflow-y-auto">
+        <div class="w-full md:w-[280px] lg:w-[320px] p-6 md:p-10 shrink-0 flex flex-col gap-2 md:h-[calc(100vh-64px)] md:sticky md:top-0 border-r border-[#e3e5e8]/50 dark:border-white/5 overflow-y-auto">
             <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#80848e] px-4 mb-4">{{ __('Settings') }}</h3>
             
             <button @click="activeTab = 'account'" 
                     class="w-full text-left px-4 py-3 rounded-[16px] text-xs font-bold transition-all flex items-center gap-3 relative overflow-hidden group"
-                    :class="activeTab === 'account' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-[#313338]' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-[#f2f3f5] dark:hover:bg-[#2b2d31]/50 border border-transparent'">
+                    :class="activeTab === 'account' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-white/5' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'">
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-discord-green rounded-r-full transition-all duration-300" :class="activeTab === 'account' ? 'h-5 opacity-100' : 'h-0 opacity-0'"></div>
                 <i class="bi bi-person-fill w-4 h-4 transition-transform group-hover:scale-110"></i> {{ __('My Account') }}
             </button>
             <button @click="activeTab = 'security'" 
                     class="w-full text-left px-4 py-3 rounded-[16px] text-xs font-bold transition-all flex items-center gap-3 relative overflow-hidden group"
-                    :class="activeTab === 'security' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-[#313338]' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-[#f2f3f5] dark:hover:bg-[#2b2d31]/50 border border-transparent'">
+                    :class="activeTab === 'security' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-white/5' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'">
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-discord-green rounded-r-full transition-all duration-300" :class="activeTab === 'security' ? 'h-5 opacity-100' : 'h-0 opacity-0'"></div>
                 <i class="bi bi-shield-fill w-4 h-4 transition-transform group-hover:scale-110"></i> {{ __('Security') }}
             </button>
             <button @click="activeTab = 'billing'" 
                     class="w-full text-left px-4 py-3 rounded-[16px] text-xs font-bold transition-all flex items-center gap-3 relative overflow-hidden group"
-                    :class="activeTab === 'billing' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-[#313338]' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-[#f2f3f5] dark:hover:bg-[#2b2d31]/50 border border-transparent'">
+                    :class="activeTab === 'billing' ? 'bg-white dark:bg-[#2b2d31] text-[#1e1f22] dark:text-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#e3e5e8] dark:border-white/5' : 'text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'">
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-discord-green rounded-r-full transition-all duration-300" :class="activeTab === 'billing' ? 'h-5 opacity-100' : 'h-0 opacity-0'"></div>
                 <i class="bi bi-credit-card-fill w-4 h-4 transition-transform group-hover:scale-110"></i> {{ __('Billing & Tokens') }}
             </button>

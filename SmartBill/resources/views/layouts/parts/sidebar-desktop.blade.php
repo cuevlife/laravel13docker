@@ -6,7 +6,7 @@
             
             // 1. Admin Core Menus (Always visible for Admin)
             $adminNavs = [
-                ['href' => \App\Support\OwnerUrl::path(request(), 'users'), 'icon' => 'bi-people-fill', 'label' => __('Users'), 'active' => request()->is('admin/users*')],
+                ['href' => route('admin.users'), 'icon' => 'bi-people-fill', 'label' => __('Users'), 'active' => request()->is('admin/users*')],
                 ['href' => route('admin.audit-logs'), 'icon' => 'bi-journal-text', 'label' => __('Global Audit'), 'active' => request()->routeIs('admin.audit-logs')],
                 ['href' => route('admin.settings'), 'icon' => 'bi-cpu-fill', 'label' => __('AI Settings'), 'active' => request()->routeIs('admin.settings')],
             ];

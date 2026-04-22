@@ -2,10 +2,17 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Models\Merchant;
+use App\Models\Slip;
+use App\Observers\UserObserver;
+use App\Observers\MerchantObserver;
+use App\Observers\SlipObserver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +29,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set global password defaults
+        Password::defaults(function () {
+            return Password::min(2)->max(30);
+        });
+        // Register Observers
+        User::observe(UserObserver::class);
+        Merchant::observe(MerchantObserver::class);
+        Slip::observe(SlipObserver::class);
+
         if ($this->app->bound('request')) {
             config([
                 'session.domain' => $this->resolveSessionDomain(request()->getHost()),

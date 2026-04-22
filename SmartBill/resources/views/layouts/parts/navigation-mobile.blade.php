@@ -6,8 +6,8 @@
 
         if ($isAdminMode) {
             $navs = [
-                ['href' => \App\Support\OwnerUrl::path(request(), 'users'), 'icon' => 'bi-people-fill', 'label' => 'Users', 'active' => request()->routeIs('admin.users*')],
-                ['href' => \App\Support\OwnerUrl::path(request(), 'folders'), 'icon' => 'bi-folder2-open', 'label' => 'Folders', 'active' => request()->routeIs('admin.folders*')],
+                ['href' => route('admin.users'), 'icon' => 'bi-people-fill', 'label' => 'Users', 'active' => request()->routeIs('admin.users*')],
+                ['href' => route('admin.folders.index'), 'icon' => 'bi-folder2-open', 'label' => 'Folders', 'active' => request()->routeIs('admin.folders*')],
                 ['href' => route('admin.settings'), 'icon' => 'bi-cpu-fill', 'label' => 'AI Settings', 'active' => request()->routeIs('admin.settings')],
             ];
         } elseif ($isTenant) {
