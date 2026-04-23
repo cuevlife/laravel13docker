@@ -2,257 +2,230 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\User;
+use App\Models\SystemConfig;
 
 class GeminiService
 {
+    protected const RETRY_DELAYS_MS = [3000, 10000, 20000];
+
     protected ?string $apiKey = null;
     protected string $model;
-    protected string $baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
+    protected string $apiVersion = 'v1beta';
+    protected array $config = [];
 
     public function __construct()
     {
-        $this->model = config('services.gemini.model', 'gemini-1.5-flash');
-        $this->resolveApiKey();
+        $this->loadConfig();
     }
 
-    /**
-     * Dynamically resolve the API key from the global pool (rotation)
-     */
-    protected function resolveApiKey(): void
+    protected function loadConfig(): void
     {
-        $superAdmin = User::where('role', User::ROLE_SUPER_ADMIN)->first();
-        $settings = $superAdmin?->settings ?: [];
-        $keys = $settings['gemini_api_keys'] ?? [];
+        $configs = SystemConfig::whereIn('config_key', ['gemini_model', 'gemini_api_keys'])->pluck('config_value', 'config_key');
 
-        if (empty($keys)) {
-            $this->apiKey = config('services.gemini.key');
-            return;
+        $this->model = $configs['gemini_model'] ?? config('services.gemini.model', 'gemini-1.5-flash');
+        
+        $keysValue = $configs['gemini_api_keys'] ?? null;
+        if ($keysValue) {
+            $keys = json_decode($keysValue, true) ?: [];
+            if (!empty($keys)) {
+                // Randomly select one key from the pool
+                $this->apiKey = $keys[array_rand($keys)];
+            }
         }
 
-        // Simple rotation based on minute of the hour
-        $index = (int) date('i') % count($keys);
-        $this->apiKey = $keys[$index];
-
-        // Increment usage count for this key
-        $cacheKey = 'gemini_key_usage_' . md5($this->apiKey);
-        \Illuminate\Support\Facades\Cache::increment($cacheKey);
+        if (!$this->apiKey) {
+            $this->apiKey = config('services.gemini.key');
+        }
     }
 
     public function setModel(string $model): self
     {
+        // Strip "models/" prefix if present
         $this->model = preg_replace('/^models\//', '', $model);
         return $this;
     }
 
-    public function identifyStoreFromImage(string $imagePath, array $templateNames): ?string
-    {
-        if (!$this->apiKey || empty($templateNames)) return null;
-
-        $base64Image = base64_encode(file_get_contents($imagePath));
-        $storeList = implode(', ', array_map(fn($t) => '"' . $t . '"', $templateNames));
-        
-        $prompt = "Look at this receipt/invoice. Which of the following stores or profiles does it belong to?\n" .
-                  "Choices: [" . $storeList . "]\n\n" .
-                  "If you are confident it belongs to one of the choices, reply ONLY with the EXACT name from the choices. Do not add any punctuation or extra words.\n" .
-                  "If it does not match ANY of the choices, reply ONLY with the word 'UNKNOWN'.";
-
-        try {
-            $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
-                    "contents" => [
-                        [
-                            "parts" => [
-                                ["text" => $prompt],
-                                ["inline_data" => ["mime_type" => "image/jpeg", "data" => $base64Image]]
-                            ]
-                        ]
-                    ],
-                    "generationConfig" => ["temperature" => 0.0]
-                ]);
-
-            if ($response->status() === 429) {
-                throw new \RuntimeException("AI API limit reached. Please wait a moment.");
-            }
-
-            if ($response->failed()) return null;
-
-            $data = $response->json();
-            $responseText = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? 'UNKNOWN');
-            if ($responseText === 'UNKNOWN' || $responseText === '') return null;
-            return trim($responseText, '"\' ');
-        } catch (\RuntimeException $re) {
-            throw $re;
-        } catch (\Exception $e) {
-            Log::error("Gemini Auto-Detect Error: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public function suggestSchemaFromImage(string $imagePath): array
+    public function extractDataFromImage(string $imagePath, array $options = []): array
     {
         if (!$this->apiKey) {
-            throw new \RuntimeException('Gemini API Key is not configured.');
+            throw new \RuntimeException("Gemini API key is not configured.");
         }
 
-        $base64Image = base64_encode(file_get_contents($imagePath));
-        $prompt = "Analyze this receipt/slip image and identify all important data fields that should be extracted. 
+        $fields = $options['ai_fields'] ?? [];
+        $extraInstructions = $options['extra_instructions'] ?? '';
 
-        Return a JSON object where:
-        - Keys are the snake_case technical names (in English).
-        - Values are the beautiful, friendly Display Labels in THAI (e.g., 'ที่อยู่', 'เบอร์โทร', 'เลขผู้เสียภาษี').
+        $prompt = $this->buildPrompt($fields, $extraInstructions);
+        $imageData = base64_encode(file_get_contents($imagePath));
+        $mimeType = mime_content_type($imagePath);
 
-        Example Output:
-        {
-            \"shop_name\": \"ชื่อร้าน\",
-            \"tax_id\": \"เลขประจำตัวผู้เสียภาษี\",
-            \"total_amount\": \"ยอดรวมทั้งสิ้น\",
-            \"items\": \"รายการสินค้า\"
-        }";
+        $url = "https://generativelanguage.googleapis.com/{$this->apiVersion}/models/{$this->model}:generateContent?key={$this->apiKey}";
+
+        $payload = [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt],
+                        [
+                            'inline_data' => [
+                                'mime_type' => $mimeType,
+                                'data' => $imageData,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'generationConfig' => [
+                'response_mime_type' => 'application/json',
+            ],
+        ];
 
         try {
-            $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
-                    "contents" => [
-                        [
-                            "parts" => [
-                                ["text" => $prompt],
-                                ["inline_data" => ["mime_type" => "image/jpeg", "data" => $base64Image]]
-                            ]
-                        ]
-                    ],
-                    "generationConfig" => [
-                        "response_mime_type" => "application/json",
-                        "temperature" => 0.1
-                    ]
-                ]);
-
-            if ($response->status() === 429) {
-                throw new \RuntimeException("AI API limit reached. Please wait a moment.");
-            }
+            $response = $this->postToGemini($url, $payload);
 
             if ($response->failed()) {
-                $errorBody = $response->json();
-                throw new \RuntimeException($errorBody['error']['message'] ?? 'AI Engine Error');
+                $error = $response->json();
+                $msg = $error['error']['message'] ?? 'Unknown API error';
+                
+                if ($response->status() === 429) {
+                    throw new \RuntimeException("API Rate Limit Reached. Please try again later.");
+                }
+                
+                throw new \RuntimeException("Gemini API Error: " . $msg);
             }
 
-            $data = $response->json();
-            $responseText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
-            return json_decode(preg_replace('/^```json\s*|```$/', '', trim($responseText)), true) ?: [];
-        } catch (\RuntimeException $re) {
-            throw $re;
+            $result = $response->json();
+            $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
+            
+            return $this->normalizeResponse(json_decode($text, true) ?: [], $fields);
+
         } catch (\Exception $e) {
-            Log::error("Gemini Suggest Schema Error: " . $e->getMessage());
+            Log::error("Gemini Extraction Failed: " . $e->getMessage());
             throw $e;
         }
     }
 
-    public function extractDataFromImage(string $imagePath, array $config): array
+    public function suggestFieldsFromImage(string $imagePath): array
     {
         if (!$this->apiKey) {
-            return ['status' => 'error', 'message' => 'Gemini API Key is missing.'];
+            throw new \RuntimeException("Gemini API key is not configured.");
         }
 
-        $base64Image = base64_encode(file_get_contents($imagePath));
-        $fieldDefinitions = $this->normalizedFieldDefinitions($config);
-        $prompt = $this->getDynamicPrompt($config);
+        $prompt = "Analyze this receipt image and suggest a list of data fields to extract. 
+        For each field, provide:
+        1. 'key': snake_case technical name
+        2. 'label': Thai descriptive name
+        3. 'type': one of [text, number, date, array]
+        4. 'hint': brief instruction on where to find it
+        
+        Return ONLY a valid JSON array of objects with these keys.";
+
+        $imageData = base64_encode(file_get_contents($imagePath));
+        $mimeType = mime_content_type($imagePath);
+        $url = "https://generativelanguage.googleapis.com/{$this->apiVersion}/models/{$this->model}:generateContent?key={$this->apiKey}";
+
+        $payload = [
+            'contents' => [['parts' => [['text' => $prompt], ['inline_data' => ['mime_type' => $mimeType, 'data' => $imageData]]]]],
+            'generationConfig' => ['response_mime_type' => 'application/json']
+        ];
 
         try {
-            $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                ->post($this->baseUrl . $this->model . ":generateContent?key=" . $this->apiKey, [
-                    "contents" => [
-                        [
-                            "parts" => [
-                                ["text" => $prompt],
-                                ["inline_data" => ["mime_type" => "image/jpeg", "data" => $base64Image]]
-                            ]
-                        ]
-                    ],
-                    "generationConfig" => [
-                        "response_mime_type" => "application/json",
-                        "temperature" => 0.0
-                    ]
-                ]);
+            $response = $this->postToGemini($url, $payload);
+            if ($response->failed()) throw new \RuntimeException("Gemini API Error");
 
-            if ($response->status() === 429) {
-                throw new \RuntimeException("AI API limit reached. Please wait a moment.");
-            }
-
-            if ($response->failed()) {
-                $errorBody = $response->json();
-                throw new \Exception($errorBody['error']['message'] ?? 'AI Engine Error');
-            }
-
-            $data = $response->json();
-            $responseText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
-            $decoded = json_decode(preg_replace('/^```json\s*|```$/', '', trim($responseText)), true);
-            $payload = is_array($decoded) ? $decoded : [];
-
-            return $this->normalizeExtractedPayload($payload, $fieldDefinitions);
-        } catch (\RuntimeException $re) {
-            throw $re;
+            $result = $response->json();
+            $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? '[]';
+            return json_decode($text, true) ?: [];
         } catch (\Exception $e) {
-            return ['status' => 'error', 'message' => $e->getMessage()];
+            Log::error("Gemini Suggestion Failed: " . $e->getMessage());
+            throw $e;
         }
     }
 
-    protected function getDynamicPrompt(array $config): string
+    protected function postToGemini(string $url, array $payload): Response
     {
-        $requestedFields = $this->normalizedFieldDefinitions($config);
-        $fieldGuide = "";
+        $retryDelays = self::RETRY_DELAYS_MS;
 
-        foreach ($requestedFields as $field) {
-            $key = $field['key'] ?? 'unknown';
-            $label = $field['label'] ?? $key;
-            $type = $field['type'] ?? 'text';
-            $hint = !empty($field['hint']) ? " (Special Instruction: {$field['hint']})" : "";
-            $fieldGuide .= "- `{$key}`: This is the '{$label}'. Expected type: {$type}.{$hint}\n";
-        }
+        return Http::timeout(60)
+            ->retry(
+                count($retryDelays) + 1,
+                function (int $attempt, \Exception $exception) use ($retryDelays): int {
+                    $delay = $retryDelays[$attempt - 1] ?? $retryDelays[count($retryDelays) - 1];
 
-        return "### ROLE: PROFESSIONAL DATA EXTRACTION ENGINE\n" .
-               "### TASK: EXTRACT SPECIFIC FIELDS FROM THE ATTACHED IMAGE\n\n" .
-               "### FIELDS TO EXTRACT:\n" . $fieldGuide . 
-               "\n### RULES:\n1. RETURN ONLY RAW VALID JSON.\n2. CLEAN DATA: No prefixes.\n3. Numbers: pure number.\n4. Dates: YYYY-MM-DD.\n5. Thai: Maintain encoding.\n\n### FINAL OUTPUT FORM: VALID JSON OBJECT ONLY.";
+                    Log::warning('Gemini request timed out, retrying.', [
+                        'attempt' => $attempt + 1,
+                        'delay_ms' => $delay,
+                        'error' => $exception->getMessage(),
+                    ]);
+
+                    return $delay;
+                },
+                function (\Exception $exception): bool {
+                    if (!$exception instanceof ConnectionException) {
+                        return false;
+                    }
+
+                    $message = strtolower($exception->getMessage());
+
+                    return str_contains($message, 'curl error 28')
+                        || str_contains($message, 'operation timed out')
+                        || str_contains($message, 'timed out');
+                },
+                throw: true
+            )
+            ->post($url, $payload);
     }
 
-    protected function normalizedFieldDefinitions(array $config): array
+    protected function buildPrompt(array $fields, string $extra = ''): string
     {
-        $fields = $this->aiFieldDefinitions($config['ai_fields'] ?? []);
-        if ($fields !== []) return $fields;
-
-        return [
-            ['key' => 'shop_name', 'type' => 'text'],
-            ['key' => 'date', 'type' => 'date'],
-            ['key' => 'final_total', 'type' => 'number'],
-            ['key' => 'items', 'type' => 'array'],
-        ];
-    }
-
-    protected function aiFieldDefinitions(array $aiFields): array
-    {
-        $definitions = [];
-        foreach ($aiFields as $key => $value) {
-            if (is_array($value)) {
-                $definitions[] = [
-                    'key' => trim((string) ($value['key'] ?? '')),
-                    'label' => trim((string) ($value['label'] ?? '')) ?: null,
-                    'type' => trim((string) ($value['type'] ?? '')) ?: null,
-                    'hint' => trim((string) ($value['hint'] ?? '')) ?: null,
-                ];
+        $schema = [];
+        $hasItemsField = false;
+        foreach ($fields as $f) {
+            $schema[$f['key']] = $f['label'] . " (type: {$f['type']})";
+            if (($f['key'] ?? '') === 'items' || ($f['type'] ?? '') === 'array') {
+                $hasItemsField = true;
             }
         }
-        return $definitions;
+
+        $prompt = "As an expert OCR and document analysis engine, extract high-precision data from this Thai receipt/invoice image.
+If the text is blurry or skewed, use contextual reasoning to deduce the correct value.
+Handle Buddhist Year (BE) by converting to Christian Year (AD) if necessary (AD = BE - 543).
+Return ONLY a valid JSON object matching this exact schema:\n";
+        $prompt .= json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
+
+        if ($hasItemsField) {
+            $prompt .= "Array Standard:\n";
+            $prompt .= "- If the field key is `items`, return an array of line-item objects.\n";
+            $prompt .= "- Each item should use consistent keys: `name`, `qty`, `unit_price`, `total_price`, `discount`, `sku`, `note`.\n";
+            $prompt .= "- Use numeric values only for `qty`, `unit_price`, `total_price`, and `discount` when possible.\n";
+            $prompt .= "- If the receipt has no itemized lines, return an empty array for `items`.\n";
+            $prompt .= "- Do not invent items that are not visible on the receipt.\n\n";
+        }
+        
+        if (!empty($extra)) {
+            $prompt .= "Additional Instructions: " . $extra . "\n";
+        }
+
+        $prompt .= "Rules:\n1. Accuracy is paramount. If a value is unclear, use your best judgment based on surrounding text.\n2. If a text/number/date field is absolutely not found, use null.\n3. For currency/totals, return numeric values only (e.g., 1250.50).\n4. For dates, standardize to YYYY-MM-DD. Handle Thai months correctly.\n5. For shop/store names, extract the full official name if visible.\n6. For array fields, ALWAYS return an array. Empty array [] if no items found.";
+        
+        return $prompt;
     }
 
-    protected function normalizeExtractedPayload(array $payload, array $fieldDefinitions): array
+    protected function normalizeResponse(array $data, array $fields): array
     {
         $normalized = [];
-        foreach ($fieldDefinitions as $field) {
-            $fieldKey = $field['key'];
-            $value = $payload[$fieldKey] ?? null;
-            if (($field['type'] ?? null) === 'array' && $value !== null && !is_array($value)) {
+        foreach ($fields as $f) {
+            $fieldKey = $f['key'];
+            $value = $data[$fieldKey] ?? null;
+            
+            // Basic normalization based on type
+            if ($f['type'] === 'number' && $value !== null) {
+                $value = (float) preg_replace('/[^0-9.]/', '', (string)$value);
+            }
+            if ($f['type'] === 'array' && $value !== null && !is_array($value)) {
                 $value = [$value];
             }
             $normalized[$fieldKey] = $value;

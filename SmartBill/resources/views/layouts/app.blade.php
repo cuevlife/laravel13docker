@@ -6,6 +6,10 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'smartbill') }}</title>
 
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
+
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2323a559' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z'/><path d='M16 8h-6'/><path d='M16 12H8'/><path d='M13 16H8'/></svg>">
 
         <!-- Tailwind Play CDN (No Node.js Required) -->
@@ -16,7 +20,7 @@
                 theme: {
                     extend: {
                         fontFamily: {
-                            sans: ['Inter', 'Noto Sans Thai', 'sans-serif'],
+                            sans: ['Noto Sans Thai', 'Inter', 'sans-serif'],
                         },
                         colors: {
                             'discord-gray': '#313338',
@@ -32,7 +36,7 @@
 
         <style>
             @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; src: local('Inter'), local('Segoe UI'), local('Helvetica Neue'), Arial, sans-serif; }
-            body { font-family: 'Inter', 'Noto Sans Thai', sans-serif; }
+            body { font-family: 'Noto Sans Thai', 'Inter', sans-serif; }
             [x-cloak] { display: none !important; }
         </style>
 
@@ -50,6 +54,37 @@
             } else if (localStorage.getItem('theme') === 'light') {
                 document.documentElement.classList.remove('dark');
             }
+
+            // Global Notification Helper
+            window.notify = {
+                toast: Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                }),
+                success(msg) { this.toast.fire({ icon: 'success', title: msg }); },
+                                error(msg) { this.toast.fire({ icon: 'error', title: msg, timer: 6000 }); },
+                info(msg) { this.toast.fire({ icon: 'info', title: msg }); },
+                async confirm(title, text = '') {
+                    return await Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ed4245',
+                        cancelButtonColor: '#4e5058',
+                        confirmButtonText: 'Confirm',
+                        background: document.documentElement.classList.contains('dark') ? '#2b2d31' : '#ffffff',
+                        color: document.documentElement.classList.contains('dark') ? '#ffffff' : '#1e1f22'
+                    });
+                }
+            };
         </script>
     </head>
     <body x-data="{ modalActive: false, profileOpen: false, sidebarOpen: false }" :class="{'overflow-hidden': modalActive || sidebarOpen}" class="bg-[#fafafa] dark:bg-[#1e1f22] font-sans tracking-tight">
@@ -77,15 +112,15 @@
                 <main class="flex-1 overflow-y-auto p-2 md:p-4 lg:p-8" :class="{'modal-open-blur': modalActive}">
                     <div class="w-full">
                         @if (session('status'))
-                            <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
-                                {{ session('status') }}
-                            </div>
+                            <script>document.addEventListener('DOMContentLoaded', () => window.notify.success("{{ session('status') }}"));</script>
+                        @endif
+
+                        @if (session('error'))
+                            <script>document.addEventListener('DOMContentLoaded', () => window.notify.error("{{ session('error') }}"));</script>
                         @endif
 
                         @if ($errors->any())
-                            <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
-                                {{ $errors->first() }}
-                            </div>
+                            <script>document.addEventListener('DOMContentLoaded', () => window.notify.error("{{ $errors->first() }}"));</script>
                         @endif
 
                         @yield('content')

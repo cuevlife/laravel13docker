@@ -6,8 +6,8 @@
             
             // 1. Admin Core Menus (Always visible for Admin)
             $adminNavs = [
-                ['href' => \App\Support\OwnerUrl::path(request(), 'users'), 'icon' => 'bi-people-fill', 'label' => __('Users'), 'active' => request()->is('admin/users*')],
-                ['href' => \App\Support\OwnerUrl::path(request(), 'folders'), 'icon' => 'bi-folder2-open', 'label' => __('Folders'), 'active' => request()->is('admin/folders*')],
+                ['href' => route('admin.users'), 'icon' => 'bi-people-fill', 'label' => __('Users'), 'active' => request()->is('admin/users*')],
+                ['href' => route('admin.audit-logs'), 'icon' => 'bi-journal-text', 'label' => __('Global Audit'), 'active' => request()->routeIs('admin.audit-logs')],
                 ['href' => route('admin.settings'), 'icon' => 'bi-cpu-fill', 'label' => __('AI Settings'), 'active' => request()->routeIs('admin.settings')],
             ];
 
@@ -18,9 +18,6 @@
                 ['href' => \App\Support\WorkspaceUrl::current(request(), 'slips'), 'icon' => 'bi-qr-code-scan', 'label' => __('Inbox'), 'active' => request()->is('workspace/slips*')],
             ];
 
-            if ($isOwner) {
-                $workspaceNavs[] = ['href' => \App\Support\WorkspaceUrl::current(request(), 'settings'), 'icon' => 'bi-gear-fill', 'label' => __('Folder Settings'), 'active' => request()->is('workspace/settings*')];
-            }
 
             // 3. Central Hub (Visible for everyone when NOT in Admin mode)
             $hubNavs = [
@@ -28,8 +25,8 @@
             ];
         @endphp
 
-        {{-- Show Admin Section if User is Admin --}}
-        @if($isAdmin)
+        {{-- 1. Admin Section (Only in Admin Mode) --}}
+        @if($isAdmin && $isAdminMode)
             @foreach($adminNavs as $nav)
                 <div class="relative flex items-center justify-center w-full group">
                     <div class="absolute left-0 w-1 bg-rose-500 rounded-r-full transition-all duration-300 {{ $nav['active'] ? 'h-10 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-50' }}"></div>
@@ -38,37 +35,18 @@
                     </a>
                 </div>
             @endforeach
-            <div class="w-8 h-[2px] bg-[#d5d6d9] dark:bg-[#2b2d31] my-2 transition-colors"></div>
         @endif
 
-        {{-- Show Workspace Section if inside a Folder --}}
-        @if($isTenant)
+        {{-- 2. Workspace Section (Only in Workspace Mode) --}}
+        @if($isTenant && !$isAdminMode)
             @foreach($workspaceNavs as $nav)
                 <div class="relative flex items-center justify-center w-full group">
                     <div class="absolute left-0 w-1 bg-discord-green rounded-r-full transition-all duration-300 {{ $nav['active'] ? 'h-10 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-50' }}"></div>
                     <a href="{{ $nav['href'] }}" class="w-12 h-12 flex items-center justify-center transition-all duration-200 rounded-[24px] {{ $nav['active'] ? 'bg-discord-green text-white rounded-[16px] shadow-lg shadow-green-500/20' : 'text-[#80848e] hover:bg-white dark:hover:bg-white/5 hover:text-discord-green hover:rounded-[16px]' }}" title="{{ $nav['label'] }}">
-                        <i class="bi {{ $nav['icon'] }} text-xl"></i>
+                        <i class="bi {{ $nav['icon'] }} text-xl"></i>   
                     </a>
                 </div>
             @endforeach
         @endif
-
-        {{-- Show Hub/Wallet for regular users or Admin when not in Admin-specific pages and not in tenant mode --}}
-        @if(!$isTenant && (!request()->is('admin*') || !$isAdmin))
-            @foreach($hubNavs as $nav)
-                <div class="relative flex items-center justify-center w-full group">
-                    <div class="absolute left-0 w-1 bg-discord-green rounded-r-full transition-all duration-300 {{ $nav['active'] ? 'h-10 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-50' }}"></div>
-                    <a href="{{ $nav['href'] }}" class="w-12 h-12 flex items-center justify-center transition-all duration-200 rounded-[24px] {{ $nav['active'] ? 'bg-discord-green text-white rounded-[16px] shadow-lg shadow-green-500/20' : 'text-[#80848e] hover:bg-white dark:hover:bg-white/5 hover:text-discord-green hover:rounded-[16px]' }}" title="{{ $nav['label'] }}">
-                        <i class="bi {{ $nav['icon'] }} text-xl"></i>
-                    </a>
-                </div>
-            @endforeach
-        @endif
-    </div>
-
-    <div class="mt-auto">
-        <button class="w-12 h-12 flex items-center justify-center text-[#80848e] hover:text-discord-green transition-colors group">
-            <i class="bi bi-question-circle text-xl group-hover:scale-110 transition-transform"></i>
-        </button>
     </div>
 </div>

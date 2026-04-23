@@ -9,29 +9,15 @@ class Slip extends Model
     protected $fillable = [
         'uid',
         'user_id',
-        'slip_template_id',
-        'slip_batch_id',
+        'merchant_id',
         'image_path',
         'image_hash',
         'extracted_data',
-        'status',
         'workflow_status',
-        'labels',
-        'processed_at',
-        'reviewed_at',
-        'approved_at',
-        'exported_at',
-        'archived_at',
     ];
 
     protected $casts = [
         'extracted_data' => 'array',
-        'labels' => 'array',
-        'processed_at' => 'datetime',
-        'reviewed_at' => 'datetime',
-        'approved_at' => 'datetime',
-        'exported_at' => 'datetime',
-        'archived_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -66,26 +52,9 @@ class Slip extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function template()
-    {
-        return $this->belongsTo(SlipTemplate::class, 'slip_template_id');
-    }
-
-    public function batch()
-    {
-        return $this->belongsTo(SlipBatch::class, 'slip_batch_id');
-    }
-
     public function merchant()
     {
-        return $this->hasOneThrough(
-            Merchant::class,
-            SlipBatch::class,
-            'id', // SlipBatch.id
-            'id', // Merchant.id
-            'slip_batch_id', // Slip.slip_batch_id
-            'merchant_id' // SlipBatch.merchant_id
-        );
+        return $this->belongsTo(Merchant::class, 'merchant_id');
     }
 
     // Workflow Constants

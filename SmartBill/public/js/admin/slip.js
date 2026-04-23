@@ -370,7 +370,16 @@ window.slipRegistry = function () {
             } catch (error) {
                 // 3. Rollback: ถ้าหลังบ้านมีปัญหา ให้ดึงข้อมูลสลิปกลับมาแสดงเหมือนเดิม
                 console.error('Delete error:', error);
-                alert('เกิดข้อผิดพลาด: ' + error.message);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
                 this.slips = originalSlips;
                 if(this.pagination) {
                     this.pagination.total = originalTotal;

@@ -6,8 +6,8 @@
 
         if ($isAdminMode) {
             $navs = [
-                ['href' => \App\Support\OwnerUrl::path(request(), 'users'), 'icon' => 'bi-people-fill', 'label' => 'Users', 'active' => request()->routeIs('admin.users*')],
-                ['href' => \App\Support\OwnerUrl::path(request(), 'folders'), 'icon' => 'bi-folder2-open', 'label' => 'Folders', 'active' => request()->routeIs('admin.folders*')],
+                ['href' => route('admin.users'), 'icon' => 'bi-people-fill', 'label' => 'Users', 'active' => request()->routeIs('admin.users*')],
+                ['href' => route('admin.folders.index'), 'icon' => 'bi-folder2-open', 'label' => 'Folders', 'active' => request()->routeIs('admin.folders*')],
                 ['href' => route('admin.settings'), 'icon' => 'bi-cpu-fill', 'label' => 'AI Settings', 'active' => request()->routeIs('admin.settings')],
             ];
         } elseif ($isTenant) {
@@ -18,9 +18,6 @@
                 ['href' => \App\Support\WorkspaceUrl::current(request(), 'slips'), 'icon' => 'bi-qr-code-scan', 'label' => 'Inbox', 'active' => $slipIndexActive],
             ];
 
-            if ($isOwner) {
-                $navs[] = ['href' => \App\Support\WorkspaceUrl::current(request(), 'settings'), 'icon' => 'bi-gear-fill', 'label' => 'Settings', 'active' => request()->routeIs('workspace.settings')];
-            }
         } else {
             $navs = [
                 ['href' => route('dashboard'), 'icon' => 'bi-grid-fill', 'label' => 'Hub', 'active' => request()->routeIs('dashboard')],

@@ -44,6 +44,13 @@
             <span class="hidden md:inline ml-1">{{ app()->getLocale() == 'th' ? 'TH' : 'EN' }}</span>
         </a>
 
+        @if(auth()->user()->isSuperAdmin() && !$isAdminMode && !request()->routeIs('profile.edit'))
+            <a href="{{ route('admin.users') }}" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-rose-500/20 shadow-sm shadow-rose-500/5">
+                <i class="bi bi-shield-lock-fill text-xs"></i>
+                <span>{{ __('Admin Panel') }}</span>
+            </a>
+        @endif
+
         <div class="h-4 md:h-6 w-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
 
         <div class="relative" x-data="{ profileOpen: false }">
@@ -58,27 +65,23 @@
                     <p class="text-[9px] text-[#5c5e66] dark:text-[#b5bac1] truncate">{{ auth()->user()->email }}</p>
                 </div>
 
+                {{-- Mobile only Admin link if not in admin mode --}}
                 @if(auth()->user()->isSuperAdmin() && !request()->is('admin*'))
-                    <div class="px-5 py-2">
-                        <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">Control Plane</div>
-                    </div>
-                    <a href="{{ \App\Support\OwnerUrl::path(request(), 'users') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
-                        <i class="bi bi-shield-lock-fill text-sm"></i> {{ __('System Admin') }}
+                    <a href="{{ route('admin.users') }}" class="md:hidden flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
+                        <i class="bi bi-shield-lock-fill text-sm"></i> {{ __('Admin Panel') }}
                     </a>
-                    <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
                 @endif
 
-                {{-- Only show Folder Hub if NOT in Admin mode and not already on Dashboard --}}
-                @if(!request()->is('admin*') && $workspaceSwitcherStores->isNotEmpty() && !request()->routeIs('dashboard'))
+                {{-- Only show Folder Hub if NOT already on Dashboard --}}
+                @if($workspaceSwitcherStores->isNotEmpty() && !request()->routeIs('dashboard'))
                     <div class="px-5 py-2">
                         <div class="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">{{ __('Folders') }}</div>
                     </div>
-                    <a href="{{ $workspaceBaseUrl . '/dashboard' }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors">
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors">
                         <i class="bi bi-window-stack text-sm"></i> {{ __('Folder Hub') }}
                     </a>
                     <div class="mx-5 my-2 h-px bg-[#e3e5e8] dark:bg-[#1e1f22]"></div>
                 @endif
-
                 <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light')" class="w-full flex items-center justify-between px-5 py-2.5 text-xs font-bold text-[#5c5e66] dark:text-[#b5bac1] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[#1e1f22] dark:hover:text-white transition-colors text-left">
                     <div class="flex items-center gap-3">
                         <i class="bi bi-moon-stars-fill text-sm hidden dark:block"></i>

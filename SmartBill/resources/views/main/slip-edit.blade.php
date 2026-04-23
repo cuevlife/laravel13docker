@@ -9,12 +9,12 @@
             <!-- Header Section (Internal) -->
             <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-black/[0.04] dark:border-white/[0.04] pb-8">
                 <div class="flex items-center gap-4">
-                    <a href="{{ \App\Support\WorkspaceUrl::current(request(), 'slips') }}" class="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-500/5 text-[#80848e] hover:text-rose-500 border border-black/5 dark:border-white/5 transition-all">
-                        <i class="bi bi-arrow-left text-xl"></i>
+                    <a href="{{ route('workspace.slip.index') }}" class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-500/10 dark:bg-white/5 text-indigo-500 hover:bg-indigo-500 hover:text-white border border-transparent transition-all shadow-sm group/back">
+                        <i class="bi bi-arrow-left text-xl transition-colors group-hover/back:text-white"></i>
                     </a>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h2 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">Intelligence Editor</h2>
+                            <h2 class="text-lg font-black text-[#1e1f22] dark:text-white uppercase tracking-widest">{{ __('Intelligence Editor') }}</h2>
                             <span class="px-2 py-0.5 rounded-lg bg-discord-green/10 text-discord-green text-[9px] font-black uppercase tracking-widest">#{{ $slip->id }}</span>
                         </div>
                         <p class="text-[9px] font-bold text-[#80848e] uppercase tracking-widest mt-1" x-text="'Unique ID: ' + originalData.uid"></p>
@@ -22,23 +22,20 @@
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
-                    <!-- Mode Switcher -->
-                    <div class="flex bg-[#f2f3f5] dark:bg-[#1e1f22] rounded-xl p-1">
-                        <button @click="switchMode('ui')" :class="viewMode === 'ui' ? 'bg-white text-discord-green shadow-sm dark:bg-[#2b2d31]' : 'text-[#80848e]'"
-                                class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">UI</button>
-                        <button @click="switchMode('json')" :class="viewMode === 'json' ? 'bg-white text-discord-green shadow-sm dark:bg-[#2b2d31]' : 'text-[#80848e]'"
-                                class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">JSON</button>
-                    </div>
-
-                    <button @click="showImage = true; modalActive = true" class="h-10 px-4 bg-white dark:bg-[#1e1f22] border border-black/5 dark:border-white/5 rounded-xl shadow-sm text-[#80848e] hover:text-discord-green transition-all" title="View Document">
-                        <i class="bi bi-arrows-fullscreen"></i>
+                    <button @click="openRescanModal()" class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500 hover:text-white px-4 text-[10px] font-black uppercase tracking-widest transition-all border border-indigo-500/20 shadow-sm">
+                        <i class="bi bi-arrow-repeat text-sm"></i>
+                        <span>{{ __('Re-scan') }}</span>
                     </button>
 
-                    <button @click="save()" :disabled="saving"
-                            class="h-10 px-6 bg-discord-green text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-[#1f8b4c] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
-                        <i x-show="!saving" class="bi bi-shield-check text-sm"></i>
-                        <i x-show="saving" class="bi bi-arrow-repeat text-sm animate-spin"></i>
-                        <span x-text="saving ? 'Saving...' : 'Save & Sync'"></span>
+                    <div class="flex bg-[#f2f3f5] dark:bg-[#1e1f22] rounded-xl p-1">
+                        <button @click="switchMode('ui')" :class="viewMode === 'ui' ? 'bg-white text-discord-green shadow-sm dark:bg-[#2b2d31]' : 'text-[#80848e]'"
+                                class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">{{ __('UI') }}</button>
+                        <button @click="switchMode('json')" :class="viewMode === 'json' ? 'bg-white text-discord-green shadow-sm dark:bg-[#2b2d31]' : 'text-[#80848e]'"
+                                class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">{{ __('JSON') }}</button>
+                    </div>
+
+                    <button @click="showImage = true; modalActive = true" class="h-10 px-4 bg-white dark:bg-[#1e1f22] border border-black/5 dark:border-white/5 rounded-xl shadow-sm text-[#80848e] hover:text-discord-green transition-all" title="{{ __('View Document') }}">
+                        <i class="bi bi-arrows-fullscreen"></i>
                     </button>
                 </div>
             </div>
@@ -50,8 +47,8 @@
                     <template x-for="column in columns" :key="column.key">
                         <div class="space-y-2">
                             <label :for="'field-'+column.key" class="text-[10px] font-black uppercase tracking-widest text-[#80848e] ml-1" x-text="column.label"></label>
-                            <input :id="'field-'+column.key" type="text" x-model="fields[column.key]"
-                                   class="w-full bg-[#f8fafb] dark:bg-[#1e1f22] border border-black/5 dark:border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-[#313338] dark:text-white outline-none focus:border-discord-green/30 transition-all shadow-inner">
+                            <input :id="'field-'+column.key" type="text" x-model="fields[column.key]" readonly
+                                   class="w-full bg-[#f8fafb] dark:bg-[#1e1f22] border border-black/5 dark:border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-[#313338] dark:text-white outline-none transition-all shadow-inner cursor-default">
                         </div>
                     </template>
                 </div>
@@ -66,9 +63,8 @@
 
                     <div class="flex items-center justify-between">
                         <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-[#80848e] flex items-center gap-2">
-                            <i class="bi bi-list-stars text-sm"></i> Transaction Items
+                            <i class="bi bi-list-stars text-sm"></i> {{ __('Transaction Items') }}
                         </h3>
-                        <button @click="addItem()" class="h-8 px-4 rounded-xl bg-discord-green/10 text-discord-green text-[9px] font-black uppercase tracking-widest hover:bg-discord-green hover:text-white transition-all">+ Add Item</button>
                     </div>
 
                     <div class="grid grid-cols-1 gap-3">
@@ -76,15 +72,12 @@
                             <div class="bg-[#f8fafb] dark:bg-[#1e1f22] p-4 rounded-xl border border-black/5 dark:border-white/5 flex items-center gap-4 group transition-all" :class="{'border-rose-300 dark:border-rose-500/20 bg-rose-50/30': mathMismatch}">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black bg-white dark:bg-[#2b2d31] text-[#80848e] shadow-sm" x-text="index + 1"></div>
                                 <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input type="text" x-model="item.name" :id="'item-name-' + index" class="w-full bg-transparent border-0 p-0 text-sm font-bold focus:ring-0 text-[#313338] dark:text-white" placeholder="Item name...">
+                                    <input type="text" x-model="item.name" :id="'item-name-' + index" readonly class="w-full bg-transparent border-0 p-0 text-sm font-bold focus:ring-0 text-[#313338] dark:text-white cursor-default" placeholder="{{ __('Item name...') }}">
                                     <div class="flex items-center justify-end gap-2">
                                         <span class="text-[10px] font-black text-[#80848e]">฿</span>
-                                        <input type="text" x-model="item.price" :id="'item-price-' + index" class="w-28 bg-transparent border-0 p-0 text-sm font-black text-discord-green text-right focus:ring-0" placeholder="0.00">
+                                        <input type="text" x-model="item.price" :id="'item-price-' + index" readonly class="w-28 bg-transparent border-0 p-0 text-sm font-black text-discord-green text-right focus:ring-0 cursor-default" placeholder="0.00">
                                     </div>
                                 </div>
-                                <button @click="removeItem(index)" class="text-[#e3e5e8] hover:text-rose-500 transition-colors">
-                                    <i class="bi bi-trash-fill text-sm"></i>
-                                </button>
                             </div>
                         </template>
                     </div>
@@ -96,9 +89,9 @@
                 <div class="bg-[#1e1f22] rounded-xl overflow-hidden border border-black/10 shadow-inner">
                     <div class="px-6 py-3 bg-black/20 border-b border-white/5 flex justify-between items-center">
                         <span class="text-[9px] font-black uppercase tracking-widest text-discord-green flex items-center gap-2">
-                            <i class="bi bi-code-slash"></i> Raw AI Extraction
+                            <i class="bi bi-code-slash"></i> {{ __('Raw AI Extraction') }}
                         </span>
-                        <button @click="prettifyJson()" class="h-7 px-3 rounded-lg bg-white/5 text-[9px] font-black text-white/40 hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest">Prettify</button>
+                        <button @click="prettifyJson()" class="h-7 px-3 rounded-lg bg-white/5 text-[9px] font-black text-white/40 hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest">{{ __('Prettify') }}</button>
                     </div>
                     <textarea x-model="jsonContent" rows="20" class="w-full bg-transparent text-emerald-400 font-mono text-xs p-8 focus:ring-0 border-0 leading-relaxed custom-scrollbar"></textarea>
                 </div>
@@ -116,6 +109,44 @@
                 </div>
             </div>
         </template>
+
+        <!-- Re-scan Confirmation Modal -->
+        <template x-teleport="body">
+            <div x-show="rescanModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-transition.opacity x-cloak>
+                <div class="bg-white dark:bg-[#2b2d31] w-full max-w-lg rounded-xl shadow-2xl border border-black/5 overflow-hidden" @click.away="!isRescanning && (rescanModalOpen = false)">
+                    <div class="p-8">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                                <i class="bi bi-arrow-repeat text-2xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-black text-[#1e1f22] dark:text-white uppercase tracking-tight">{{ __('Intelligence Re-scan') }}</h2>
+                                <p class="text-xs font-bold text-[#80848e]">{{ __('Re-scan and analyze data again') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-[10px] font-black uppercase text-[#80848e] mb-2 ml-1">{{ __('Additional Instructions (Optional)') }}</label>
+                            <textarea x-model="rescanInstructions" placeholder="{{ __('e.g. Correct shop name, some items are missing...') }}" 
+                                      class="w-full bg-[#f8fafb] dark:bg-[#1e1f22] border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-[#1e1f22] dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-inner h-24 resize-none"></textarea>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-xl mb-6">
+                            <i class="bi bi-info-circle-fill text-amber-500"></i>
+                            <p class="text-[10px] font-bold text-amber-700 dark:text-amber-400">{{ __('Re-scanning costs 1 Token and will overwrite existing data.') }}</p>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button @click="rescanModalOpen = false" :disabled="isRescanning" class="flex-1 px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#5c5e66] hover:bg-black/5 dark:text-[#b5bac1] transition rounded-xl disabled:opacity-50">{{ __('Cancel') }}</button>
+                            <button @click="performRescan()" :disabled="isRescanning" class="flex-1 px-6 py-3 bg-indigo-500 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:bg-indigo-600 transition flex items-center justify-center gap-2">
+                                <i x-show="isRescanning" class="bi bi-arrow-repeat animate-spin"></i>
+                                <span x-text="isRescanning ? '{{ __('Processing...') }}' : '{{ __('Confirm Re-scan') }}'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 
     @push('scripts')
@@ -124,8 +155,18 @@
             originalData: @json($slip->extracted_data),
             columns: @json($exportColumns),
             updateRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'slips/update/' . $slip->id)),
+            rescanRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'slips/rescan/' . $slip->id)),
             indexRoute: @json(\App\Support\WorkspaceUrl::current(request(), 'slips')),
-            csrfToken: '{{ csrf_token() }}'
+            csrfToken: '{{ csrf_token() }}',
+            trans: {
+                rescan_failed: '{{ __('Re-scan failed') }}',
+                rescan_success: '{{ __('Re-scan successful') }}',
+                error_occurred: '{{ __('An error occurred') }}',
+                invalid_json: '{{ __('Invalid JSON format') }}',
+                update_failed: '{{ __('Failed to update') }}',
+                update_success: '{{ __('Intelligence updated') }}',
+                math_mismatch: '{{ __('Calculated Sum (฿:sum) doesn\'t match Declared Total (฿:total)') }}'
+            }
         };
     </script>
     <script src="{{ asset('js/admin/slip-edit.js') }}"></script>

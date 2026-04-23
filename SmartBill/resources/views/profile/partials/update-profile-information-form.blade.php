@@ -1,13 +1,4 @@
 <section>
-    <header>
-        <h2 class="text-sm font-black text-[#1e1f22] dark:text-[#f2f3f5] uppercase tracking-widest">
-            {{ __('Profile Information') }}
-        </h2>
-        <p class="mt-1 text-xs text-[#5c5e66] dark:text-[#b5bac1]">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
-    </header>
-
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
         @csrf
     </form>
@@ -24,18 +15,18 @@
                     <i class="bi bi-person-lock text-sm"></i>
                     {{ $user->username }}
                 </div>
-                <p class="mt-1.5 text-[9px] font-bold text-[#80848e] uppercase tracking-widest ml-1">Username cannot be changed</p>
+                <p class="mt-1.5 text-[9px] font-bold text-[#80848e] uppercase tracking-widest ml-1">{{ __('Username cannot be changed') }}</p>
             </div>
 
             <div>
-                <label for="name" class="block text-[10px] font-black text-[#5c5e66] dark:text-[#80848e] uppercase tracking-widest mb-2">{{ __('Display Name') }}</label>
-                <input id="name" name="name" type="text" class="w-full bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-xl px-4 py-3 text-xs font-bold text-[#1e1f22] dark:text-white focus:ring-2 focus:ring-discord-green/50 transition-all outline-none" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name" />
+                <label for="name" class="block text-[10px] font-black text-[#5c5e66] dark:text-[#80848e] uppercase tracking-widest mb-2 ml-1">{{ __('Display Name') }}</label>
+                <input id="name" name="name" type="text" class="w-full bg-white dark:bg-white/5 border border-black/[0.05] dark:border-white/[0.05] rounded-xl px-4 py-3 text-xs font-bold text-[#1e1f22] dark:text-white focus:ring-2 focus:ring-discord-green/20 transition-all outline-none shadow-sm" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name" />
                 <x-input-error class="mt-2 text-[10px] text-discord-red font-bold" :messages="$errors->get('name')" />
             </div>
 
             <div>
-                <label for="email" class="block text-[10px] font-black text-[#5c5e66] dark:text-[#80848e] uppercase tracking-widest mb-2">{{ __('Email Address') }}</label>
-                <input id="email" name="email" type="email" class="w-full bg-[#f2f3f5] dark:bg-[#1e1f22] border-0 rounded-xl px-4 py-3 text-xs font-bold text-[#1e1f22] dark:text-white focus:ring-2 focus:ring-discord-green/50 transition-all outline-none" value="{{ old('email', $user->email) }}" required autocomplete="username" />
+                <label for="email" class="block text-[10px] font-black text-[#5c5e66] dark:text-[#80848e] uppercase tracking-widest mb-2 ml-1">{{ __('Email Address') }}</label>
+                <input id="email" name="email" type="email" class="w-full bg-white dark:bg-white/5 border border-black/[0.05] dark:border-white/[0.05] rounded-xl px-4 py-3 text-xs font-bold text-[#1e1f22] dark:text-white focus:ring-2 focus:ring-discord-green/20 transition-all outline-none shadow-sm" value="{{ old('email', $user->email) }}" required autocomplete="username" />
                 <x-input-error class="mt-2 text-[10px] text-discord-red font-bold" :messages="$errors->get('email')" />
 
                 @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
@@ -61,10 +52,10 @@
             <div class="pt-2 border-t border-black/[0.03] dark:border-white/[0.03]">
                 <div class="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-[#80848e]">
                     <i class="bi bi-calendar3"></i>
-                    <span>Member Since: {{ $user->created_at?->format('d M Y') }}</span>
+                    <span>{{ __('Member Since') }}: {{ $user->created_at?->format('d M Y') }}</span>
                     <span class="mx-2 opacity-30">|</span>
                     <i class="bi bi-shield-check"></i>
-                    <span>Status: {{ $user->isActive() ? 'Verified' : 'Unverified' }}</span>
+                    <span>{{ __('Status') }}: {{ $user->isActive() ? __('Verified') : __('Unverified') }}</span>
                 </div>
             </div>
         </div>

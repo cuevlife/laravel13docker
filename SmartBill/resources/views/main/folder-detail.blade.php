@@ -2,235 +2,119 @@
 
 @section('content')
     <div class="w-full px-4 py-8 sm:px-6 lg:px-8 animate-in fade-in duration-500" x-data="folderEditor()">
-        
-        <!-- Master Container Card -->
-        <div class="bg-white dark:bg-[#2b2d31] rounded-xl shadow-sm border border-black/[0.05] dark:border-white/5 overflow-hidden">
-            
-            {{-- Header Section (Inside Card) --}}
+        <x-ui.card>
+            {{-- Header Section --}}
             <div class="px-8 py-8 border-b border-black/[0.03] dark:border-white/[0.03] bg-[#f8fafb] dark:bg-black/10">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div class="flex items-center gap-5">
-                        <a href="{{ \App\Support\OwnerUrl::path(request(), 'folders') }}" class="w-10 h-10 rounded-xl bg-white dark:bg-[#1e1f22] border border-black/10 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all shadow-sm">
-                            <i class="bi bi-arrow-left text-xl"></i>
-                        </a>
-                        <div>
-                            <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                                <a href="{{ \App\Support\OwnerUrl::path(request(), 'folders') }}" class="hover:text-indigo-600 transition">Folders</a>
-                                <i class="bi bi-chevron-right text-[8px]"></i>
-                                <span class="text-slate-600 dark:text-slate-300">Folder Configuration</span>
-                            </nav>
-                            <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tightest">Settings & Access</h1>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-3 py-1 rounded-lg {{ $merchant->status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100' }} text-[10px] font-black uppercase tracking-widest border shadow-sm">
-                            Status: {{ $merchant->status }}
-                        </span>
-                    </div>
-                </div>
+                <x-ui.page-header :title="__('Folder Settings')" :subtitle="$merchant->name">
+                    <x-slot:icon_slot>
+                        <x-ui.back-button :href="route('admin.users.show', ['user' => $merchant->user_id])" :title="__('Back to Account')" />
+                    </x-slot:icon_slot>
+                    <x-slot:actions>
+                        <x-ui.badge :variant="$merchant->status === 'active' ? 'success' : 'warning'">
+                            {{ strtoupper(__($merchant->status)) }}
+                        </x-ui.badge>
+                    </x-slot:actions>
+                </x-ui.page-header>
             </div>
 
-            <div class="p-8 space-y-10">
-                
-                <!-- 1. Folder Details -->
-                <div class="space-y-6">
+            <div class="p-8 md:p-10 space-y-12 divide-y divide-black/[0.03] dark:divide-white/[0.03]">
+                <!-- 1. Folder Identity -->
+                <div class="pt-0 space-y-6">
+                    <div class="flex items-center gap-3"><div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div><h2 class="text-[10px] font-black uppercase tracking-widest text-[#1e1f22] dark:text-white">{{ __('Identity Configuration') }}</h2></div>
+                    <div class="p-6 rounded-xl border border-black/[0.03] dark:border-white/[0.03] bg-[#f8fafb] dark:bg-black/10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                            <div class="space-y-1.5 flex-1">
+                                <label class="block text-[9px] font-black uppercase text-[#80848e] ml-1 tracking-widest">{{ __('Display Name') }}</label>
+                                <x-ui.input type="text" x-model="form.name" required />
+                            </div>
+                            <div class="space-y-1.5 w-full md:w-48">
+                                <label class="block text-[9px] font-black uppercase text-rose-500 ml-1 tracking-widest">{{ __('Slip Capacity') }}</label>
+                                <x-ui.input type="number" x-model="form.max_slips" required min="1" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Recent Slips Table -->
+                <div class="pt-10 space-y-6">
+                    <div class="flex items-center gap-3"><div class="w-1.5 h-4 bg-discord-green rounded-full"></div><h2 class="text-[10px] font-black uppercase tracking-widest text-[#1e1f22] dark:text-white">{{ __('Recent Activity') }}</h2></div>
+                    <x-ui.table :headers="['Document', 'Shop', 'Amount', 'Date', '']">
+                        @foreach($recentSlips as $slip)
+                            <tr class="group hover:bg-black/[0.01] dark:hover:bg-white/[0.01]" id="slip-row-{{ $slip->id }}">
+                                <td class="px-6 py-4 font-black text-indigo-500 text-xs">{{ $slip->uid }}</td>
+                                <td class="px-6 py-4 text-xs dark:text-white">{{ $slip->extracted_data['shop_name'] ?? '-' }}</td>
+                                <td class="px-6 py-4 text-xs font-black dark:text-white">{{ number_format($slip->amount ?? 0, 2) }}</td>
+                                <td class="px-6 py-4 text-[10px] text-slate-400">{{ $slip->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button type="button" @click="deleteSlip({{ $slip->id }})" class="text-slate-300 hover:text-rose-500 transition-colors">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                        @if($recentSlips->isEmpty())
+                            <tr><td colspan="5" class="py-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{{ __('No recent slips found') }}</td></tr>
+                        @endif
+                    </x-ui.table>
+                </div>
+
+                <!-- 3. Data Schema -->
+                <div class="pt-10 space-y-6">
                     <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3"><div class="w-1.5 h-4 bg-emerald-500 rounded-full"></div><h2 class="text-[10px] font-black uppercase tracking-widest text-[#1e1f22] dark:text-white">{{ __('Data Fields') }}</h2></div>
                         <div class="flex items-center gap-2">
-                            <i class="bi bi-info-circle-fill text-indigo-500"></i>
-                            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-[#1e1f22] dark:text-white">Folder Identity</h2>
-                        </div>
-                        <button type="button" @click="saveAll()" :disabled="saving" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition shadow-md shadow-indigo-500/20 disabled:opacity-50 flex items-center gap-2">
-                            <i x-show="saving" class="bi bi-arrow-repeat animate-spin"></i>
-                            <span x-text="saving ? 'Saving...' : 'Update Configuration'"></span>
-                        </button>
-                    </div>
-
-                    <div class="space-y-5 bg-[#f8fafb] dark:bg-black/10 p-6 rounded-xl border border-black/5 dark:border-white/5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Logical Name</label>
-                                <input type="text" x-model="form.name" required class="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold dark:bg-[#1e1f22] dark:border-white/10 dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">System Subdomain</label>
-                                <input type="text" value="{{ $merchant->subdomain }}" disabled class="w-full rounded-xl border border-black/5 bg-[#f2f3f5] px-4 py-2.5 text-sm font-bold text-slate-400 dark:bg-black/20 dark:border-white/5 shadow-inner cursor-not-allowed">
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                            <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Tax ID</label>
-                                <input type="text" x-model="form.tax_id" class="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold dark:bg-[#1e1f22] dark:border-white/10 dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-slate-400 ml-1">Phone</label>
-                                <input type="text" x-model="form.phone" class="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold dark:bg-[#1e1f22] dark:border-white/10 dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="block text-[9px] font-black uppercase text-rose-500 ml-1">Max Capacity (Slips)</label>
-                                <input type="number" x-model="form.max_slips" required min="1" class="w-full rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-black text-rose-600 dark:bg-[#1e1f22] dark:border-white/10 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all">
-                            </div>
+                            <input type="file" id="sample-slip" class="hidden" @change="handleSampleUpload" accept="image/*">     
+                            <x-ui.button variant="ghost" size="sm" icon="bi-magic" @click="document.getElementById('sample-slip').click()" ::disabled="analyzing"><span x-text="analyzing ? '{{ __('Analyzing...') }}' : '{{ __('Auto-Suggest') }}'"></span></x-ui.button>
+                            <x-ui.button variant="success" size="sm" icon="bi-plus-lg" @click="addField()">{{ __('Add Field') }}</x-ui.button>
                         </div>
                     </div>
-                </div>
-
-                <!-- 2. AI Data Schema Designer -->
-                <div class="space-y-6">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div class="flex items-center gap-2">
-                            <i class="bi bi-cpu-fill text-indigo-500"></i>
-                            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-[#1e1f22] dark:text-white">AI Extraction Rules</h2>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="file" id="sample-slip" class="hidden" @change="handleSampleUpload" accept="image/*">
-                            <button type="button" @click="document.getElementById('sample-slip').click()" :disabled="analyzing"
-                                    class="h-9 px-4 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2">
-                                <i class="bi bi-magic" x-show="!analyzing"></i>
-                                <i class="bi bi-arrow-repeat animate-spin" x-show="analyzing" x-cloak></i>
-                                <span x-text="analyzing ? 'Analyzing...' : 'Auto-Suggest Fields'"></span>
-                            </button>
-                            <button type="button" @click="addField()" class="h-9 px-4 rounded-xl bg-[#1e1f22] dark:bg-white text-white dark:text-[#1e1f22] text-[9px] font-black uppercase tracking-widest hover:opacity-90 transition-all">
-                                <i class="bi bi-plus-lg mr-1"></i> Add Target Field
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="overflow-hidden border border-black/[0.05] dark:border-white/5 rounded-xl bg-white dark:bg-[#1e1f22]">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-black/[0.02] dark:bg-white/[0.02] text-[9px] font-black uppercase tracking-widest text-slate-500">
-                                <tr>
-                                    <th class="px-6 py-4">Technical Key</th>
-                                    <th class="px-6 py-4">Display Label</th>
-                                    <th class="px-6 py-4 w-32">Type</th>
-                                    <th class="px-6 py-4">Extraction Instruction</th>
-                                    <th class="px-6 py-4 w-16"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-black/5 dark:divide-white/5">
-                                <template x-for="(field, index) in aiFields" :key="index">
-                                    <tr class="group hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
-                                        <td class="px-6 py-3">
-                                            <input type="text" x-model="field.key" placeholder="tax_id" @input="field.key = field.key.toLowerCase().replace(/[^a-z0-9_]/g, '')"
-                                                   class="w-full bg-transparent border-0 p-0 text-xs font-black text-rose-500 focus:ring-0">
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <input type="text" x-model="field.label" placeholder="TAX ID"
-                                                   class="w-full bg-transparent border-0 p-0 text-xs font-bold text-slate-900 dark:text-white focus:ring-0">
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <select x-model="field.type" class="w-full bg-slate-50 dark:bg-black/20 border-0 rounded-lg px-2 py-1 text-[10px] font-black uppercase text-slate-500 focus:ring-0 cursor-pointer">
-                                                <option value="text">Text</option>
-                                                <option value="number">Number</option>
-                                                <option value="date">Date</option>
-                                                <option value="array">Array</option>
-                                            </select>
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <input type="text" x-model="field.hint" placeholder="Find the taxpayer number..."
-                                                   class="w-full bg-transparent border-0 p-0 text-[10px] font-bold text-slate-400 focus:ring-0 italic">
-                                        </td>
-                                        <td class="px-6 py-3 text-center">
-                                            <button type="button" @click="aiFields.splice(index, 1)" class="text-slate-300 hover:text-rose-500 transition-colors">
-                                                <i class="bi bi-trash3-fill"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                        <template x-if="aiFields.length === 0">
-                            <div class="p-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
-                                No specific rules defined for this folder.
-                            </div>
+                    <x-ui.table :headers="['Key', 'Label', 'Type', 'Instruction', '']">
+                        <template x-for="(field, index) in aiFields" :key="index">
+                            <tr class="hover:bg-black/[0.01]">
+                                <td class="px-6 py-3"><input type="text" x-model="field.key" @input="field.key = field.key.toLowerCase().replace(/[^a-z0-9_]/g, '')" class="w-full bg-transparent border-0 p-0 text-xs font-black text-rose-500 focus:ring-0"></td>
+                                <td class="px-6 py-3"><input type="text" x-model="field.label" class="w-full bg-transparent border-0 p-0 text-xs font-bold dark:text-white focus:ring-0"></td>
+                                <td class="px-6 py-3">
+                                    <select x-model="field.type" class="w-full bg-slate-50 dark:bg-black/20 border-0 rounded-lg px-2 py-1 text-[10px] font-black uppercase text-slate-500 focus:ring-0 cursor-pointer">
+                                        <option value="text">TEXT</option><option value="number">NUMBER</option><option value="date">DATE</option><option value="array">ARRAY</option>
+                                    </select>
+                                </td>
+                                <td class="px-6 py-3"><input type="text" x-model="field.hint" class="w-full bg-transparent border-0 p-0 text-[10px] font-bold text-slate-400 focus:ring-0 italic"></td>
+                                <td class="px-6 py-3 text-center"><button type="button" @click="aiFields.splice(index, 1)" class="text-slate-300 hover:text-rose-500 transition-colors"><i class="bi bi-trash3-fill"></i></button></td>
+                            </tr>
                         </template>
-                    </div>
+                    </x-ui.table>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <!-- 3. Member Access -->
-                    <div class="space-y-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <i class="bi bi-people-fill text-indigo-500"></i>
-                                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-[#1e1f22] dark:text-white">Folder Members</h2>
-                            </div>
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ $merchant->users->count() }} Users</span>
-                        </div>
-
-                        <div class="bg-[#f8fafb] dark:bg-black/10 p-6 rounded-xl border border-black/5 dark:border-white/5 space-y-6">
-                            <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'folders/' . $merchant->id . '/members') }}" class="flex flex-col sm:flex-row gap-2">
-                                @csrf
-                                <select name="user_id" class="flex-1 rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-4 py-2.5 text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none shadow-sm">
-                                    <option value="">Add user...</option>
-                                    @foreach($candidateUsers as $candidateUser)
-                                        <option value="{{ $candidateUser->id }}">{{ $candidateUser->name }}</option>
-                                    @endforeach
-                                </select>
-                                <select name="workspace_role" class="w-full sm:w-28 rounded-xl border border-black/10 bg-white dark:bg-[#1e1f22] px-3 py-2.5 text-xs font-black uppercase dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm">
-                                    <option value="employee">Staff</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="owner">Owner</option>
-                                </select>
-                                <button type="submit" class="bg-[#1e1f22] dark:bg-white text-white dark:text-[#1e1f22] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition shadow-md active:scale-95">Link</button>
-                            </form>
-
-                            <div class="divide-y divide-black/[0.03] dark:divide-white/[0.03]">
-                                @foreach($merchant->users as $member)
-                                    @php $isPrimaryOwner = (int) $merchant->user_id === (int) $member->id; @endphp
-                                    <div class="flex items-center justify-between py-3 group">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-lg bg-white dark:bg-[#2b2d31] flex items-center justify-center text-indigo-600 font-black text-[10px] border border-black/5">
-                                                {{ substr($member->name, 0, 1) }}
-                                            </div>
-                                            <div>
-                                                <div class="text-[12px] font-bold text-[#1e1f22] dark:text-white">{{ $member->name }}</div>
-                                                <div class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{{ $member->email }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-black/5 dark:border-white/5 {{ $isPrimaryOwner ? 'text-emerald-600 bg-emerald-50' : 'text-slate-500 bg-slate-50' }}">
-                                                {{ $isPrimaryOwner ? 'Primary' : $member->pivot?->role }}
-                                            </span>
-                                            @if(!$isPrimaryOwner)
-                                                <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'folders/' . $merchant->id . '/members/' . $member->id) }}" onsubmit="return confirm('Remove access?')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="text-slate-300 hover:text-rose-500 transition-colors">
-                                                        <i class="bi bi-x-circle-fill"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Danger Zone -->
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-2">
-                            <i class="bi bi-shield-lock-fill text-rose-500"></i>
-                            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-rose-600">Danger Zone</h2>
-                        </div>
-                        
-                        <div class="bg-rose-50/50 dark:bg-rose-500/5 p-6 rounded-xl border border-rose-100 dark:border-rose-500/10 flex flex-col items-start justify-between h-full min-h-[180px]">
-                            <div class="mb-4">
-                                <h3 class="text-[11px] font-black uppercase text-rose-600 tracking-widest">Archive Status</h3>
-                                <p class="text-[10px] font-bold text-rose-500/70 uppercase tracking-tight mt-1 leading-relaxed">Archived folders are hidden from standard users and stop consuming active resources.</p>
-                            </div>
-                            <form method="POST" action="{{ \App\Support\OwnerUrl::path(request(), 'folders/' . $merchant->id . '/status') }}" class="w-full">
+                <!-- 4. Administrative Actions -->
+                <div class="pt-10 space-y-6 pb-10">
+                    <div class="flex items-center gap-3"><div class="w-1.5 h-4 bg-rose-500 rounded-full"></div><h2 class="text-[10px] font-black uppercase tracking-widest text-rose-600">{{ __('Administrative Actions') }}</h2></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-6 rounded-xl border border-amber-100 bg-amber-50/30 dark:bg-amber-500/5 flex flex-col justify-between gap-6">
+                            <h3 class="text-[10px] font-black uppercase text-amber-700 tracking-widest">{{ __('Archive Status') }}</h3>
+                            <form method="POST" action="{{ route('admin.folders.status', ['merchant' => $merchant->id]) }}">
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="status" value="{{ $merchant->status === 'active' ? 'archived' : 'active' }}">
-                                <button type="submit" class="w-full h-12 rounded-xl border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition shadow-sm bg-rose-50/50 active:scale-95">
-                                    {{ $merchant->status === 'active' ? 'Archive Folder' : 'Restore Folder' }}
-                                </button>
+                                <x-ui.button type="submit" variant="warning" class="w-full">{{ $merchant->status === 'active' ? __('Archive Folder') : __('Restore Folder') }}</x-ui.button>
+                            </form>
+                        </div>
+                        <div class="p-6 rounded-xl border border-rose-100 bg-rose-50/30 dark:bg-rose-500/5 flex flex-col justify-between gap-6">
+                            <h3 class="text-[10px] font-black uppercase text-rose-700 tracking-widest">{{ __('Permanent Deletion') }}</h3>
+                            <form method="POST" action="{{ route('admin.folders.destroy', ['merchant' => $merchant->id]) }}" onsubmit="return confirm('{{ __('WARNING: THIS ACTION IS IRREVERSIBLE. Proceed?') }}')">
+                                @csrf @method('DELETE')
+                                <x-ui.button type="submit" variant="danger" class="w-full">{{ __('Terminate Folder') }}</x-ui.button>
                             </form>
                         </div>
                     </div>
                 </div>
 
+                <div class="mt-12 pt-8 border-t border-black/[0.03] flex justify-end">
+                    <x-ui.button type="button" @click="saveAll()" variant="primary" size="lg" ::disabled="saving">
+                        <span x-show="!saving">{{ __('Update Configuration') }}</span>
+                        <span x-show="saving"><i class="bi bi-arrow-repeat animate-spin"></i></span>
+                    </x-ui.button>
+                </div>
             </div>
-        </div>
+        </x-ui.card>
     </div>
 @endsection
 
@@ -238,28 +122,44 @@
 <script>
     function folderEditor() {
         return {
-            saving: false,
-            analyzing: false,
-            form: {
-                name: {!! json_encode($merchant->name) !!},
-                tax_id: {!! json_encode($merchant->tax_id) !!},
-                phone: {!! json_encode($merchant->phone) !!},
-                max_slips: {!! json_encode($merchant->max_slips ?? 10000) !!}
-            },
+            saving: false, analyzing: false,
+            form: { name: {!! json_encode($merchant->name) !!}, max_slips: {!! json_encode($merchant->max_slips) !!} },
             aiFields: {!! json_encode($schemaFields) !!},
+            addField() { this.aiFields.push({ key: 'field_' + Date.now(), label: 'New Field', type: 'text', hint: '' }); },
+            async deleteSlip(id) {
+                const confirmed = await Swal.fire({
+                    title: '{{ __('Delete this slip?') }}',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ed4245',
+                    cancelButtonColor: '#4e5058',
+                    confirmButtonText: 'Yes, delete it!'
+                });
+                if (!confirmed.isConfirmed) return;
 
-            addField() {
-                this.aiFields.push({ key: 'new_field_' + Date.now(), label: 'New Field', type: 'text', hint: '' });
+                try {
+                    const response = await fetch('/workspace/slips/delete/' + id, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    if (response.ok) {
+                        document.getElementById('slip-row-' + id).remove();
+                        window.notify.success('{{ __('Slip deleted successfully.') }}');
+                    } else {
+                        const data = await response.json();
+                        throw new Error(data.message || '{{ __('Failed to delete') }}');
+                    }
+                } catch (e) { window.notify.error(e.message); }
             },
-
             async handleSampleUpload(e) {
                 const file = e.target.files[0];
                 if (!file) return;
-
                 this.analyzing = true;
                 const formData = new FormData();
                 formData.append('image', file);
-
                 try {
                     const res = await fetch('{{ route('admin.settings.suggest') }}', {
                         method: 'POST',
@@ -269,46 +169,23 @@
                     const data = await res.json();
                     if (data.status === 'success') {
                         this.aiFields = data.ai_fields;
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Analysis Complete', text: 'Schema updated based on receipt.', showConfirmButton: false, timer: 3000 });
-                    } else {
-                        throw new Error(data.message || 'Analysis failed');
-                    }
-                } catch (e) {
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error', text: e.message, showConfirmButton: false, timer: 3000 });
-                } finally {
-                    this.analyzing = false;
-                    e.target.value = '';
-                }
+                        window.notify.success('{{ __('Analysis Complete') }}');
+                    } else { throw new Error(data.message || '{{ __('Error') }}'); }
+                } catch (e) { window.notify.error(e.message); }
+                finally { this.analyzing = false; e.target.value = ''; }
             },
-
             async saveAll() {
                 this.saving = true;
                 try {
-                    const res = await fetch('{{ \App\Support\OwnerUrl::path(request(), 'folders/' . $merchant->id) }}', {
+                    const res = await fetch('{{ route('admin.folders.update', ['merchant' => $merchant->id]) }}', {
                         method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            ...this.form,
-                            ai_fields: this.aiFields
-                        })
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ ...this.form, ai_fields: this.aiFields })
                     });
-
-                    if (res.ok) {
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Saved!', text: 'Folder configuration updated.', showConfirmButton: false, timer: 2000 });
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        const data = await res.json();
-                        throw new Error(data.message || 'Update failed');
-                    }
-                } catch (e) {
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error', text: e.message, showConfirmButton: false, timer: 3000 });
-                } finally {
-                    this.saving = false;
-                }
+                    if (res.ok) window.notify.success('{{ __('Updated') }}');
+                    else throw new Error('{{ __('Error') }}');
+                } catch (e) { window.notify.error(e.message); }
+                finally { this.saving = false; }
             }
         }
     }

@@ -11,7 +11,7 @@ const Toast = Swal.mixin({
 });
 
 window.slipEditor = function(config) {
-    const originalData = config.originalData || {};
+    const initialOriginalData = config.originalData || {};
     const columns = (config.columns || [])
         .filter(c => c.key !== 'items')
         .map(c => ({ key: c.key, label: c.label }));
@@ -20,19 +20,83 @@ window.slipEditor = function(config) {
         viewMode: 'ui', 
         showImage: false, 
         saving: false,
-        originalData, 
+        originalData: initialOriginalData, 
         columns,
-        jsonContent: JSON.stringify(originalData, null, 4),
-        fields: columns.reduce((a, c) => { a[c.key] = originalData[c.key] ?? ''; return a; }, {}),
-        items: Array.isArray(originalData.items) ? originalData.items.map((i, idx) => {
-            const parseName = (item) => item.name || item.item_name || item.item || item.description || item.desc || item.title || item.product || (typeof item === 'string' ? item : '');
-            const parsePrice = (item) => {
-                let p = item.price ?? item.amount ?? item.total ?? item.total_price ?? item.value ?? item.cost;
-                return p !== undefined && p !== null ? String(p).replace(/[^0-9.-]+/g,"") : '';
-            };
-            return { uid: Date.now()+idx, name: parseName(i), price: parsePrice(i) };
-        }) : [],
+        jsonContent: '',
+        fields: {},
+        items: [],
         showItems: true,
+        
+        // Re-scan state
+        rescanModalOpen: false,
+        isRescanning: false,
+        rescanInstructions: '',
+
+        init() {
+            this.syncFromData(this.originalData);
+            this.$watch('jsonContent', (val) => {
+                if (this.viewMode === 'json') {
+                    try {
+                        const parsed = JSON.parse(val);
+                        this.syncFromData(parsed, false);
+                    } catch(e) {}
+                }
+            });
+        },
+
+        syncFromData(data, updateJson = true) {
+            this.fields = this.columns.reduce((a, c) => { a[c.key] = data[c.key] ?? ''; return a; }, {});
+            this.items = Array.isArray(data.items) ? data.items.map((i, idx) => {
+                const parseName = (item) => item.name || item.item_name || item.item || item.description || item.desc || item.title || item.product || (typeof item === 'string' ? item : '');
+                const parsePrice = (item) => {
+                    let p = item.price ?? item.amount ?? item.total ?? item.total_price ?? item.value ?? item.cost;
+                    return p !== undefined && p !== null ? String(p).replace(/[^0-9.-]+/g,"") : '';
+                };
+                return { uid: Date.now()+idx, name: parseName(i), price: parsePrice(i) };
+            }) : [];
+            if (updateJson) {
+                this.jsonContent = JSON.stringify(data, null, 4);
+            }
+        },
+
+        openRescanModal() {
+            this.rescanInstructions = '';
+            this.rescanModalOpen = true;
+        },
+
+        async performRescan() {
+            this.isRescanning = true;
+            try {
+                const response = await fetch(config.rescanRoute, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ instructions: this.rescanInstructions })
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Re-scan failed');
+
+                this.originalData = result.data;
+                this.syncFromData(this.originalData);
+                this.rescanModalOpen = false;
+
+                Toast.fire({
+                    icon: 'success',
+                    title: config.trans.rescan_success
+                });
+            } catch (e) {
+                Toast.fire({
+                    icon: 'error',
+                    title: e.message || config.trans.rescan_failed
+                });
+            } finally {
+                this.isRescanning = false;
+            }
+        },
         
         get mathMismatch() {
             if (!this.showItems || this.items.length === 0) return false;
@@ -47,101 +111,56 @@ window.slipEditor = function(config) {
             
             const cleanDeclaredTotal = String(this.fields[totalKey] || '').replace(/[^0-9.-]+/g,"");
             const declaredTotal = parseFloat(cleanDeclaredTotal) || 0;
-
-            if (declaredTotal > 0 && Math.abs(sum - declaredTotal) > 0.1) {
-                return `Warning: Items calculate to ฿${sum.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})} but declared total is ฿${declaredTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            
+            if (Math.abs(sum - declaredTotal) > 0.1) {
+                return config.trans.math_mismatch
+                    .replace(':sum', sum.toFixed(2))
+                    .replace(':total', declaredTotal.toFixed(2));
             }
             return false;
         },
-        
-        init() { 
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons(); 
-            }
-        },
-        
+
         switchMode(mode) {
-            if (mode === 'json') { 
-                this.jsonContent = JSON.stringify(this.getCombined(), null, 4); 
-            } else { 
-                try { 
-                    this.syncFrom(JSON.parse(this.jsonContent)); 
-                } catch(e) { 
-                    return Toast.fire({icon:'error', title:'Invalid JSON'}); 
-                } 
-            }
-            this.viewMode = mode; 
-            if (typeof lucide !== 'undefined') {
-                this.$nextTick(() => lucide.createIcons());
-            }
+            this.viewMode = mode;
         },
-        
-        getCombined() {
-            const data = {...this.originalData, ...this.fields};
-            if (this.showItems) data.items = this.items.map(i => ({ name: i.name, price: i.price }));
-            return data;
-        },
-        
-        syncFrom(data) {
-            this.originalData = data;
-            this.columns.forEach(c => this.fields[c.key] = data[c.key] ?? '');
-            if (Array.isArray(data.items)) {
-                const parseName = (item) => item.name || item.item_name || item.item || item.description || item.desc || item.title || item.product || (typeof item === 'string' ? item : '');
-                const parsePrice = (item) => {
-                    let p = item.price ?? item.amount ?? item.total ?? item.total_price ?? item.value ?? item.cost;
-                    return p !== undefined && p !== null ? String(p).replace(/[^0-9.-]+/g,"") : '';
-                };
-                this.items = data.items.map((i, idx) => ({ uid: Date.now()+idx, name: parseName(i), price: parsePrice(i) }));
-            } else {
-                this.items = [];
-            }
-        },
-        
-        addItem() { 
-            this.items.push({ uid: Date.now(), name: '', price: '' }); 
-            if (typeof lucide !== 'undefined') {
-                this.$nextTick(() => lucide.createIcons()); 
-            }
-        },
-        
-        handleEnterPress(index) {
-            if (index === this.items.length - 1) {
-                this.addItem();
-            }
-            this.$nextTick(() => {
-                const nextInput = document.getElementById('item-name-' + (index + 1));
-                if (nextInput) {
-                    nextInput.focus();
-                }
-            });
-        },
-        
-        removeItem(idx) { 
-            this.items.splice(idx, 1); 
-        },
-        
-        prettifyJson() { 
-            try { 
-                this.jsonContent = JSON.stringify(JSON.parse(this.jsonContent), null, 4); 
-            } catch(e) {} 
-        },
-        
-        async save() {
-            this.saving = true;
+
+        prettifyJson() {
             try {
-                const data = this.viewMode === 'json' ? JSON.parse(this.jsonContent) : this.getCombined();
+                const obj = JSON.parse(this.jsonContent);
+                this.jsonContent = JSON.stringify(obj, null, 4);
+            } catch(e) {
+                Toast.fire({ icon: 'warning', title: config.trans.invalid_json });
+            }
+        },
+
+        async save() {
+            if (this.saving) return;
+            this.saving = true;
+            
+            try {
+                let dataToSave = {};
+                if (this.viewMode === 'json') {
+                    dataToSave = JSON.parse(this.jsonContent);
+                } else {
+                    dataToSave = { ...this.fields, items: this.items };
+                }
+
                 const res = await fetch(config.updateRoute, {
-                    method: 'POST', 
-                    body: JSON.stringify({ data, _token: config.csrfToken }),
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ data: dataToSave })
                 });
+
+                if (!res.ok) throw new Error(config.trans.update_failed);
                 
-                if (!res.ok) throw new Error('Update failed');
-                
-                Toast.fire({ icon: 'success', title: 'Registry Synced' });
+                Toast.fire({ icon: 'success', title: config.trans.update_success });
                 setTimeout(() => window.location.href = config.indexRoute, 900);
             } catch (e) { 
-                Toast.fire({ icon: 'error', title: e.message || 'An error occurred' }); 
+                Toast.fire({ icon: 'error', title: e.message || config.trans.error_occurred }); 
             } finally { 
                 this.saving = false; 
             }

@@ -24,8 +24,9 @@ class ProfileController extends Controller
             ->sum('delta');
 
         $rawLogs = \App\Models\TokenLog::where('user_id', $user->id)
+            ->where('created_at', '>=', now()->subDays(30)) // Only last 30 days
             ->latest()
-            ->limit(200)
+            ->limit(100)
             ->get();
 
         // Grouping Logic: Usage slips scanned within the same hour are combined
@@ -46,7 +47,7 @@ class ProfileController extends Controller
                 'is_batch' => $count > 1,
                 'count' => $count
             ];
-        })->values()->take(30);
+        })->values()->take(15); // Show only top 15 grouped entries
 
         return view('profile.edit', [
             'user' => $user,

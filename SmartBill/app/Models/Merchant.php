@@ -5,16 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['user_id', 'name', 'subdomain', 'status', 'address', 'tax_id', 'phone', 'config', 'max_slips'])]
+#[Fillable(['user_id', 'name', 'logo_path', 'status', 'max_slips', 'config'])]
 class Merchant extends Model
 {
-    protected function casts(): array
-    {
-        return [
-            'config' => 'array',
-            'max_slips' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'config' => 'array',
+        'max_slips' => 'integer',
+    ];
 
     public function isActive(): bool
     {
@@ -34,11 +31,6 @@ class Merchant extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function users()
-    {
-        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
-    }
-
     public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -49,13 +41,15 @@ class Merchant extends Model
         return $this->hasMany(SlipTemplate::class);
     }
 
-    public function slipBatches()
-    {
-        return $this->hasMany(SlipBatch::class);
-    }
-
     public function slips()
     {
-        return $this->hasManyThrough(Slip::class, SlipBatch::class);
+        return $this->hasMany(Slip::class);
+    }
+
+    public function getLogoUrlAttribute()
+    {
+        // Prioritize logo_path column, fallback to config
+        $path = $this->logo_path ?: ($this->config['logo_path'] ?? null);
+        return $path ? \Illuminate\Support\Facades\Storage::url($path) : null;
     }
 }

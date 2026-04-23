@@ -27,11 +27,5 @@ RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" && \
 
 WORKDIR /app
 
-# เพิ่ม Entrypoint Script
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# คำสั่งหลัก
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8001"]
+# รัน Laravel Setup, Migrate และเริ่ม Server
+CMD ["sh", "-c", "if [ ! -f vendor/autoload.php ]; then composer install --no-interaction --no-progress --optimize-autoloader; fi && php artisan migrate --force && php artisan config:clear && php artisan route:clear && php artisan view:clear && php artisan serve --host=0.0.0.0 --port=8001"]
